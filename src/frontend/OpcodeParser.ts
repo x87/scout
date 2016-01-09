@@ -122,7 +122,7 @@ module cleojs.disasm {
         private getString(): string {
             let result;
             try {
-                result = this.data.toString('utf8', this.offset, 8);
+                result = this.data.toString('utf8', this.offset, this.offset+8).split('\0').shift();
                 this.offset += 8;
             } catch (e) {
                 throw logger.error("EEOFBUF", 8);
@@ -134,7 +134,7 @@ module cleojs.disasm {
             let self = this;
             let iterator = {
                 next() {
-                    if (self.offset >= self.data.length - 1) {//one byte is not an opcode
+                    if (self.offset >= self.data.length) {
                         return {value: undefined, done: true};
                     }
 
@@ -149,8 +149,8 @@ module cleojs.disasm {
 
         private getOpcode() {
             let opcode = new COpcode();
-            opcode.id = this.nextUInt16();
-            let params = this.opcodesData[opcode.id & 0x07FF].params;
+            let id = opcode.id = this.nextUInt16();
+            let params = this.opcodesData[id & 0x07FF].params;
             opcode.params = params === null ? this.getArgumentsList() : this.getParams(params.length);
             return opcode;
         }
