@@ -35,44 +35,79 @@ module cleojs.disasm {
         }
 
         private nextUInt8(): number {
-            let result = this.data.readUInt8(this.offset);
-            this.offset += 1;
+            let result;
+            try {
+                result = this.data.readUInt8(this.offset);
+                this.offset += 1;
+            } catch (e) {
+                throw logger.error("EEOFBUF", 1);
+            }
             return result;
         }
 
         private nextInt8(): number {
-            let result = this.data.readInt8(this.offset);
-            this.offset += 1;
+            let result;
+            try {
+                result = this.data.readInt8(this.offset);
+                this.offset += 1;
+            } catch (e) {
+                throw logger.error("EEOFBUF", 1);
+            }
             return result;
         }
 
         private nextUInt16(): number {
-            let result = this.data.readUInt16LE(this.offset);
-            this.offset += 2;
+            let result;
+            try {
+                result = this.data.readUInt16LE(this.offset);
+                this.offset += 2;
+            } catch (e) {
+                throw logger.error("EEOFBUF", 2);
+            }
             return result;
         }
 
         private nextInt16(): number {
-            let result = this.data.readInt16LE(this.offset);
-            this.offset += 2;
+            let result;
+            try {
+                result = this.data.readInt16LE(this.offset);
+                this.offset += 2;
+            } catch (e) {
+                throw logger.error("EEOFBUF", 2);
+            }
             return result;
         }
 
         private nextUInt32(): number {
-            let result = this.data.readUInt32LE(this.offset);
-            this.offset += 4;
+            let result;
+            try {
+                result = this.data.readUInt32LE(this.offset);
+                this.offset += 4;
+            } catch (e) {
+                throw logger.error("EEOFBUF", 4);
+            }
             return result;
         }
 
         private nextInt32(): number {
-            let result = this.data.readInt32LE(this.offset);
-            this.offset += 4;
+            let result;
+            try {
+                result = this.data.readInt32LE(this.offset);
+                this.offset += 4;
+            } catch (e) {
+                throw logger.error("EEOFBUF", 4);
+            }
             return result;
         }
 
         private nextFloat(): number {
-            let result = this.data.readFloatLE(this.offset);
-            this.offset += 4;
+            let result;
+            try {
+                result = this.data.readFloatLE(this.offset);
+                this.offset += 4;
+            } catch (e) {
+                throw logger.error("EEOFBUF", 4);
+            }
             return result;
         }
 
@@ -85,8 +120,13 @@ module cleojs.disasm {
         }
 
         private getString(): string {
-            let result = this.data.toString('utf8', this.offset, 8);
-            this.offset += 8;
+            let result;
+            try {
+                result = this.data.toString('utf8', this.offset, 8);
+                this.offset += 8;
+            } catch (e) {
+                throw logger.error("EEOFBUF", 8);
+            }
             return result;
         }
 
@@ -110,18 +150,9 @@ module cleojs.disasm {
         private getOpcode() {
             let opcode = new COpcode();
             opcode.id = this.nextUInt16();
-            let params = this.opcodesData[opcode.id].params;
+            let params = this.opcodesData[opcode.id & 0x07FF].params;
             opcode.params = params === null ? this.getArgumentsList() : this.getParams(params.length);
             return opcode;
-        }
-
-        /**
-         * read parameters until eParamType.EOL
-         * @returns {null}
-         */
-        private getArgumentsList(): IOpcodeParam[] {
-            //todo;
-            return null;
         }
 
         private getParamType(): eParamType {
@@ -137,17 +168,37 @@ module cleojs.disasm {
         }
 
         /**
-         * read <np> parameters
-         * @param numOfParams
+         * read parameters until eParamType.EOL
          * @returns {null}
          */
-        private getParams(numOfParams: number): IOpcodeParam[] {
+        private getArgumentsList(): IOpcodeParam[] {
+            let params = [];
+            let paramType: eParamType;
+            while ((paramType = this.getParamType()) != eParamType.EOL) {
+                params[params.length] = this.getParam(paramType);
+            }
+            return params;
+        }
 
+        /**
+         * read <np> parameters
+         * @param numOfParams
+         * @returns {IOpcodeParam[]}
+         */
+        private getParams(numOfParams: number): IOpcodeParam[] {
+            let params = [];
+            while (numOfParams--) {
+                params[params.length] = this.getParam(this.getParamType());
+            }
+            return params;
+        }
+
+        /**
+         * read one opcode parameter
+         * @returns {IOpcodeParam}
+         */
+        private getParam(paramType: eParamType): IOpcodeParam {
             const paramsProcessingTable: Object = {
-                [eParamType.EOL]:   () => ({
-                    type:  eParamType.EOL,
-                    value: null // should there be a warning? EOL in fixed params opcode
-                }),
                 [eParamType.IMM32]: () => ({
                     type:  eParamType.IMM32,
                     value: this.nextInt32()
@@ -177,18 +228,10 @@ module cleojs.disasm {
                     value: this.getString()
                 }),
             }
-
-            let params = [];
-
-            for (let i = 0; i < numOfParams; i += 1) {
-                let paramType = this.getParamType();
-                if (!paramsProcessingTable.hasOwnProperty(paramType)) {
-                    throw logger.error("EUNKPAR", paramType)
-                }
-                params[params.length] = paramsProcessingTable[paramType]();
-
+            if (!paramsProcessingTable.hasOwnProperty(paramType)) {
+                throw logger.error("EUNKPAR", paramType)
             }
-            return params;
+            return paramsProcessingTable[paramType]();
         }
     }
 }
