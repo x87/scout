@@ -11,6 +11,11 @@ module cleojs.common {
         "ERRARGS": "Command-line error: value for argument %s not found",
         "ERRGAME": "Command-line error: unknown game alias <%s> passed as argument",
         "EUNKPAR": "Unknown data type found: <%s>",
-        "EEOFBUF": "End of buffer unexpectedly reached while reading %d bytes"
+        "EEOFBUF": "End of buffer unexpectedly reached while reading %d bytes",
+        "ENOINPT": `No input file is provided.
+
+        Usage: node cleo.js [ -i script.cs | script.cs ] [arguments]
+        node cleo.js script.cs -g gta3
+        `
     }
 }

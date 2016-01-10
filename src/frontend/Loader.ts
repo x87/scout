@@ -17,7 +17,7 @@ module cleojs.disasm {
                         scriptFile.opcodes = buffer.slice(0);
                         return scriptFile;
                     } else {
-                        throw logger.error("ERRTYPE", "Buffer");
+                        throw Log.error("ERRTYPE", "Buffer");
                     }
                 })
                 .catch(e => {

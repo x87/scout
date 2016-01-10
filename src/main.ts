@@ -1,5 +1,3 @@
-const logger = new Log();
-
 let disasm = new TheDisasm();
 
     disasm.disassembler.loadOpcodeData()

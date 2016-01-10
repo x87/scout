@@ -40,7 +40,7 @@ module cleojs.disasm {
                 result = this.data.readUInt8(this.offset);
                 this.offset += 1;
             } catch (e) {
-                throw logger.error("EEOFBUF", 1);
+                throw Log.error("EEOFBUF", 1);
             }
             return result;
         }
@@ -51,7 +51,7 @@ module cleojs.disasm {
                 result = this.data.readInt8(this.offset);
                 this.offset += 1;
             } catch (e) {
-                throw logger.error("EEOFBUF", 1);
+                throw Log.error("EEOFBUF", 1);
             }
             return result;
         }
@@ -62,7 +62,7 @@ module cleojs.disasm {
                 result = this.data.readUInt16LE(this.offset);
                 this.offset += 2;
             } catch (e) {
-                throw logger.error("EEOFBUF", 2);
+                throw Log.error("EEOFBUF", 2);
             }
             return result;
         }
@@ -73,7 +73,7 @@ module cleojs.disasm {
                 result = this.data.readInt16LE(this.offset);
                 this.offset += 2;
             } catch (e) {
-                throw logger.error("EEOFBUF", 2);
+                throw Log.error("EEOFBUF", 2);
             }
             return result;
         }
@@ -84,7 +84,7 @@ module cleojs.disasm {
                 result = this.data.readUInt32LE(this.offset);
                 this.offset += 4;
             } catch (e) {
-                throw logger.error("EEOFBUF", 4);
+                throw Log.error("EEOFBUF", 4);
             }
             return result;
         }
@@ -95,7 +95,7 @@ module cleojs.disasm {
                 result = this.data.readInt32LE(this.offset);
                 this.offset += 4;
             } catch (e) {
-                throw logger.error("EEOFBUF", 4);
+                throw Log.error("EEOFBUF", 4);
             }
             return result;
         }
@@ -106,7 +106,7 @@ module cleojs.disasm {
                 result = this.data.readFloatLE(this.offset);
                 this.offset += 4;
             } catch (e) {
-                throw logger.error("EEOFBUF", 4);
+                throw Log.error("EEOFBUF", 4);
             }
             return result;
         }
@@ -125,7 +125,7 @@ module cleojs.disasm {
                 result = this.data.toString('utf8', this.offset, this.offset+8).split('\0').shift();
                 this.offset += 8;
             } catch (e) {
-                throw logger.error("EEOFBUF", 8);
+                throw Log.error("EEOFBUF", 8);
             }
             return result;
         }
@@ -229,7 +229,7 @@ module cleojs.disasm {
                 }),
             }
             if (!paramsProcessingTable.hasOwnProperty(paramType)) {
-                throw logger.error("EUNKPAR", paramType)
+                throw Log.error("EUNKPAR", paramType)
             }
             return paramsProcessingTable[paramType]();
         }

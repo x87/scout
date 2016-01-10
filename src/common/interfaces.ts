@@ -1,6 +1,7 @@
 module cleojs.common {
     export interface IArguments {
-        game: eGame
+        game: eGame,
+        inputFile: string
     }
 
     export interface IOpcodeDataParam {

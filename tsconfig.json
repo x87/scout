@@ -6,9 +6,10 @@
     "files": [
         "typings/tsd.d.ts",
         "src/common/enums.ts",
+        "src/common/errors.ts",
+        "src/utils/Log.ts",
         "src/common/arguments.ts",
         "src/common/paths.ts",
-        "src/common/errors.ts",
         "src/common/interfaces.ts",
         "src/frontend/ScriptFile.ts",
         "src/frontend/OpcodeParser.ts",
@@ -16,7 +17,6 @@
         "src/frontend/Disassembler.ts",
         "src/frontend/TheDisasm.ts",
         "src/utils/fsHelpers.ts",
-        "src/utils/Log.ts",
         "src/utils/helpers.ts",
         "src/import.ts",
         "src/main.ts"
