@@ -1,15 +1,33 @@
 module cleojs.common {
+
     export enum eParamType {
         EOL,
-        IMM32,
-        GVAR,
-        LVAR,
-        IMM8,
-        IMM16,
-        FLOAT,
 
-        // last one for GTA3, VC
-        STR8
+        // immediate values
+        NUM8,
+        NUM16,
+        NUM32,
+        FLOAT,
+        STR,
+        STR8,
+        STR16,
+        STR128,
+
+        // variables
+        GVARNUM32,
+        LVARNUM32,
+        GVARSTR8,
+        LVARSTR8,
+        GVARSTR16,
+        LVARSTR16,
+
+        // arrays
+        GARRSTR8,
+        LARRSTR8,
+        GARRSTR16,
+        LARRSTR16,
+        GARRNUM32,
+        LARRNUM32,
     }
 
     export enum eGame {

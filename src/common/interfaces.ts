@@ -1,7 +1,15 @@
 module cleojs.common {
     export interface IArguments {
         game: eGame,
-        inputFile: string
+        inputFile: string,
+        printAssembly: boolean
+    }
+
+    export interface IOpcodeParamArray {
+        offset: number;
+        varIndex: number;
+        size: number;
+        props: number;
     }
 
     export interface IOpcodeDataParam {
@@ -20,7 +28,7 @@ module cleojs.common {
 
     export interface IOpcodeParam {
         type: eParamType;
-        value: number | string;
+        value: number | string | IOpcodeParamArray;
     }
 
 }

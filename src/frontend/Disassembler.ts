@@ -29,18 +29,25 @@ module cleojs.disasm {
         public disassemble(opcodes: Buffer) {
             this.opcodeParser.data = opcodes;
             for (let opcode of this.opcodeParser) {
-                let id = opcode.id;
-                let info = this.opcodeParser.opcodesData[id & 0x7FFF];
-                let output = '';
-                if (id > 0x7FFF) {
-                    output = 'NOT ';
+                if (Arguments.printAssembly === true) {
+                    this.printOpcode(opcode);
                 }
-                output += info.name;
-                for (let i = 0; i < opcode.params.length; i += 1) {
-                    output += ' ' + opcode.params[i].value;
-                }
-                console.log(output);
+
             }
+        }
+
+        private printOpcode(opcode: IOpcode) {
+            let id = opcode.id;
+            let info = this.opcodeParser.opcodesData[id & 0x7FFF];
+            let output = '';
+            if (id > 0x7FFF) {
+                output = 'NOT ';
+            }
+            output += info.name;
+            for (let i = 0; i < opcode.params.length; i += 1) {
+                output += ' ' + opcode.params[i].value;
+            }
+            console.log(output);
         }
 
         get opcodeParser(): COpcodeParser {

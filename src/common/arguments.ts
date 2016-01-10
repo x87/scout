@@ -1,8 +1,10 @@
 module cleojs.common {
     import Log = cleojs.utils.CLog;
 
-    let _game = eGame.GTA3;
-    let _inputFile = '';
+    let game = eGame.GTA3;
+    let inputFile = '';
+    let printAssembly: boolean = false;
+
     const args = process.argv.slice(2);
     const argKeys: Object = {
         "-g": (arg) => {
@@ -19,10 +21,16 @@ module cleojs.common {
                 throw Log.error("ERRGAME", arg)
             }
 
-            _game = gameMap[arg];
+            game = gameMap[arg];
         },
         "-i": (arg) => {
-            _inputFile = arg;
+            inputFile = arg;
+        }
+    }
+
+    const singleArgs: Object = {
+        "-p": () => {
+            printAssembly = true;
         }
     }
 
@@ -34,20 +42,23 @@ module cleojs.common {
             }
             argKeys[arg](args[i + 1]);
             i++;
+        } if (singleArgs.hasOwnProperty(arg)) {
+            singleArgs[arg]();
         } else {
-            if (!_inputFile) {
-                _inputFile = arg;
+            if (!inputFile) {
+                inputFile = arg;
             }
         }
     }
 
-    if (!_inputFile) {
+    if (!inputFile) {
         throw Log.error("ENOINPT");
     }
 
     export const Arguments: IArguments = {
-        game: _game,
-        inputFile: _inputFile
+        game,
+        inputFile,
+        printAssembly
     }
 
 }

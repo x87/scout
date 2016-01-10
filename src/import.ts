@@ -5,6 +5,7 @@ import IOpcodeData = cleojs.common.IOpcodeData;
 import IOpcodeDataParam = cleojs.common.IOpcodeDataParam;
 import IOpcode = cleojs.common.IOpcode;
 import IOpcodeParam = cleojs.common.IOpcodeParam;
+import IOpcodeParamArray = cleojs.common.IOpcodeParamArray;
 import fsHelpers = cleojs.fsHelpers;
 import Log = cleojs.utils.CLog;
 import Paths = cleojs.common.paths;

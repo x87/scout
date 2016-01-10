@@ -6,9 +6,11 @@ module cleojs.disasm {
     }
 
     export class COpcodeParser {
+
         private _data: Buffer;
         private _offset: number = 0;
         private _opcodesData: IOpcodeData[];
+        private _paramReader: Array<eParamType>;
 
         get data(): Buffer {
             return this._data;
@@ -34,8 +36,98 @@ module cleojs.disasm {
             return this._opcodesData;
         }
 
+        get paramReader(): Array<eParamType> {
+            return this._paramReader;
+        }
+
+        constructor() {
+            this._paramReader = (() => Array.apply(null, Array(256)).map((v, i) => {
+                switch (i) {
+                    case 0:
+                        return () => eParamType.EOL;
+                    case 1:
+                        return () => eParamType.NUM32;
+                    case 2:
+                        return () => eParamType.GVARNUM32;
+                    case 3:
+                        return () => eParamType.LVARNUM32;
+                    case 4:
+                        return () => eParamType.NUM8;
+                    case 5:
+                        return () => eParamType.NUM16;
+                    case 6:
+                        return () => eParamType.FLOAT;
+                    case 7:
+                        if (helpers.isGameSA()) {
+                            return () => eParamType.GARRNUM32;
+                        }
+                    case 8:
+                        if (helpers.isGameSA()) {
+                            return () => eParamType.LARRNUM32;
+                        }
+                    case 9:
+                        if (helpers.isGameSA()) {
+                            return () => eParamType.STR8;
+                        }
+                    case 0xA:
+                        if (helpers.isGameSA()) {
+                            return () => eParamType.GVARSTR8;
+                        }
+                    case 0xB:
+                        if (helpers.isGameSA()) {
+                            return () => eParamType.LVARSTR8;
+                        }
+                    case 0xC:
+                        if (helpers.isGameSA()) {
+                            return () => eParamType.GARRSTR8;
+                        }
+                    case 0xD:
+                        if (helpers.isGameSA()) {
+                            return () => eParamType.LARRSTR8;
+                        }
+                    case 0xE:
+                        if (helpers.isGameSA()) {
+                            return () => eParamType.STR;
+                        }
+                    case 0xF:
+                        if (helpers.isGameSA()) {
+                            return () => eParamType.STR16;
+                        }
+                    case 0x10:
+                        if (helpers.isGameSA()) {
+                            return () => eParamType.GVARSTR16;
+                        }
+                    case 0x11:
+                        if (helpers.isGameSA()) {
+                            return () => eParamType.LVARSTR16;
+                        }
+                    case 0x12:
+                        if (helpers.isGameSA()) {
+                            return () => eParamType.GARRSTR16;
+                        }
+                    case 0x13:
+                        if (helpers.isGameSA()) {
+                            return () => eParamType.LARRSTR16;
+                        }
+                    default:
+                        if (helpers.isGameSA()) {
+                            return () => {
+                                this.offset--;
+                                return eParamType.STR128;
+                            }
+                        } else {
+                            return () => {
+                                this.offset--;
+                                return eParamType.STR8;
+                            }
+                        }
+                }
+            }))();
+        }
+
+
         private nextUInt8(): number {
-            let result;
+            let result: number;
             try {
                 result = this.data.readUInt8(this.offset);
                 this.offset += 1;
@@ -46,7 +138,7 @@ module cleojs.disasm {
         }
 
         private nextInt8(): number {
-            let result;
+            let result: number;
             try {
                 result = this.data.readInt8(this.offset);
                 this.offset += 1;
@@ -57,7 +149,7 @@ module cleojs.disasm {
         }
 
         private nextUInt16(): number {
-            let result;
+            let result: number;
             try {
                 result = this.data.readUInt16LE(this.offset);
                 this.offset += 2;
@@ -68,7 +160,7 @@ module cleojs.disasm {
         }
 
         private nextInt16(): number {
-            let result;
+            let result: number;
             try {
                 result = this.data.readInt16LE(this.offset);
                 this.offset += 2;
@@ -79,7 +171,7 @@ module cleojs.disasm {
         }
 
         private nextUInt32(): number {
-            let result;
+            let result: number;
             try {
                 result = this.data.readUInt32LE(this.offset);
                 this.offset += 4;
@@ -90,7 +182,7 @@ module cleojs.disasm {
         }
 
         private nextInt32(): number {
-            let result;
+            let result: number;
             try {
                 result = this.data.readInt32LE(this.offset);
                 this.offset += 4;
@@ -101,7 +193,7 @@ module cleojs.disasm {
         }
 
         private nextFloat(): number {
-            let result;
+            let result: number;
             try {
                 result = this.data.readFloatLE(this.offset);
                 this.offset += 4;
@@ -119,13 +211,23 @@ module cleojs.disasm {
             return this.nextFloat();
         }
 
-        private getString(): string {
-            let result;
+        private getString(length: number): string {
+            let result: string;
             try {
-                result = this.data.toString('utf8', this.offset, this.offset+8).split('\0').shift();
-                this.offset += 8;
+                result = this.data.toString('utf8', this.offset, this.offset + length).split('\0').shift();
+                this.offset += length;
             } catch (e) {
-                throw Log.error("EEOFBUF", 8);
+                throw Log.error("EEOFBUF", length);
+            }
+            return result;
+        }
+
+        private getArray(): IOpcodeParamArray {
+            let result: IOpcodeParamArray = {
+                offset:   this.nextUInt16(),
+                varIndex: this.nextUInt16(),
+                size:     this.nextUInt8(),
+                props:    this.nextUInt8()
             }
             return result;
         }
@@ -157,14 +259,7 @@ module cleojs.disasm {
 
         private getParamType(): eParamType {
             let dataType = this.nextUInt8();
-
-            if (helpers.isGameGTA3() || helpers.isGameVC()) {
-                if (dataType > eParamType.FLOAT) {
-                    this.offset -= 1; // no datatype there
-                    return eParamType.STR8;
-                }
-            }
-            return <eParamType>dataType;
+            return this.paramReader[dataType]();
         }
 
         /**
@@ -199,33 +294,41 @@ module cleojs.disasm {
          */
         private getParam(paramType: eParamType): IOpcodeParam {
             const paramsProcessingTable: Object = {
-                [eParamType.IMM32]: () => ({
-                    type:  eParamType.IMM32,
+                [eParamType.NUM32]:     () => ({
+                    type:  eParamType.NUM32,
                     value: this.nextInt32()
                 }),
-                [eParamType.GVAR]:  () => ({
-                    type:  eParamType.GVAR,
+                [eParamType.GVARNUM32]: () => ({
+                    type:  eParamType.GVARNUM32,
                     value: this.nextUInt16()
                 }),
-                [eParamType.LVAR]:  () => ({
-                    type:  eParamType.LVAR,
+                [eParamType.LVARNUM32]: () => ({
+                    type:  eParamType.LVARNUM32,
                     value: this.nextUInt16()
                 }),
-                [eParamType.IMM8]:  () => ({
-                    type:  eParamType.IMM8,
+                [eParamType.NUM8]:      () => ({
+                    type:  eParamType.NUM8,
                     value: this.nextInt8()
                 }),
-                [eParamType.IMM16]: () => ({
-                    type:  eParamType.IMM16,
+                [eParamType.NUM16]:     () => ({
+                    type:  eParamType.NUM16,
                     value: this.nextInt16()
                 }),
-                [eParamType.FLOAT]: () => ({
+                [eParamType.FLOAT]:     () => ({
                     type:  eParamType.FLOAT,
                     value: this.getFloat()
                 }),
-                [eParamType.STR8]:  () => ({
+                [eParamType.STR8]:      () => ({
                     type:  eParamType.STR8,
-                    value: this.getString()
+                    value: this.getString(8)
+                }),
+                [eParamType.GARRNUM32]: () => ({
+                    type:  eParamType.GARRNUM32,
+                    value: this.getArray()
+                }),
+                [eParamType.LARRNUM32]: () => ({
+                    type:  eParamType.LARRNUM32,
+                    value: this.getArray()
                 }),
             }
             if (!paramsProcessingTable.hasOwnProperty(paramType)) {
