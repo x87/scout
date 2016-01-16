@@ -3,10 +3,6 @@ module cleojs.disasm {
     export class CDisassembler {
         private _opcodeParser: COpcodeParser
 
-        /**
-         *
-         * @param opcodes
-         */
         constructor() {
             this._opcodeParser = new COpcodeParser();
         }
@@ -25,14 +21,12 @@ module cleojs.disasm {
                 })
         }
 
-
         public disassemble(opcodes: Buffer) {
-            this.opcodeParser.data = opcodes;
-            for (let opcode of this.opcodeParser) {
-                if (Arguments.printAssembly === true) {
+            let map = this.opcodeParser.parse(opcodes);
+            if (Arguments.printAssembly === true) {
+                for (let [offset, opcode] of map) {
                     this.printOpcode(opcode);
                 }
-
             }
         }
 

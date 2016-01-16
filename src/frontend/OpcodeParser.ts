@@ -333,5 +333,19 @@ module cleojs.disasm {
                 value: this.paramValuesHandlers[paramType]()
             };
         }
+
+        /**
+         *
+         * @param Buffer data
+         * @returns {Map<any, any>}
+         */
+        public parse(data: Buffer): Map<number, IOpcode> {
+            let map = new Map();
+            this.data = data;
+            for (let opcode of this) {
+                map.set(opcode.offset, opcode);
+            }
+            return map;
+        }
     }
 }
