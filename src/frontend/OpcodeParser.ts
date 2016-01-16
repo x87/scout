@@ -10,7 +10,8 @@ module cleojs.disasm {
         private _data: Buffer;
         private _offset: number = 0;
         private _opcodesData: IOpcodeData[];
-        private _paramReader: Array<eParamType>;
+        private _paramTypesHandlers: Object;
+        private _paramValuesHandlers: Object;
 
         get data(): Buffer {
             return this._data;
@@ -36,12 +37,39 @@ module cleojs.disasm {
             return this._opcodesData;
         }
 
-        get paramReader(): Array<eParamType> {
-            return this._paramReader;
+        get paramTypesHandlers(): Object {
+            return this._paramTypesHandlers;
+        }
+
+        get paramValuesHandlers(): Object {
+            return this._paramValuesHandlers;
         }
 
         constructor() {
-            this._paramReader = (() => Array.apply(null, Array(256)).map((v, i) => {
+            this._paramValuesHandlers = {
+                [eParamType.NUM8]:      () => this.nextInt8(),
+                [eParamType.NUM16]:     () => this.nextInt16(),
+                [eParamType.NUM32]:     () => this.nextInt32(),
+                [eParamType.FLOAT]:     () => this.getFloat(),
+                [eParamType.STR]:       () => this.getString(this.nextUInt8()),
+                [eParamType.STR8]:      () => this.getString(8),
+                [eParamType.STR16]:     () => this.getString(16),
+                [eParamType.STR128]:    () => this.getString(128),
+                [eParamType.GVARNUM32]: () => this.nextUInt16(),
+                [eParamType.LVARNUM32]: () => this.nextUInt16(),
+                [eParamType.GVARSTR8]:  () => this.nextUInt16(),
+                [eParamType.LVARSTR8]:  () => this.nextUInt16(),
+                [eParamType.GVARSTR16]: () => this.nextUInt16(),
+                [eParamType.LVARSTR16]: () => this.nextUInt16(),
+                [eParamType.GARRNUM32]: () => this.getArray(),
+                [eParamType.LARRNUM32]: () => this.getArray(),
+                [eParamType.GARRSTR8]:  () => this.getArray(),
+                [eParamType.LARRSTR8]:  () => this.getArray(),
+                [eParamType.GARRSTR16]: () => this.getArray(),
+                [eParamType.LARRSTR16]: () => this.getArray(),
+            }
+
+            this._paramTypesHandlers = (() => [...Array(256)].map((v, i) => {
                 switch (i) {
                     case 0:
                         return () => eParamType.EOL;
@@ -252,14 +280,14 @@ module cleojs.disasm {
         private getOpcode() {
             let opcode = new COpcode();
             let id = opcode.id = this.nextUInt16();
-            let params = this.opcodesData[id & 0x07FF].params;
+            let params = this.opcodesData[id & 0x7FFF].params;
             opcode.params = params === null ? this.getArgumentsList() : this.getParams(params.length);
             return opcode;
         }
 
         private getParamType(): eParamType {
             let dataType = this.nextUInt8();
-            return this.paramReader[dataType]();
+            return this.paramTypesHandlers[dataType]();
         }
 
         /**
@@ -282,8 +310,13 @@ module cleojs.disasm {
          */
         private getParams(numOfParams: number): IOpcodeParam[] {
             let params = [];
+            let paramType: eParamType;
             while (numOfParams--) {
-                params[params.length] = this.getParam(this.getParamType());
+                paramType = this.getParamType();
+                if (paramType === eParamType.EOL) {
+                    throw Log.error("EUNKPAR", paramType)
+                }
+                params[params.length] = this.getParam(paramType);
             }
             return params;
         }
@@ -293,48 +326,10 @@ module cleojs.disasm {
          * @returns {IOpcodeParam}
          */
         private getParam(paramType: eParamType): IOpcodeParam {
-            const paramsProcessingTable: Object = {
-                [eParamType.NUM32]:     () => ({
-                    type:  eParamType.NUM32,
-                    value: this.nextInt32()
-                }),
-                [eParamType.GVARNUM32]: () => ({
-                    type:  eParamType.GVARNUM32,
-                    value: this.nextUInt16()
-                }),
-                [eParamType.LVARNUM32]: () => ({
-                    type:  eParamType.LVARNUM32,
-                    value: this.nextUInt16()
-                }),
-                [eParamType.NUM8]:      () => ({
-                    type:  eParamType.NUM8,
-                    value: this.nextInt8()
-                }),
-                [eParamType.NUM16]:     () => ({
-                    type:  eParamType.NUM16,
-                    value: this.nextInt16()
-                }),
-                [eParamType.FLOAT]:     () => ({
-                    type:  eParamType.FLOAT,
-                    value: this.getFloat()
-                }),
-                [eParamType.STR8]:      () => ({
-                    type:  eParamType.STR8,
-                    value: this.getString(8)
-                }),
-                [eParamType.GARRNUM32]: () => ({
-                    type:  eParamType.GARRNUM32,
-                    value: this.getArray()
-                }),
-                [eParamType.LARRNUM32]: () => ({
-                    type:  eParamType.LARRNUM32,
-                    value: this.getArray()
-                }),
-            }
-            if (!paramsProcessingTable.hasOwnProperty(paramType)) {
-                throw Log.error("EUNKPAR", paramType)
-            }
-            return paramsProcessingTable[paramType]();
+            return {
+                type:  paramType,
+                value: this.paramValuesHandlers[paramType]()
+            };
         }
     }
 }
