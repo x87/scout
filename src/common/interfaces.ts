@@ -23,6 +23,7 @@ module cleojs.common {
 
     export interface IOpcode {
         id: number;
+        offset: number;
         params: IOpcodeParam[]
     }
 

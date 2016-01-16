@@ -39,13 +39,18 @@ module cleojs.disasm {
         private printOpcode(opcode: IOpcode) {
             let id = opcode.id;
             let info = this.opcodeParser.opcodesData[id & 0x7FFF];
-            let output = '';
+            let output = `${opcode.offset}: `;
             if (id > 0x7FFF) {
-                output = 'NOT ';
+                output += 'NOT ';
             }
             output += info.name;
-            for (let i = 0; i < opcode.params.length; i += 1) {
-                output += ' ' + opcode.params[i].value;
+            for (let param of opcode.params) {
+                if (helpers.isArray(param.type)) {
+                    let a = <IOpcodeParamArray>param.value;
+                    output += ` (${a.varIndex} ${a.offset} ${a.size} ${a.props})`;
+                } else {
+                    output += ' ' + param.value;
+                }
             }
             console.log(output);
         }

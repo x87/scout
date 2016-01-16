@@ -2,6 +2,7 @@ module cleojs.disasm {
 
     export class COpcode implements IOpcode {
         public id: number;
+        public offset: number;
         public params: IOpcodeParam[];
     }
 
@@ -281,6 +282,7 @@ module cleojs.disasm {
             let opcode = new COpcode();
             let id = opcode.id = this.nextUInt16();
             let params = this.opcodesData[id & 0x7FFF].params;
+            opcode.offset = this.offset;
             opcode.params = params === null ? this.getArgumentsList() : this.getParams(params.length);
             return opcode;
         }
