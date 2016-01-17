@@ -35,4 +35,12 @@ module cleojs.common {
         GTAVC,
         GTASA
     }
+
+    export enum eScriptFileSegments {
+        GLOBAL_VARS,
+        MODELS,
+        MISSIONS,
+        EXTERNALS,
+        MAIN
+    }
 }

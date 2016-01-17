@@ -27,4 +27,14 @@ module cleojs.fsHelpers {
         })
 
     }
+
+    /**
+     *
+     * @param fileName
+     * @returns {string}
+     */
+    export function getFileExtension(fileName: string): string {
+        let path = require('path');
+        return path.extname(fileName);
+    }
 }

@@ -5,6 +5,7 @@ module cleojs.common {
      */
     export const errors = {
 
+        "ERRIEXT": `file extension %s is not supported`,
         "ERRTYPE": `invalid type, <%s> was expected`,
         "ERRNOOP": `Opcodes definitions are not found at <%s>, disassembling is impossible`,
         "ERRJSON": "Error occured while trying to parse JSON data: %s",

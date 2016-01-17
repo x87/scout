@@ -1,8 +1,8 @@
 module cleojs.common {
     export interface IArguments {
-        game: eGame,
-        inputFile: string,
-        printAssembly: boolean
+        game: eGame;
+        inputFile: string;
+        printAssembly: boolean;
     }
 
     export interface IOpcodeParamArray {
@@ -13,18 +13,18 @@ module cleojs.common {
     }
 
     export interface IOpcodeDataParam {
-        type: string
+        type: string;
     }
 
     export interface IOpcodeData {
-        name: string,
-        params: IOpcodeDataParam[]
+        name: string;
+        params: IOpcodeDataParam[];
     }
 
     export interface IOpcode {
         id: number;
         offset: number;
-        params: IOpcodeParam[]
+        params: IOpcodeParam[];
     }
 
     export interface IOpcodeParam {
@@ -32,4 +32,13 @@ module cleojs.common {
         value: number | string | IOpcodeParamArray;
     }
 
+    export interface IScriptFileHeader {
+        numModels: number;
+        modelIds: string[];
+        mainSize: number;
+        largestMission: number;
+        numMissions: number;
+        numExclusiveMissions: number;
+        missions: number[];
+    }
 }
