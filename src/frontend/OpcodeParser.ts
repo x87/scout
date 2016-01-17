@@ -1,5 +1,9 @@
 module cleojs.disasm {
 
+    export const PARAM_ANY = "any";
+    export const PARAM_ARGUMENTS = "arguments";
+    export const PARAM_LABEL = "label";
+
     export class COpcode implements IOpcode {
         public id: number;
         public offset: number;
@@ -154,7 +158,6 @@ module cleojs.disasm {
             }))();
         }
 
-
         private nextUInt8(): number {
             let result: number;
             try {
@@ -280,10 +283,9 @@ module cleojs.disasm {
 
         private getOpcode() {
             let opcode = new COpcode();
-            let id = opcode.id = this.nextUInt16();
-            let params = this.opcodesData[id & 0x7FFF].params;
             opcode.offset = this.offset;
-            opcode.params = params === null ? this.getArgumentsList() : this.getParams(params.length);
+            opcode.id = this.nextUInt16();
+            opcode.params = this.getOpcodeParams(opcode.id & 0x7FFF);
             return opcode;
         }
 
@@ -292,34 +294,27 @@ module cleojs.disasm {
             return this.paramTypesHandlers[dataType]();
         }
 
-        /**
-         * read parameters until eParamType.EOL
-         * @returns {null}
-         */
-        private getArgumentsList(): IOpcodeParam[] {
+        private getOpcodeParams(opcodeId: number): IOpcodeParam[] {
             let params = [];
             let paramType: eParamType;
-            while ((paramType = this.getParamType()) != eParamType.EOL) {
-                params[params.length] = this.getParam(paramType);
-            }
-            return params;
-        }
+            let paramsData = this.opcodesData[opcodeId].params;
 
-        /**
-         * read <np> parameters
-         * @param numOfParams
-         * @returns {IOpcodeParam[]}
-         */
-        private getParams(numOfParams: number): IOpcodeParam[] {
-            let params = [];
-            let paramType: eParamType;
-            while (numOfParams--) {
+            for (let i = 0; i < paramsData.length; i += 1) {
+
+                if (paramsData[i].type == PARAM_ARGUMENTS) {
+                    while ((paramType = this.getParamType()) != eParamType.EOL) {
+                        params[params.length] = this.getParam(paramType);
+                    }
+                    return params;
+                }
+
                 paramType = this.getParamType();
                 if (paramType === eParamType.EOL) {
                     throw Log.error("EUNKPAR", paramType)
                 }
                 params[params.length] = this.getParam(paramType);
             }
+
             return params;
         }
 

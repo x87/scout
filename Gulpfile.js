@@ -3,7 +3,6 @@ const src = path.join('./', 'src');
 const dist = path.join('./', 'build');
 const gulp = require('gulp');
 const $ = require('gulp-load-plugins')();
-
 const tsProject = $.typescript.createProject('tsconfig.json');
 
 gulp.task('default', ['build']);
