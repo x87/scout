@@ -33,14 +33,11 @@ module cleojs.common {
     }
 
     export interface IScriptFileHeader {
-        numModels: number;
         modelIds: string[];
         mainSize: number;
         largestMission: number;
-        numMissions: number;
         numExclusiveMissions: number;
         missions: number[];
-        numExternals: number;
         externals: ExternalScriptHeader[];
     }
 

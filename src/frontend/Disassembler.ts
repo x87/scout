@@ -1,10 +1,10 @@
 module cleojs.disasm {
 
     export class CDisassembler {
-        private _opcodeParser: COpcodeParser
+        private _opcodeParser: OpcodeParser
 
         constructor() {
-            this._opcodeParser = new COpcodeParser();
+            this._opcodeParser = new OpcodeParser();
         }
 
         /**
@@ -21,8 +21,25 @@ module cleojs.disasm {
                 })
         }
 
-        public disassemble(opcodes: Buffer) {
-            let map = this.opcodeParser.parse(opcodes);
+        public disassemble(scriptFile: ScriptFile) {
+            if (Arguments.printAssembly === true) {
+                console.log(`//-------------MAIN---------------`);
+            }
+            this.parseBuffer(scriptFile.mainData, scriptFile.baseOffset);
+
+            if (scriptFile instanceof ScriptFileSCM) {
+                for (let i = 0, len = scriptFile.missionsData.length; i < len; i += 1) {
+                    if (Arguments.printAssembly === true) {
+                        console.log(`\n//-------------Mission ${i}---------------`);
+                    }
+                    this.parseBuffer(scriptFile.missionsData[i], scriptFile.header.missions[i]);
+                }
+            }
+
+        }
+
+        private parseBuffer(data: Buffer, base: number) {
+            let map = this.opcodeParser.parse(data, base);
             if (Arguments.printAssembly === true) {
                 for (let [offset, opcode] of map) {
                     this.printOpcode(opcode);
@@ -49,7 +66,7 @@ module cleojs.disasm {
             console.log(output);
         }
 
-        get opcodeParser(): COpcodeParser {
+        get opcodeParser(): OpcodeParser {
             return this._opcodeParser;
         }
 

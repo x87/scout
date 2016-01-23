@@ -43,74 +43,67 @@ module cleojs.disasm {
 
         private _size: number;
         private _offset: number;
-        private _data: Buffer;
 
-        numModels: number;
         modelIds: string[];
         mainSize: number;
         largestMission: number;
-        numMissions: number;
         numExclusiveMissions: number;
         highestLocalInMission: number;
         missions: number[];
-        numExternals: number;
         largestExternalSize: number;
         externals: ExternalScriptHeader[];
 
         constructor(data: Buffer) {
-            this.data = data;
-
-            this.loadModelSegment();
-            this.loadMissionSegment();
+            this.loadModelSegment(data);
+            this.loadMissionSegment(data);
 
             if (helpers.isGameSA()) {
-                this.loadExternalSegment();
+                this.loadExternalSegment(data);
             }
 
             this._size = this.getSegmentOffset(data, scriptFileSegmentsMap[Arguments.game][eScriptFileSegments.MAIN], false);
         }
 
 
-        private loadModelSegment() {
-            this.offset = this.getSegmentOffset(this.data, scriptFileSegmentsMap[Arguments.game][eScriptFileSegments.MODELS]);
+        private loadModelSegment(data: Buffer) {
+            this.offset = this.getSegmentOffset(data, scriptFileSegmentsMap[Arguments.game][eScriptFileSegments.MODELS]);
 
-            this.numModels = this.read32Bit();
-
+            let numModels = this.read32Bit(data);
             this.modelIds = [];
             this.offset += 24; // skip first model (empty)
 
-            for (let i = 1; i < this.numModels; i += 1) {
-                this.modelIds[this.modelIds.length] = this.readString(24);
+            for (let i = 1; i < numModels; i += 1) {
+                this.modelIds[this.modelIds.length] = this.readString(data, 24);
             }
 
         }
 
-        private loadMissionSegment() {
-            this.offset = this.getSegmentOffset(this.data, scriptFileSegmentsMap[Arguments.game][eScriptFileSegments.MISSIONS]);
-            this.mainSize = this.read32Bit();
-            this.largestMission = this.read32Bit();
-            this.numMissions = this.read16Bit();
-            this.numExclusiveMissions = this.read16Bit();
+        private loadMissionSegment(data: Buffer) {
+            this.offset = this.getSegmentOffset(data, scriptFileSegmentsMap[Arguments.game][eScriptFileSegments.MISSIONS]);
+            this.mainSize = this.read32Bit(data);
+            this.largestMission = this.read32Bit(data);
+            let numMissions = this.read16Bit(data);
+            this.numExclusiveMissions = this.read16Bit(data);
 
             if (helpers.isGameSA()) {
-                this.highestLocalInMission = this.read32Bit();
+                this.highestLocalInMission = this.read32Bit(data);
             }
 
             this.missions = [];
 
-            for (let i = 0; i < this.numMissions; i += 1) {
-                this.missions[this.missions.length] = this.read32Bit();
+            for (let i = 0; i < numMissions; i += 1) {
+                this.missions[this.missions.length] = this.read32Bit(data);
             }
         }
 
-        private loadExternalSegment() {
-            this.offset = this.getSegmentOffset(this.data, scriptFileSegmentsMap[Arguments.game][eScriptFileSegments.EXTERNALS]);
-            this.largestExternalSize = this.read32Bit();
-            this.numExternals = this.read32Bit();
+        private loadExternalSegment(data: Buffer) {
+            this.offset = this.getSegmentOffset(data, scriptFileSegmentsMap[Arguments.game][eScriptFileSegments.EXTERNALS]);
+            this.largestExternalSize = this.read32Bit(data);
+            let numExternals = this.read32Bit(data);
 
             this.externals = [];
-            for (let i = 0; i < this.numExternals; i += 1) {
-                this.externals[this.externals.length] = new CExternalScriptHeader(this.readString(20), this.read32Bit(), this.read32Bit());
+            for (let i = 0; i < numExternals; i += 1) {
+                this.externals[this.externals.length] = new CExternalScriptHeader(this.readString(data, 20), this.read32Bit(data), this.read32Bit(data));
             }
         }
 
@@ -127,28 +120,21 @@ module cleojs.disasm {
             return this._size;
         }
 
-        private readString(len): string {
+        private readString(data: Buffer, len): string {
             this.offset += len;
-            return this.data.toString('utf8', this.offset - len, this.offset).split('\0').shift();
+            return data.toString('utf8', this.offset - len, this.offset).split('\0').shift();
         }
 
-        private read32Bit(): number {
+        private read32Bit(data: Buffer): number {
             this.offset += 4;
-            return this.data.readInt32LE(this.offset - 4);
+            return data.readInt32LE(this.offset - 4);
         }
 
-        private read16Bit(): number {
+        private read16Bit(data: Buffer): number {
             this.offset += 2;
-            return this.data.readInt16LE(this.offset - 2);
+            return data.readInt16LE(this.offset - 2);
         }
 
-        get data(): Buffer {
-            return this._data;
-        }
-
-        set data(value: Buffer) {
-            this._data = value;
-        }
         get offset(): number {
             return this._offset;
         }
@@ -160,34 +146,67 @@ module cleojs.disasm {
     }
 
     export class CScriptFile {
-        private _opcodes: Buffer;
-        private _hasHeader: boolean;
-        private _header: CScriptFileHeader
 
-        set opcodes(value: Buffer) {
-            this._opcodes = value;
+        private _mainData: Buffer;
+
+        get mainData(): Buffer {
+            return this._mainData;
         }
 
-        get opcodes(): Buffer {
-            return this._opcodes;
+        set mainData(value: Buffer) {
+            this._mainData = value;
         }
 
-        get hasHeader(): boolean {
-            return this._hasHeader;
+        public init(data: Buffer) {
+            this.mainData = data.slice(this.baseOffset);
         }
 
-        set hasHeader(value: boolean) {
-            this._hasHeader = value;
+        get baseOffset(): number {
+            return 0;
         }
 
-        get header(): CScriptFileHeader {
+
+    }
+
+    export class CScriptFileSCM extends CScriptFile {
+        private _header: ScriptFileHeader;
+        private _missionsData: Buffer[];
+        private _externalData: Buffer[];
+
+        constructor(data: Buffer) {
+            super();
+            this.header = new CScriptFileHeader(data);
+            this._missionsData = [];
+            this._externalData = [];
+        }
+
+        public init(data: Buffer) {
+            this.mainData = data.slice(this.baseOffset, this.header.mainSize);
+            for (let i = 0, len = this.header.missions.length; i < len; i += 1) {
+                let nextMissionOffset = i == len - 1 ? data.length : this.header.missions[i + 1];
+                this.missionsData[this.missionsData.length] = data.slice(this.header.missions[i], nextMissionOffset)
+            }
+            // todo; read external data
+        }
+
+        get externalData(): Buffer[] {
+            return this._externalData;
+        }
+
+        get missionsData(): Buffer[] {
+            return this._missionsData;
+        }
+
+        get baseOffset(): number {
+            return this.header.getSize();
+        }
+
+        get header(): ScriptFileHeader {
             return this._header;
         }
 
-        set header(value: CScriptFileHeader) {
+        set header(value: ScriptFileHeader) {
             this._header = value;
         }
-
-
     }
 }

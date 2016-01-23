@@ -5,7 +5,7 @@ let disasm = new TheDisasm();
             () => disasm.loader.loadScript(Paths.inputFile)
         )
         .then(
-            scriptFile => disasm.disassembler.disassemble(scriptFile.opcodes)
+            scriptFile => disasm.disassembler.disassemble(scriptFile)
         )
         .catch(
             e => { console.error(e) }

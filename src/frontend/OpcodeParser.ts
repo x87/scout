@@ -12,11 +12,20 @@ module cleojs.disasm {
 
     export class COpcodeParser {
 
+
         private _data: Buffer;
-        private _offset: number = 0;
+        private _offset;
         private _opcodesData: IOpcodeData[];
         private _paramTypesHandlers: Object;
         private _paramValuesHandlers: Object;
+
+        /*get base(): number {
+            return this._base;
+        }
+
+        set base(value: number) {
+            this._base = value;
+        }*/
 
         get data(): Buffer {
             return this._data;
@@ -334,10 +343,12 @@ module cleojs.disasm {
          * @param Buffer data
          * @returns {Map<any, any>}
          */
-        public parse(data: Buffer): Map<number, IOpcode> {
+        public parse(data: Buffer, base: number): Map<number, IOpcode> {
             let map = new Map();
             this.data = data;
+            this.offset = 0;
             for (let opcode of this) {
+                opcode.offset += base;
                 map.set(opcode.offset, opcode);
             }
             return map;

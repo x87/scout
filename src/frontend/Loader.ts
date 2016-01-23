@@ -22,14 +22,14 @@ module cleojs.disasm {
                 })
                 .then(buffer => {
                     if (Buffer.isBuffer(buffer)) {
-                        let scriptFile = new ScriptFile();
+                        let scriptFile: ScriptFile;
 
-                        let opcodesOffset = 0;
-                        if (scriptFile.hasHeader = this.isScriptFileWithHeader(fileName)) {
-                            scriptFile.header = new CScriptFileHeader(buffer);
-                            opcodesOffset = scriptFile.header.getSize();
+                        if (this.isScriptFileWithHeader(fileName)) {
+                            scriptFile = new ScriptFileSCM(buffer);
+                        } else {
+                            scriptFile = new ScriptFile();
                         }
-                        scriptFile.opcodes = buffer.slice(opcodesOffset);
+                        scriptFile.init(buffer);
                         return scriptFile;
                     } else {
                         throw Log.error("ERRTYPE", "Buffer");
