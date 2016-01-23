@@ -1,6 +1,7 @@
 module cleojs.disasm {
     import eGame = cleojs.common.eGame;
     import eScriptFileSegments = cleojs.common.eScriptFileSegments;
+    import IExternalScriptHeader = cleojs.common.IExternalScriptHeader;
     const scriptFileSegmentsMap: Object = {
         [eGame.GTA3]:  {
             [eScriptFileSegments.GLOBAL_VARS]: 0,
@@ -19,20 +20,99 @@ module cleojs.disasm {
             [eScriptFileSegments.MODELS]:      1,
             [eScriptFileSegments.MISSIONS]:    2,
             [eScriptFileSegments.EXTERNALS]:   3,
-            [eScriptFileSegments.MAIN]:        4,
+            [eScriptFileSegments.SASEG5]:      4,
+            [eScriptFileSegments.SASEG6]:      5,
+            [eScriptFileSegments.MAIN]:        6,
         }
     };
+
+    export class CExternalScriptHeader implements IExternalScriptHeader {
+        name: string;
+        offset: number;
+        size: number;
+
+        constructor(name, offset, size) {
+            this.name = name;
+            this.offset = offset;
+            this.size = size;
+        }
+
+    }
 
     export class CScriptFileHeader implements IScriptFileHeader {
 
         private _size: number;
+        private _offset: number;
+        private _data: Buffer;
+
         numModels: number;
         modelIds: string[];
         mainSize: number;
         largestMission: number;
         numMissions: number;
         numExclusiveMissions: number;
+        highestLocalInMission: number;
         missions: number[];
+        numExternals: number;
+        largestExternalSize: number;
+        externals: ExternalScriptHeader[];
+
+        constructor(data: Buffer) {
+            this.data = data;
+
+            this.loadModelSegment();
+            this.loadMissionSegment();
+
+            if (helpers.isGameSA()) {
+                this.loadExternalSegment();
+            }
+
+            this._size = this.getSegmentOffset(data, scriptFileSegmentsMap[Arguments.game][eScriptFileSegments.MAIN], false);
+        }
+
+
+        private loadModelSegment() {
+            this.offset = this.getSegmentOffset(this.data, scriptFileSegmentsMap[Arguments.game][eScriptFileSegments.MODELS]);
+
+            this.numModels = this.read32Bit();
+
+            this.modelIds = [];
+            this.offset += 24; // skip first model (empty)
+
+            for (let i = 1; i < this.numModels; i += 1) {
+                this.modelIds[this.modelIds.length] = this.readString(24);
+            }
+
+        }
+
+        private loadMissionSegment() {
+            this.offset = this.getSegmentOffset(this.data, scriptFileSegmentsMap[Arguments.game][eScriptFileSegments.MISSIONS]);
+            this.mainSize = this.read32Bit();
+            this.largestMission = this.read32Bit();
+            this.numMissions = this.read16Bit();
+            this.numExclusiveMissions = this.read16Bit();
+
+            if (helpers.isGameSA()) {
+                this.highestLocalInMission = this.read32Bit();
+            }
+
+            this.missions = [];
+
+            for (let i = 0; i < this.numMissions; i += 1) {
+                this.missions[this.missions.length] = this.read32Bit();
+            }
+        }
+
+        private loadExternalSegment() {
+            this.offset = this.getSegmentOffset(this.data, scriptFileSegmentsMap[Arguments.game][eScriptFileSegments.EXTERNALS]);
+            this.largestExternalSize = this.read32Bit();
+            this.numExternals = this.read32Bit();
+
+            this.externals = [];
+            for (let i = 0; i < this.numExternals; i += 1) {
+                this.externals[this.externals.length] = new CExternalScriptHeader(this.readString(20), this.read32Bit(), this.read32Bit());
+            }
+        }
 
 
         private getSegmentOffset(data: Buffer, segmentId: number, skipJumpOpcode: boolean = true): number {
@@ -47,38 +127,36 @@ module cleojs.disasm {
             return this._size;
         }
 
-        constructor(data: Buffer) {
-            let map = scriptFileSegmentsMap[Arguments.game];
-
-            let offset = this.getSegmentOffset(data, map[eScriptFileSegments.MODELS]);
-
-            this.numModels = data.readInt32LE(offset);
-            offset += 4;
-
-            this.modelIds = [];
-            offset += 24; // skip first model (empty)
-
-            for (let i = 1; i < this.numModels; i += 1, offset += 24) {
-                this.modelIds[this.modelIds.length] = data.toString('utf8', offset, offset + 24).split('\0').shift();
-            }
-
-            offset = this.getSegmentOffset(data, map[eScriptFileSegments.MISSIONS]);
-            this.mainSize = data.readInt32LE(offset);
-            offset += 4;
-            this.largestMission = data.readInt32LE(offset);
-            offset += 4;
-            this.numMissions = data.readInt16LE(offset);
-            offset += 2;
-            this.numExclusiveMissions = data.readInt16LE(offset);
-            offset += 2;
-            this.missions = [];
-
-            for (let i = 0; i < this.numMissions; i += 1, offset += 4) {
-                this.missions[this.missions.length] = data.readInt32LE(offset);
-            }
-
-            this._size = this.getSegmentOffset(data, map[eScriptFileSegments.MAIN], false);
+        private readString(len): string {
+            this.offset += len;
+            return this.data.toString('utf8', this.offset - len, this.offset).split('\0').shift();
         }
+
+        private read32Bit(): number {
+            this.offset += 4;
+            return this.data.readInt32LE(this.offset - 4);
+        }
+
+        private read16Bit(): number {
+            this.offset += 2;
+            return this.data.readInt16LE(this.offset - 2);
+        }
+
+        get data(): Buffer {
+            return this._data;
+        }
+
+        set data(value: Buffer) {
+            this._data = value;
+        }
+        get offset(): number {
+            return this._offset;
+        }
+
+        set offset(value: number) {
+            this._offset = value;
+        }
+
     }
 
     export class CScriptFile {

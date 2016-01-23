@@ -41,6 +41,8 @@ module cleojs.common {
         MODELS,
         MISSIONS,
         EXTERNALS,
+        SASEG5,
+        SASEG6,
         MAIN
     }
 }

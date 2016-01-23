@@ -35,6 +35,6 @@ module cleojs.fsHelpers {
      */
     export function getFileExtension(fileName: string): string {
         let path = require('path');
-        return path.extname(fileName);
+        return path.extname(fileName).toLowerCase();
     }
 }

@@ -14,6 +14,7 @@ import Paths = cleojs.common.paths;
 import TheDisasm = cleojs.disasm.TheDisasm;
 import ScriptFile = cleojs.disasm.CScriptFile;
 import ScriptFileHeader = cleojs.disasm.CScriptFileHeader;
+import ExternalScriptHeader = cleojs.disasm.CExternalScriptHeader;
 import Disassembler = cleojs.disasm.CDisassembler;
 import COpcodeParser = cleojs.disasm.COpcodeParser;
 import helpers = cleojs.utils.Helpers;

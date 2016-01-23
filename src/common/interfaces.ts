@@ -40,5 +40,13 @@ module cleojs.common {
         numMissions: number;
         numExclusiveMissions: number;
         missions: number[];
+        numExternals: number;
+        externals: ExternalScriptHeader[];
+    }
+
+    export interface IExternalScriptHeader {
+        name: string;
+        offset: number;
+        size: number;
     }
 }
