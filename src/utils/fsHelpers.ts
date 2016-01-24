@@ -1,4 +1,4 @@
-module cleojs.fsHelpers {
+module scout.fsHelpers {
     /**
      *
      * @param {string} fileName

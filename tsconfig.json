@@ -1,7 +1,7 @@
 {
     "compilerOptions": {
         "target": "ES6",
-        "outFile": "cleo.js"
+        "outFile": "scout.js"
     },
     "files": [
         "typings/tsd.d.ts",

@@ -1,7 +1,7 @@
-import errors = cleojs.common.errors;
-module cleojs.utils {
+import errors = scout.common.errors;
+module scout.utils {
 
-    export class CLog {
+    export class Log {
         static error(error: string, ...args) {
             let util = require('util');
             return util.format(errors[error], (args.length ? args : ""));

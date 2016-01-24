@@ -1,4 +1,4 @@
-module cleojs.common {
+module scout.common {
     export interface IArguments {
         game: eGame;
         inputFile: string;
@@ -38,7 +38,7 @@ module cleojs.common {
         largestMission: number;
         numExclusiveMissions: number;
         missions: number[];
-        externals: ExternalScriptHeader[];
+        externals: CExternalScriptHeader[];
     }
 
     export interface IExternalScriptHeader {

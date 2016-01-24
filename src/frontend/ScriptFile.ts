@@ -1,7 +1,7 @@
-module cleojs.disasm {
-    import eGame = cleojs.common.eGame;
-    import eScriptFileSegments = cleojs.common.eScriptFileSegments;
-    import IExternalScriptHeader = cleojs.common.IExternalScriptHeader;
+module scout.disasm {
+    import eGame = scout.common.eGame;
+    import eScriptFileSegments = scout.common.eScriptFileSegments;
+    import IExternalScriptHeader = scout.common.IExternalScriptHeader;
     const scriptFileSegmentsMap: Object = {
         [eGame.GTA3]:  {
             [eScriptFileSegments.GLOBAL_VARS]: 0,
@@ -51,7 +51,7 @@ module cleojs.disasm {
         highestLocalInMission: number;
         missions: number[];
         largestExternalSize: number;
-        externals: ExternalScriptHeader[];
+        externals: CExternalScriptHeader[];
 
         constructor(data: Buffer) {
             this.loadModelSegment(data);
@@ -169,7 +169,7 @@ module cleojs.disasm {
     }
 
     export class CScriptFileSCM extends CScriptFile {
-        private _header: ScriptFileHeader;
+        private _header: CScriptFileHeader;
         private _missionsData: Buffer[];
         private _externalData: Buffer[];
 
@@ -201,11 +201,11 @@ module cleojs.disasm {
             return this.header.getSize();
         }
 
-        get header(): ScriptFileHeader {
+        get header(): CScriptFileHeader {
             return this._header;
         }
 
-        set header(value: ScriptFileHeader) {
+        set header(value: CScriptFileHeader) {
             this._header = value;
         }
     }

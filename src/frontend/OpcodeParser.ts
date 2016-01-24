@@ -1,4 +1,4 @@
-module cleojs.disasm {
+module scout.disasm {
 
     export const PARAM_ANY = "any";
     export const PARAM_ARGUMENTS = "arguments";
@@ -12,20 +12,11 @@ module cleojs.disasm {
 
     export class COpcodeParser {
 
-
         private _data: Buffer;
         private _offset;
-        private _opcodesData: IOpcodeData[];
         private _paramTypesHandlers: Object;
         private _paramValuesHandlers: Object;
-
-        /*get base(): number {
-            return this._base;
-        }
-
-        set base(value: number) {
-            this._base = value;
-        }*/
+        private _opcodesData: IOpcodeData[];
 
         get data(): Buffer {
             return this._data;
@@ -43,20 +34,20 @@ module cleojs.disasm {
             this._offset = value;
         }
 
-        set opcodesData(value: IOpcodeData[]) {
-            this._opcodesData = value;
-        }
-
-        get opcodesData(): IOpcodeData[] {
-            return this._opcodesData;
-        }
-
         get paramTypesHandlers(): Object {
             return this._paramTypesHandlers;
         }
 
         get paramValuesHandlers(): Object {
             return this._paramValuesHandlers;
+        }
+
+        get opcodesData(): IOpcodeData[] {
+            return this._opcodesData;
+        }
+
+        set opcodesData(value: IOpcodeData[]) {
+            this._opcodesData = value;
         }
 
         constructor() {
@@ -338,20 +329,5 @@ module cleojs.disasm {
             };
         }
 
-        /**
-         *
-         * @param Buffer data
-         * @returns {Map<any, any>}
-         */
-        public parse(data: Buffer, base: number): Map<number, IOpcode> {
-            let map = new Map();
-            this.data = data;
-            this.offset = 0;
-            for (let opcode of this) {
-                opcode.offset += base;
-                map.set(opcode.offset, opcode);
-            }
-            return map;
-        }
     }
 }

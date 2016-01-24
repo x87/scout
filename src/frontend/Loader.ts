@@ -1,4 +1,4 @@
-module cleojs.disasm {
+module scout.disasm {
 
     const HEADER_EXTENSION_MAP: Object = {
         '.scm': true,
@@ -11,7 +11,7 @@ module cleojs.disasm {
          * @param fileName
          * @returns {Promise<T>}
          */
-        public loadScript(fileName: string): Promise<ScriptFile> {
+        public loadScript(fileName: string): Promise<CScriptFile> {
 
             if (!this.isScriptFileValidExtension(fileName)) {
                 throw Log.error("ERRIEXT", fsHelpers.getFileExtension(fileName));
@@ -22,12 +22,12 @@ module cleojs.disasm {
                 })
                 .then(buffer => {
                     if (Buffer.isBuffer(buffer)) {
-                        let scriptFile: ScriptFile;
+                        let scriptFile: CScriptFile;
 
                         if (this.isScriptFileWithHeader(fileName)) {
-                            scriptFile = new ScriptFileSCM(buffer);
+                            scriptFile = new CScriptFileSCM(buffer);
                         } else {
-                            scriptFile = new ScriptFile();
+                            scriptFile = new CScriptFile();
                         }
                         scriptFile.init(buffer);
                         return scriptFile;

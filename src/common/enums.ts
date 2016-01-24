@@ -1,4 +1,4 @@
-module cleojs.common {
+module scout.common {
 
     export enum eParamType {
         EOL,

@@ -1,5 +1,5 @@
-module cleojs.common {
-    import Log = cleojs.utils.CLog;
+module scout.common {
+    import Log = scout.utils.Log;
 
     let game = eGame.GTA3;
     let inputFile = '';
