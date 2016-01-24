@@ -1,4 +1,4 @@
-module scout.disasm {
+module scout.frontend {
     import eGame = scout.common.eGame;
     import eScriptFileSegments = scout.common.eScriptFileSegments;
     import IExternalScriptHeader = scout.common.IExternalScriptHeader;
@@ -208,5 +208,12 @@ module scout.disasm {
         set header(value: CScriptFileHeader) {
             this._header = value;
         }
+    }
+
+    export class CCompiledFile implements ICompiledFile {
+        type: eCompiledFileType;
+        size: number;
+        opcodes: TOpcodesMap;
+
     }
 }

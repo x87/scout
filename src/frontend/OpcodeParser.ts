@@ -1,10 +1,11 @@
-module scout.disasm {
+module scout.frontend {
 
     export const PARAM_ANY = "any";
     export const PARAM_ARGUMENTS = "arguments";
     export const PARAM_LABEL = "label";
 
     export class COpcode implements IOpcode {
+        public isLeader: boolean;
         public id: number;
         public offset: number;
         public params: IOpcodeParam[];
@@ -286,6 +287,7 @@ module scout.disasm {
             opcode.offset = this.offset;
             opcode.id = this.nextUInt16();
             opcode.params = this.getOpcodeParams(opcode.id & 0x7FFF);
+            opcode.isLeader = false;
             return opcode;
         }
 

@@ -1,4 +1,4 @@
-module scout.disasm {
+module scout.frontend {
 
     const HEADER_EXTENSION_MAP: Object = {
         '.scm': true,

@@ -17,6 +17,8 @@ module scout.common {
 
         Usage: node cleo.js [ -i script.cs | script.cs ] [arguments]
         node cleo.js script.cs -g gta3
-        `
+        `,
+        "ERROFFS": `Relative offset found in main section at %d`,
+        "ENOTARG": `No target instruction found for branch at %d`,
     }
 }

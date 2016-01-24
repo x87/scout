@@ -7,12 +7,17 @@ disasm.disassembler.loadOpcodeData()
     .then(
         scriptFile => disasm.disassembler.disassemble(scriptFile)
     ).then(
-        map => {
-            if (Arguments.printAssembly === true) {
-                for (let [offset, opcode] of map) {
-                    disasm.printOpcode(opcode);
+        files => disasm.cfg.findLeaderInstructions(files)
+    ).then(
+        files => {
+            files.forEach(file => {
+                if (Arguments.printAssembly === true) {
+                    for (let [offset, opcode] of file.opcodes) {
+                        disasm.printOpcode(opcode);
+                    }
                 }
-            }
+            })
+
         }
     ).catch(
         e => {

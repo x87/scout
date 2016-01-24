@@ -1,15 +1,17 @@
-module scout.disasm {
+module scout.frontend {
     export class TheDisasm {
 
         public _loader: CLoader;
         public _disassembler: CDisassembler;
+        private _cfg: CCFG;
 
         constructor() {
             this.loader = new CLoader();
             this.disassembler = new CDisassembler();
+            this.cfg = new CCFG();
         }
 
-        set loader(value: scout.disasm.CLoader) {
+        set loader(value: CLoader) {
             this._loader = value;
         }
 
@@ -24,6 +26,15 @@ module scout.disasm {
         set disassembler(value: CDisassembler) {
             this._disassembler = value;
         }
+
+        get cfg(): CCFG {
+            return this._cfg;
+        }
+
+        set cfg(value: CCFG) {
+            this._cfg = value;
+        }
+
 
         public printOpcode(opcode: IOpcode) {
             let id = opcode.id;

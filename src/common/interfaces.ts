@@ -25,6 +25,7 @@ module scout.common {
         id: number;
         offset: number;
         params: IOpcodeParam[];
+        isLeader: boolean;
     }
 
     export interface IOpcodeParam {
@@ -46,4 +47,14 @@ module scout.common {
         offset: number;
         size: number;
     }
+
+    export type TOpcodesMap = Map<number, IOpcode>;
+
+    export interface ICompiledFile {
+        type: eCompiledFileType,
+        size: number,
+        opcodes: TOpcodesMap;
+    }
+
+
 }

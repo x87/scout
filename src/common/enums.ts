@@ -45,4 +45,10 @@ module scout.common {
         SASEG6,
         MAIN
     }
+
+    export enum eCompiledFileType {
+        MAIN,
+        MISSION,
+        EXTERNAl
+    }
 }
