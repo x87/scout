@@ -1,8 +1,8 @@
 {
-  "name": "cleojs",
+  "name": "scout",
   "version": "0.0.1",
-  "description": "CLEO.js",
-  "main": "app.js",
+  "description": "Scout Decompiler",
+  "main": "scout.js",
   "scripts": {
       "postinstall" : "node node_modules\\tsd\\build\\cli.js install"
   },
