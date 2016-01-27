@@ -40,6 +40,10 @@ module scout.frontend {
             let id = opcode.id;
             let info = this.disassembler.opcodesData[id & 0x7FFF];
             let output = `${opcode.offset}: `;
+
+            if (opcode.isLeader) {
+                output = "\n\n" + output;
+            }
             if (id > 0x7FFF) {
                 output += 'NOT ';
             }

@@ -4,13 +4,13 @@ module scout.frontend {
     import ICompiledFile = scout.common.ICompiledFile;
     const branchOpcodesMap: Object = {
         [eGame.GTA3]:  [
-            0x0002, 0x004c, 0x004d, 0x004f, 0x0050, 0x00d7, 0x02cd
+            0x0002, 0x004c, 0x004d
         ],
         [eGame.GTAVC]: [
-            0x0002, 0x004c, 0x004d, 0x004f, 0x0050, 0x00d7
+            0x0002, 0x004d
         ],
         [eGame.GTASA]: [
-            0x0002, 0x004c, 0x004d, 0x004f, 0x0050, 0x00d7
+            0x0002, 0x004d
         ]
     };
 

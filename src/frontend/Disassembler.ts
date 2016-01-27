@@ -30,7 +30,8 @@ module scout.frontend {
             file.size = data.length;
 
             for (let opcode of this.opcodeParser) {
-                file.opcodes.set(opcode.offset + base, opcode);
+                opcode.offset += base;
+                file.opcodes.set(opcode.offset, opcode);
             }
             return file;
         }
