@@ -17,6 +17,6 @@ gulp.task('build', () => {
 });
 
 
-gulp.task('w', ['build'], function() {
-    gulp.watch(path.join(src, '**/*.ts'), ['build']);
-});
+gulp.task('w', ['build'], () => gulp.watch(path.join(src, '**/*.ts'), ['build']));
+
+gulp.task('b', ['build']);

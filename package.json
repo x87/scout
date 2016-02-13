@@ -4,7 +4,8 @@
   "description": "Scout Decompiler",
   "main": "scout.js",
   "scripts": {
-      "postinstall" : "node node_modules\\tsd\\build\\cli.js install"
+      "postinstall" : "node node_modules\\tsd\\build\\cli.js install",
+      "build": "node ./build/scout MAIN.SCM -g gta3 -p > ./build/test3.txt"
   },
   "keywords": [],
   "author": "",

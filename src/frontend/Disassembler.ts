@@ -10,13 +10,14 @@ module scout.frontend {
 
         public disassemble(scriptFile: CScriptFile) {
             let files: ICompiledFile[] = [];
-            files[files.length] = this.parseBuffer(scriptFile.baseOffset, eCompiledFileType.MAIN, scriptFile.mainData);
+            files[files.length] = this.parseBuffer(scriptFile.baseOffset, scriptFile.type, scriptFile.mainData);
 
             if (scriptFile instanceof CScriptFileSCM) {
                 for (let i = 0, len = scriptFile.missionsData.length; i < len; i += 1) {
                     files[files.length] = this.parseBuffer(0, eCompiledFileType.MISSION, scriptFile.missionsData[i]);
                 }
             }
+            // todo; external data
             return files;
         }
 
@@ -24,10 +25,9 @@ module scout.frontend {
             this.opcodeParser.data = data;
             this.opcodeParser.offset = 0;
 
-            let file = new CCompiledFile();
+            let file = <ICompiledFile>{};
             file.opcodes = new Map();
             file.type = type;
-            file.size = data.length;
 
             for (let opcode of this.opcodeParser) {
                 opcode.offset += base;

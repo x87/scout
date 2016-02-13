@@ -148,6 +148,7 @@ module scout.frontend {
     export class CScriptFile {
 
         private _mainData: Buffer;
+        private _type: eCompiledFileType;
 
         get mainData(): Buffer {
             return this._mainData;
@@ -159,10 +160,19 @@ module scout.frontend {
 
         public init(data: Buffer) {
             this.mainData = data.slice(this.baseOffset);
+            this.type = eCompiledFileType.EXTERNAL;
         }
 
         get baseOffset(): number {
             return 0;
+        }
+
+        get type(): eCompiledFileType {
+            return this._type;
+        }
+
+        set type(value: eCompiledFileType) {
+            this._type = value;
         }
 
 
@@ -182,6 +192,7 @@ module scout.frontend {
 
         public init(data: Buffer) {
             this.mainData = data.slice(this.baseOffset, this.header.mainSize);
+            this.type = eCompiledFileType.MAIN;
             for (let i = 0, len = this.header.missions.length; i < len; i += 1) {
                 let nextMissionOffset = i == len - 1 ? data.length : this.header.missions[i + 1];
                 this.missionsData[this.missionsData.length] = data.slice(this.header.missions[i], nextMissionOffset)
@@ -210,10 +221,4 @@ module scout.frontend {
         }
     }
 
-    export class CCompiledFile implements ICompiledFile {
-        type: eCompiledFileType;
-        size: number;
-        opcodes: TOpcodesMap;
-
-    }
 }

@@ -12,7 +12,7 @@
         "src/common/paths.ts",
         "src/common/interfaces.ts",
         "src/frontend/ScriptFile.ts",
-        "src/frontend/CFG.ts",
+        "src/frontend/CFGProcessor.ts",
         "src/frontend/OpcodeParser.ts",
         "src/frontend/Loader.ts",
         "src/frontend/Disassembler.ts",

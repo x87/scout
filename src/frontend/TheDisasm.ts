@@ -3,12 +3,12 @@ module scout.frontend {
 
         public _loader: CLoader;
         public _disassembler: CDisassembler;
-        private _cfg: CCFG;
+        private _cfg: CCFGProcessor;
 
         constructor() {
             this.loader = new CLoader();
             this.disassembler = new CDisassembler();
-            this.cfg = new CCFG();
+            this.cfg = new CCFGProcessor();
         }
 
         set loader(value: CLoader) {
@@ -27,11 +27,11 @@ module scout.frontend {
             this._disassembler = value;
         }
 
-        get cfg(): CCFG {
+        get cfg(): CCFGProcessor {
             return this._cfg;
         }
 
-        set cfg(value: CCFG) {
+        set cfg(value: CCFGProcessor) {
             this._cfg = value;
         }
 

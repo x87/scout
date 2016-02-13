@@ -52,8 +52,15 @@ module scout.common {
 
     export interface ICompiledFile {
         type: eCompiledFileType,
-        size: number,
         opcodes: TOpcodesMap;
+        basicBlocks: IBasicBlock[];
+    }
+
+    export interface IBasicBlock {
+        type: eBasicBlockType;
+        opcodes: IOpcode[];
+        successors: IBasicBlock[];
+        predecessors: IBasicBlock[];
     }
 
 

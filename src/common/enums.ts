@@ -49,6 +49,15 @@ module scout.common {
     export enum eCompiledFileType {
         MAIN,
         MISSION,
-        EXTERNAl
+        EXTERNAL
+    }
+
+    export enum eBasicBlockType {
+        ONE_WAY,
+        TWO_WAY,
+        FALL_THRU,
+        N_WAY,
+        START_BB,
+        END_BB
     }
 }
