@@ -28,7 +28,7 @@ module scout.frontend {
             let file = <ICompiledFile>{};
             file.opcodes = new Map();
             file.type = type;
-            file.basicBlocks = [];
+            file.basicBlocks = new Map();
 
             for (let opcode of this.opcodeParser) {
                 opcode.offset += base;

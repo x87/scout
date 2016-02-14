@@ -49,11 +49,12 @@ module scout.common {
     }
 
     export type TOpcodesMap = Map<number, IOpcode>;
+    export type TBasicBlockMap = Map<number, IBasicBlock>;
 
     export interface ICompiledFile {
         type: eCompiledFileType,
         opcodes: TOpcodesMap;
-        basicBlocks: IBasicBlock[];
+        basicBlocks: TBasicBlockMap;
     }
 
     export interface IBasicBlock {

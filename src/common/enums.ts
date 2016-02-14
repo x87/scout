@@ -53,11 +53,9 @@ module scout.common {
     }
 
     export enum eBasicBlockType {
-        ONE_WAY,
-        TWO_WAY,
+        ONE_WAY, // jump
+        TWO_WAY, // jf
         FALL_THRU,
-        N_WAY,
-        START_BB,
-        END_BB
+        N_WAY // switch
     }
 }
