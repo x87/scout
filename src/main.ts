@@ -7,7 +7,10 @@ disasm.disassembler.loadOpcodeData()
     .then(
         scriptFile => disasm.disassembler.disassemble(scriptFile)
     ).then(
-        files => disasm.cfg.findBasicBlocks(files)
+        files => {
+            disasm.cfg.findBasicBlocks(files);
+            return files;
+        }
     ).then(
         files => {
             files.forEach(file => {

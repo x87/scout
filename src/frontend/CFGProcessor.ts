@@ -2,87 +2,82 @@ module scout.frontend {
 
     import eGame = scout.common.eGame;
     const branchOpcodesMap: Object = {
-        [eGame.GTA3]:  [
-            0x0002, 0x004c, 0x004d
-        ],
-        [eGame.GTAVC]: [
-            0x0002, 0x004d
-        ],
-        [eGame.GTASA]: [
-            0x0002, 0x004d
-        ]
+        [eGame.GTA3]: {
+            0x0002: true,
+            0x004c: true,
+            0x004d: true
+        },
+        [eGame.GTAVC]: {
+            0x0002: true,
+            0x004d: true
+        },
+        [eGame.GTASA]: {
+            0x0002: true,
+            0x004d: true
+        }
     };
 
     export class CCFGProcessor {
 
         public findBasicBlocks(files: ICompiledFile[]) {
-            this.findLeaderInstructions(files);
-            let basicBlocks = [];
-
-            for (let i = 0; i < files.length; i += 1) {
-                let currentLeader = null;
-                let opcodes = [];
-                for (let [offset, opcode] of files[i].opcodes) {
-                    if (opcode.isLeader) {
-                        if (currentLeader) {
-                            basicBlocks[basicBlocks.length] = this.createBasicBlock(opcodes);
-                        }
-                        currentLeader = opcode;
-                        opcodes = [];
-                    }
-                    opcodes[opcodes.length] = opcode;
-                }
-                // add last bb in the file
-                basicBlocks[basicBlocks.length] = this.createBasicBlock(opcodes);
-                files[i].basicBlocks = basicBlocks;
-            }
-            return files;
+            files.forEach(file => this.findLeadersForFile(file, files[0].opcodes))
+            files.forEach(file => this.findBasicBlocksForFile(file))
         }
 
-        public findLeaderInstructions(files: ICompiledFile[]) {
-            files.forEach(file => {
-                let isThisFirstInstructionOfFile = true;
-                let isThisInstructionFollowBranchOpcode = false;
 
-                for (let [offset, opcode] of file.opcodes) {
-
-                    if (isThisFirstInstructionOfFile) {
-                        // first instruction is a leader
-                        opcode.isLeader = true;
-                        isThisFirstInstructionOfFile = false;
-                    } else if (isThisInstructionFollowBranchOpcode) {
-                        // instruction after branch opcode is a leader
-                        opcode.isLeader = true;
-                        isThisInstructionFollowBranchOpcode = false;
+        private findBasicBlocksForFile(file: ICompiledFile) {
+            let currentLeader = null;
+            let opcodes = [];
+            for (let [offset, opcode] of file.opcodes) {
+                if (opcode.isLeader) {
+                    if (currentLeader) {
+                        file.basicBlocks.push(this.createBasicBlock(opcodes));
                     }
+                    currentLeader = opcode;
+                    opcodes = [];
+                }
+                opcodes[opcodes.length] = opcode;
+            }
+            // add last bb in the file
+            file.basicBlocks.push(this.createBasicBlock(opcodes));
+        }
 
-                    if (~branchOpcodesMap[Arguments.game].indexOf(opcode.id)) {
+        private findLeadersForFile(file: ICompiledFile, mainSectionOpcodes: TOpcodesMap) {
+            let isThisFirstInstructionOfFile = true;
+            let isThisInstructionFollowBranchOpcode = false;
 
-                        let targetOffset = Number(opcode.params[0].value);
-                        let targetOpcode;
+            for (let [offset, opcode] of file.opcodes) {
 
-                        if (targetOffset < 0) {
-                            if (file.type === eCompiledFileType.MAIN) {
-                                throw Log.error("ERROFFS", offset)
-                            }
-                            targetOpcode = file.opcodes.get(-targetOffset);
-                        } else {
-                            // positive offsets are present only in MAIN section
-                            targetOpcode = files[0].opcodes.get(targetOffset);
-                        }
+                opcode.isLeader = isThisFirstInstructionOfFile || isThisInstructionFollowBranchOpcode;
+                isThisFirstInstructionOfFile = false;
+                isThisInstructionFollowBranchOpcode = false;
 
-                        if (!targetOpcode) {
-                            throw Log.error("ENOTARG", offset);
-                        }
+                if (!branchOpcodesMap[Arguments.game][opcode.id]) {
+                    continue;
+                }
+                let targetOffset = Number(opcode.params[0].value);
+                let targetOpcode;
 
-                        // target of branch opcode is a leader
-                        targetOpcode.isLeader = true;
-                        isThisInstructionFollowBranchOpcode = true;
+                if (targetOffset < 0) {
+                    if (file.type === eCompiledFileType.MAIN) {
+                        throw Log.error("ERROFFS", offset)
                     }
+                    targetOpcode = file.opcodes.get(-targetOffset);
+                } else {
+                    // positive offsets are present only in MAIN section
+                    // todo; find a better way to get this opcode
+                    targetOpcode = mainSectionOpcodes.get(targetOffset);
                 }
 
-            })
-            return files;
+                if (!targetOpcode) {
+                    throw Log.error("ENOTARG", offset);
+                }
+
+                // target of branch opcode is a leader
+                targetOpcode.isLeader = true;
+                isThisInstructionFollowBranchOpcode = true;
+
+            }
         }
 
         /**
