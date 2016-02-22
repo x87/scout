@@ -1,20 +1,25 @@
 module scout.frontend {
 
     import eGame = scout.common.eGame;
+    import IOpcode = scout.common.IOpcode;
+    import eBasicBlockType = scout.common.eBasicBlockType;
+    const OP_JMP = 0x0002;
+    const OP_JT = 0x004c;
+    const OP_JF = 0x004d;
     const branchOpcodesMap: Object = {
         // 'call' opcodes (gosub, start_new_script, etc, is not included as they always have to return back
         [eGame.GTA3]: {
-            0x0002: () => eBasicBlockType.ONE_WAY,
-            0x004c: () => eBasicBlockType.TWO_WAY,
-            0x004d: () => eBasicBlockType.TWO_WAY
+            [OP_JMP]: eBasicBlockType.ONE_WAY,
+            [OP_JF]: eBasicBlockType.TWO_WAY,
+            [OP_JT]: eBasicBlockType.TWO_WAY
         },
         [eGame.GTAVC]: {
-            0x0002: () => eBasicBlockType.ONE_WAY,
-            0x004d: () => eBasicBlockType.TWO_WAY
+            [OP_JMP]: eBasicBlockType.ONE_WAY,
+            [OP_JF]: eBasicBlockType.TWO_WAY
         },
         [eGame.GTASA]: {
-            0x0002: () => eBasicBlockType.ONE_WAY,
-            0x004d: () => eBasicBlockType.TWO_WAY
+            [OP_JMP]: eBasicBlockType.ONE_WAY,
+            [OP_JF]: eBasicBlockType.TWO_WAY
         }
     };
 
@@ -23,7 +28,24 @@ module scout.frontend {
         public findBasicBlocks(files: ICompiledFile[]) {
             files.forEach(this.findLeadersForFile.bind(this))
             files.forEach(this.findBasicBlocksForFile.bind(this))
-            files.forEach(this.linkBasicBlocks.bind(this))
+            files.forEach(this.linkBasicBlocks.bind(this));
+            files.forEach(this.findUnreachableBlocks.bind(this));
+        }
+
+        private findUnreachableBlocks(file: ICompiledFile) {
+            file.basicBlocks.forEach((bb: IBasicBlock, index) => {
+                if (index === 0) {
+                    return;
+                }
+
+                for (let i = 0; i < bb.predecessors.length; i += 1) {
+                    if (bb.predecessors[i].isReachable) {
+                        return;
+                    }
+                }
+
+                bb.isReachable = false;
+            })
         }
 
         private linkBasicBlocks(file: ICompiledFile) {
@@ -36,14 +58,14 @@ module scout.frontend {
                 }
 
                 let lastOpcode = bb.opcodes[bb.opcodes.length - 1];
-                let branchHandler = branchOpcodesMap[Arguments.game][lastOpcode.id];
-                if (!branchHandler) {
+                let branchType = branchOpcodesMap[Arguments.game][lastOpcode.id];
+                if (!branchType) {
                     bb.type = eBasicBlockType.FALL_THRU;
                     prevBBtoLink = bb;
                     continue;
                 }
 
-                bb.type = branchHandler();
+                bb.type = branchType;
 
                 if (bb.type == eBasicBlockType.TWO_WAY) {
                     prevBBtoLink = bb;
@@ -53,7 +75,14 @@ module scout.frontend {
                     // todo; set links to switch cases
                 }
 
-                let targetOffset = this.getOpcodeTargetOffset(lastOpcode);
+                let targetOffset;
+                while (targetOffset = this.getOpcodeTargetOffset(lastOpcode)) {
+                    // eliminate jump-to-jump
+                    lastOpcode = file.opcodes.get(Math.abs(targetOffset));
+                    if (lastOpcode.id !== OP_JMP) {
+                        break;
+                    }
+                }
                 let targetBB = file.basicBlocks.get(Math.abs(targetOffset));
                 this.setBasicBlockSuccessor(bb, targetBB);
 
@@ -86,7 +115,6 @@ module scout.frontend {
                 opcode.isLeader = opcode.isLeader || isThisFirstInstructionOfFile || isThisInstructionFollowBranchOpcode;
                 isThisFirstInstructionOfFile = false;
                 isThisInstructionFollowBranchOpcode = false;
-
                 if (!branchOpcodesMap[Arguments.game][opcode.id]) {
                     continue;
                 }
@@ -118,6 +146,7 @@ module scout.frontend {
                 opcodes,
                 predecessors: [],
                 successors: [],
+                isReachable: true
             };
         }
 

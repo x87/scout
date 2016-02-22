@@ -62,6 +62,7 @@ module scout.common {
         opcodes: IOpcode[];
         successors: IBasicBlock[];
         predecessors: IBasicBlock[];
+        isReachable: boolean;
     }
 
 
