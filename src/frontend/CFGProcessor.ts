@@ -33,19 +33,27 @@ module scout.frontend {
         }
 
         private findUnreachableBlocks(file: ICompiledFile) {
-            file.basicBlocks.forEach((bb: IBasicBlock, index) => {
-                if (index === 0) {
-                    return;
-                }
-
-                for (let i = 0; i < bb.predecessors.length; i += 1) {
-                    if (bb.predecessors[i].isReachable) {
+            let unreachableFound;
+            do {
+                unreachableFound = false;
+                file.basicBlocks.forEach((bb: IBasicBlock, index) => {
+                    if (index === 0) {
                         return;
                     }
-                }
 
-                bb.isReachable = false;
-            })
+                    if (bb.predecessors.length) {
+                        return;
+                    }
+
+                    bb.successors.forEach((bb_succ: IBasicBlock) => {
+                        bb_succ.predecessors.splice(bb_succ.predecessors.indexOf(bb), 1);
+                    })
+
+                    bb.successors = [];
+                    bb.isReachable = false;
+                    unreachableFound = true;
+                })
+            } while (!unreachableFound)
         }
 
         private linkBasicBlocks(file: ICompiledFile) {
