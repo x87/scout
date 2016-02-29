@@ -1,14 +1,17 @@
-let disasm = new TheDisasm();
-
-disasm.disassembler.loadOpcodeData()
+let disasm = new CDisassembler();
+disasm.loadOpcodeData()
     .then(
-        () => disasm.loader.loadScript(Paths.inputFile)
+        () => {
+            let loader = new CLoader();
+            return loader.loadScript(Paths.inputFile)
+        }
     )
     .then(
-        scriptFile => disasm.disassembler.disassemble(scriptFile)
+        scriptFile => disasm.disassemble(scriptFile)
     ).then(
         files => {
-            disasm.cfg.findBasicBlocks(files);
+            let CFG = new CCFGProcessor();
+            CFG.findBasicBlocks(files);
             return files;
         }
     ).then(

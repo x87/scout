@@ -64,6 +64,28 @@ module scout.frontend {
             this._opcodesData = value;
         }
 
+        public printOpcode(opcode: IOpcode) {
+            let id = opcode.id;
+            let info = this.opcodesData[id & 0x7FFF];
+            let output = `${opcode.offset}: `;
+
+            if (opcode.isLeader) {
+                output = "\n\n" + output;
+            }
+            if (id > 0x7FFF) {
+                output += 'NOT ';
+            }
+            output += info.name;
+            for (let param of opcode.params) {
+                if (helpers.isArrayParam(param.type)) {
+                    let a = <IOpcodeParamArray>param.value;
+                    output += ` (${a.varIndex} ${a.offset} ${a.size} ${a.props})`;
+                } else {
+                    output += ' ' + param.value;
+                }
+            }
+            console.log(output);
+        }
 
     }
 }

@@ -16,7 +16,6 @@
         "src/frontend/OpcodeParser.ts",
         "src/frontend/Loader.ts",
         "src/frontend/Disassembler.ts",
-        "src/frontend/TheDisasm.ts",
         "src/utils/fsHelpers.ts",
         "src/utils/helpers.ts",
         "src/import.ts",
