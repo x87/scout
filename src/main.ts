@@ -1,3 +1,7 @@
+if (!Arguments.inputFile) {
+    throw Log.error("ENOINPT");
+}
+
 let disasm = new CDisassembler();
 disasm.loadOpcodeData()
     .then(

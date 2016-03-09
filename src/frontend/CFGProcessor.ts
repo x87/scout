@@ -45,8 +45,8 @@ module scout.frontend {
                         return;
                     }
 
-                    bb.successors.forEach((bb_succ: IBasicBlock) => {
-                        bb_succ.predecessors.splice(bb_succ.predecessors.indexOf(bb), 1);
+                    bb.successors.forEach((successor: IBasicBlock) => {
+                        successor.predecessors.splice(successor.predecessors.indexOf(bb), 1);
                     })
 
                     bb.successors = [];

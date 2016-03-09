@@ -1,0 +1,25 @@
+{
+    "compilerOptions": {
+        "target": "ES6",
+        "outFile": "scout-spec.js"
+    },
+    "files": [
+        "typings/tsd.d.ts",
+        "typings/jasmine/jasmine.d.ts",
+        "src/common/enums.ts",
+        "src/common/errors.ts",
+        "src/utils/Log.ts",
+        "src/common/arguments.ts",
+        "src/common/paths.ts",
+        "src/common/interfaces.ts",
+        "src/frontend/ScriptFile.ts",
+        "src/frontend/CFGProcessor.ts",
+        "src/frontend/OpcodeParser.ts",
+        "src/frontend/Loader.ts",
+        "src/frontend/Disassembler.ts",
+        "src/utils/fsHelpers.ts",
+        "src/utils/helpers.ts",
+        "src/import.ts",
+        "tests/spec.ts"
+    ]
+}

@@ -15,8 +15,8 @@ module scout.common {
         "EEOFBUF": "End of buffer unexpectedly reached while reading %d bytes",
         "ENOINPT": `No input file is provided.
 
-        Usage: node cleo.js [ -i script.cs | script.cs ] [arguments]
-        node cleo.js script.cs -g gta3
+        Usage: node scout.js [ -i script.cs | script.cs ] [arguments]
+        node scout.js script.cs -g gta3
         `,
         "ERRNOFF": `Relative offset found in main section at %d`,
         "ERRPOFF": `Absolute offset found in an external file at %d`,
