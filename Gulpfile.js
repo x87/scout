@@ -9,14 +9,7 @@ const tsProjectTest = $.typescript.createProject('tsconfig-test.json');
 
 gulp.task('default', ['build']);
 
-gulp.task('build', ['test'], () => {
-    return tsProject.src()
-        .pipe($.typescript(tsProject))
-        .pipe($.babel({
-            presets: ['es2015']
-        }))
-        .pipe(gulp.dest(dist));
-});
+gulp.task('build', ['test'], () => tsCompile(tsProject, dist));
 
 gulp.task('test', ['test_compile'], () => {
 
@@ -34,14 +27,7 @@ gulp.task('test', ['test_compile'], () => {
         }))
 });
 
-gulp.task('test_compile', () => {
-    return tsProjectTest.src()
-        .pipe($.typescript(tsProjectTest))
-        .pipe($.babel({
-            presets: ['es2015']
-        }))
-        .pipe(gulp.dest(tests));
-})
+gulp.task('test_compile', () => tsCompile(tsProjectTest, tests));
 
 gulp.task('w', ['build'], () => {
     gulp.watch(path.join(src, '**/*.ts'), ['build']);
@@ -50,3 +36,12 @@ gulp.task('w', ['build'], () => {
 
 gulp.task('b', ['build']);
 gulp.task('t', ['test']);
+
+function tsCompile(project, dest) {
+    return project.src()
+        .pipe($.typescript(project))
+        .pipe($.babel({
+            presets: ['es2015']
+        }))
+        .pipe(gulp.dest(dest));
+}
