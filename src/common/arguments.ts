@@ -51,10 +51,6 @@ module scout.common {
         }
     }
 
-    if (!inputFile) {
-        throw Log.error("ENOINPT");
-    }
-
     export const Arguments: IArguments = {
         game,
         inputFile,

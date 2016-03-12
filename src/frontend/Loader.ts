@@ -45,9 +45,9 @@ module scout.frontend {
          * @param fileName
          * @returns {boolean}
          */
-        private isScriptFileWithHeader(fileName: string): boolean {
+        public isScriptFileWithHeader(fileName: string): boolean {
             let extension = fsHelpers.getFileExtension(fileName);
-            return HEADER_EXTENSION_MAP[extension];
+            return !!HEADER_EXTENSION_MAP[extension];
         }
 
         /**
@@ -55,7 +55,7 @@ module scout.frontend {
          * @param fileName
          * @returns {boolean}
          */
-        private isScriptFileValidExtension(fileName: string): boolean {
+        public isScriptFileValidExtension(fileName: string): boolean {
             let extension = fsHelpers.getFileExtension(fileName);
             return (HEADER_EXTENSION_MAP.hasOwnProperty(extension))
         }
