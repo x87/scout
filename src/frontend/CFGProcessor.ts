@@ -8,18 +8,18 @@ module scout.frontend {
     const OP_JF = 0x004d;
     const branchOpcodesMap: Object = {
         // 'call' opcodes (gosub, start_new_script, etc, is not included as they always have to return back
-        [eGame.GTA3]: {
+        [eGame.GTA3]:  {
             [OP_JMP]: eBasicBlockType.ONE_WAY,
-            [OP_JF]: eBasicBlockType.TWO_WAY,
-            [OP_JT]: eBasicBlockType.TWO_WAY
+            [OP_JF]:  eBasicBlockType.TWO_WAY,
+            [OP_JT]:  eBasicBlockType.TWO_WAY
         },
         [eGame.GTAVC]: {
             [OP_JMP]: eBasicBlockType.ONE_WAY,
-            [OP_JF]: eBasicBlockType.TWO_WAY
+            [OP_JF]:  eBasicBlockType.TWO_WAY
         },
         [eGame.GTASA]: {
             [OP_JMP]: eBasicBlockType.ONE_WAY,
-            [OP_JF]: eBasicBlockType.TWO_WAY
+            [OP_JF]:  eBasicBlockType.TWO_WAY
         }
     };
 
@@ -30,18 +30,55 @@ module scout.frontend {
             files.forEach(this.findBasicBlocksForFile.bind(this))
             files.forEach(this.linkBasicBlocks.bind(this));
             files.forEach(this.findUnreachableBlocks.bind(this));
+            files.forEach(this.findIntervals.bind(this));
+        }
+
+        private findIntervals(file: ICompiledFile) {
+
+            if (!file.basicBlocks.size) {
+                return;
+            }
+            let headers = [file.basicBlocks.values().next().value];
+            let intervals = [];
+            while (headers.length) {
+                let interval: Array<IBasicBlock> = [];
+                {
+                    let h = headers.shift();
+                    h.processed = true;
+                    interval.push(h);
+                }
+
+                file.basicBlocks.forEach((bb: IBasicBlock) => {
+                    if (bb.processed) return;
+                    if (interval.indexOf(bb) === -1 && helpers.checkArrayIncludesArray(interval, bb.predecessors)) {
+                        interval.push(bb);
+                        bb.processed = true;
+                    }
+                })
+                file.basicBlocks.forEach((bb: IBasicBlock) => {
+                    if (bb.processed) return;
+                    if (interval.indexOf(bb) === -1 && helpers.checkArrayIncludeItemFromArray(interval, bb.predecessors)) {
+                        headers.push(bb);
+                    }
+                })
+                intervals.push(interval);
+            }
+            file.intervals = intervals;
         }
 
         private findUnreachableBlocks(file: ICompiledFile) {
             let unreachableFound;
+            let firstFound;
             do {
                 unreachableFound = false;
-                file.basicBlocks.forEach((bb: IBasicBlock, index) => {
-                    if (index === 0) {
+                firstFound = true;
+                file.basicBlocks.forEach((bb: IBasicBlock, key) => {
+                    if (firstFound) {
+                        firstFound = false;
                         return;
                     }
 
-                    if (bb.predecessors.length) {
+                    if (bb.predecessors.length > 0) {
                         return;
                     }
 
@@ -49,11 +86,10 @@ module scout.frontend {
                         successor.predecessors.splice(successor.predecessors.indexOf(bb), 1);
                     })
 
-                    bb.successors = [];
-                    bb.isReachable = false;
+                    file.basicBlocks.delete(key);
                     unreachableFound = true;
                 })
-            } while (!unreachableFound)
+            } while (unreachableFound);
         }
 
         private linkBasicBlocks(file: ICompiledFile) {
@@ -151,10 +187,11 @@ module scout.frontend {
          */
         private createBasicBlock(opcodes) {
             return <IBasicBlock>{
+                type: eBasicBlockType.UNDEFINED,
                 opcodes,
                 predecessors: [],
-                successors: [],
-                isReachable: true
+                successors:   [],
+                processed: false
             };
         }
 
