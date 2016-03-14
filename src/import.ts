@@ -1,3 +1,19 @@
+/// <reference path="../typings/tsd.d.ts"/>
+/// <reference path="common/enums.ts"/>
+/// <reference path="common/errors.ts"/>
+/// <reference path="utils/Log.ts"/>
+/// <reference path="common/arguments.ts"/>
+/// <reference path="common/paths.ts"/>
+/// <reference path="common/interfaces.ts"/>
+/// <reference path="frontend/ScriptFile.ts"/>
+/// <reference path="frontend/CFGProcessor.ts"/>
+/// <reference path="frontend/OpcodeParser.ts"/>
+/// <reference path="frontend/Loader.ts"/>
+/// <reference path="frontend/Disassembler.ts"/>
+/// <reference path="utils/fsHelpers.ts"/>
+/// <reference path="utils/helpers.ts"/>
+/// <reference path="utils/helpers.ts"/>
+
 import eParamType = scout.common.eParamType;
 import eGame = scout.common.eGame;
 import eScriptFileSegments = scout.common.eScriptFileSegments;
@@ -18,11 +34,10 @@ import IBasicBlock = scout.common.IBasicBlock;
 import CScriptFile = scout.frontend.CScriptFile;
 import CScriptFileSCM = scout.frontend.CScriptFileSCM;
 import CScriptFileHeader = scout.frontend.CScriptFileHeader;
-import CExternalScriptHeader = scout.frontend.CExternalScriptHeader;
 import CDisassembler = scout.frontend.CDisassembler;
 import COpcodeParser = scout.frontend.COpcodeParser;
 import CCFGProcessor = scout.frontend.CCFGProcessor;
-import CLoader = scout.frontend.CLoader;
+import Loader = scout.frontend.Loader;
 
 import TOpcodesMap = scout.common.TOpcodesMap;
 import helpers = scout.utils.Helpers;

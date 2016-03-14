@@ -20,8 +20,8 @@ module scout.test {
             expect(CDisassembler).toBeDefined();
         });
 
-        it("CLoader should be defined", () => {
-            expect(CLoader).toBeDefined();
+        it("Loader should be defined", () => {
+            expect(Loader).toBeDefined();
         });
 
         it("CCFGProcessor should be defined", () => {

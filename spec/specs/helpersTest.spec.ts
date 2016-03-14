@@ -1,6 +1,6 @@
 module scout.test {
 
-    export function helpers () {
+    export function helpersTest () {
 
         let helpers = scout.utils.Helpers;
 

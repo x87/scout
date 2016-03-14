@@ -4,13 +4,6 @@ module scout.frontend {
     export const PARAM_ARGUMENTS = "arguments";
     export const PARAM_LABEL = "label";
 
-    export class COpcode implements IOpcode {
-        public isLeader: boolean;
-        public id: number;
-        public offset: number;
-        public params: IOpcodeParam[];
-    }
-
     export class COpcodeParser {
 
         private _data: Buffer;
@@ -283,11 +276,12 @@ module scout.frontend {
         }
 
         private getOpcode() {
-            let opcode = new COpcode();
-            opcode.offset = this.offset;
-            opcode.id = this.nextUInt16();
+            let opcode = <IOpcode>{
+                offset: this.offset,
+                id: this.nextUInt16(),
+                isLeader: false
+            };
             opcode.params = this.getOpcodeParams(opcode.id & 0x7FFF);
-            opcode.isLeader = false;
             return opcode;
         }
 
@@ -299,11 +293,11 @@ module scout.frontend {
         private getOpcodeParams(opcodeId: number): IOpcodeParam[] {
             let params = [];
             let paramType: eParamType;
-            let paramsData = this.opcodesData[opcodeId].params;
+            let opcodeParams = this.opcodesData[opcodeId].params;
 
-            for (let i = 0; i < paramsData.length; i += 1) {
+            opcodeParams.forEach(opcodeParam => {
 
-                if (paramsData[i].type == PARAM_ARGUMENTS) {
+                if (opcodeParam.type == PARAM_ARGUMENTS) {
                     while ((paramType = this.getParamType()) != eParamType.EOL) {
                         params[params.length] = this.getParam(paramType);
                     }
@@ -315,7 +309,7 @@ module scout.frontend {
                     throw Log.error("EUNKPAR", paramType)
                 }
                 params[params.length] = this.getParam(paramType);
-            }
+            })
 
             return params;
         }

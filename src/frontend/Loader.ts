@@ -5,7 +5,7 @@ module scout.frontend {
         '.cs':  false
     };
 
-    export class CLoader {
+    export class Loader {
         /**
          *
          * @param fileName

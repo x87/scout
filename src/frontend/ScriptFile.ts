@@ -26,19 +26,6 @@ module scout.frontend {
         }
     };
 
-    export class CExternalScriptHeader implements IExternalScriptHeader {
-        name: string;
-        offset: number;
-        size: number;
-
-        constructor(name, offset, size) {
-            this.name = name;
-            this.offset = offset;
-            this.size = size;
-        }
-
-    }
-
     export class CScriptFileHeader implements IScriptFileHeader {
 
         private _size: number;
@@ -51,7 +38,7 @@ module scout.frontend {
         highestLocalInMission: number;
         missions: number[];
         largestExternalSize: number;
-        externals: CExternalScriptHeader[];
+        externals: IExternalScriptHeader[];
 
         constructor(data: Buffer) {
             this.loadModelSegment(data);
@@ -103,7 +90,11 @@ module scout.frontend {
 
             this.externals = [];
             for (let i = 0; i < numExternals; i += 1) {
-                this.externals[this.externals.length] = new CExternalScriptHeader(this.readString(data, 20), this.read32Bit(data), this.read32Bit(data));
+                this.externals[this.externals.length] = <IExternalScriptHeader>{
+                    name:   this.readString(data, 20),
+                    offset: this.read32Bit(data),
+                    size:   this.read32Bit(data)
+                }
             }
         }
 

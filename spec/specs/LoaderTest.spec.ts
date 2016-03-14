@@ -1,10 +1,10 @@
 module scout.test {
 
-    export function loader () {
+    export function LoaderTest () {
 
         let loader;
         beforeEach(() => {
-            loader = new CLoader();
+            loader = new Loader();
         })
 
         it("should be true for files with .scm extension only", () => {

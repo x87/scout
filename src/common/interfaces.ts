@@ -39,7 +39,7 @@ module scout.common {
         largestMission: number;
         numExclusiveMissions: number;
         missions: number[];
-        externals: CExternalScriptHeader[];
+        externals: IExternalScriptHeader[];
     }
 
     export interface IExternalScriptHeader {

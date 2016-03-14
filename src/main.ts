@@ -1,3 +1,5 @@
+/// <reference path="import.ts"/>
+
 if (!Arguments.inputFile) {
     throw Log.error("ENOINPT");
 }
@@ -6,7 +8,7 @@ let disasm = new CDisassembler();
 disasm.loadOpcodeData()
     .then(
         () => {
-            let loader = new CLoader();
+            let loader = new Loader();
             return loader.loadScript(Paths.inputFile)
         }
     )
