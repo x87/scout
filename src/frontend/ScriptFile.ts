@@ -1,4 +1,4 @@
-module scout.frontend {
+namespace scout.frontend {
     import eGame = scout.common.eGame;
     import eScriptFileSegments = scout.common.eScriptFileSegments;
     import IExternalScriptHeader = scout.common.IExternalScriptHeader;
@@ -94,7 +94,7 @@ module scout.frontend {
                     name:   this.readString(data, 20),
                     offset: this.read32Bit(data),
                     size:   this.read32Bit(data)
-                }
+                };
             }
         }
 
@@ -185,8 +185,8 @@ module scout.frontend {
             this.mainData = data.slice(this.baseOffset, this.header.mainSize);
             this.type = eCompiledFileType.MAIN;
             for (let i = 0, len = this.header.missions.length; i < len; i += 1) {
-                let nextMissionOffset = i == len - 1 ? data.length : this.header.missions[i + 1];
-                this.missionsData[this.missionsData.length] = data.slice(this.header.missions[i], nextMissionOffset)
+                let nextMissionOffset = i === len - 1 ? data.length : this.header.missions[i + 1];
+                this.missionsData[this.missionsData.length] = data.slice(this.header.missions[i], nextMissionOffset);
             }
             // todo; read external data
         }

@@ -1,4 +1,4 @@
-module scout.frontend {
+namespace scout.frontend {
 
     const HEADER_EXTENSION_MAP: Object = {
         '.scm': true,
@@ -14,7 +14,7 @@ module scout.frontend {
         public loadScript(fileName: string): Promise<CScriptFile> {
 
             if (!this.isScriptFileValidExtension(fileName)) {
-                throw Log.error("ERRIEXT", fsHelpers.getFileExtension(fileName));
+                throw Log.error('ERRIEXT', fsHelpers.getFileExtension(fileName));
             }
             return fsHelpers.isReadable(fileName)
                 .then(function () {
@@ -32,12 +32,12 @@ module scout.frontend {
                         scriptFile.init(buffer);
                         return scriptFile;
                     } else {
-                        throw Log.error("ERRTYPE", "Buffer");
+                        throw Log.error('ERRTYPE', 'Buffer');
                     }
                 })
                 .catch(e => {
-                    console.error(e)
-                })
+                    console.error(e);
+                });
         }
 
         /**
@@ -57,7 +57,7 @@ module scout.frontend {
          */
         public isScriptFileValidExtension(fileName: string): boolean {
             let extension = fsHelpers.getFileExtension(fileName);
-            return (HEADER_EXTENSION_MAP.hasOwnProperty(extension))
+            return (HEADER_EXTENSION_MAP.hasOwnProperty(extension));
         }
     }
 }

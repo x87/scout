@@ -1,4 +1,4 @@
-module scout.frontend {
+namespace scout.frontend {
 
     export class CDisassembler {
         private _opcodeParser: COpcodeParser;
@@ -48,8 +48,8 @@ module scout.frontend {
                     opcodesData => this._opcodeParser.opcodesData = opcodesData
                 )
                 .catch(() => {
-                    throw Log.error("ERRNOOP", Paths.opcodesFile)
-                })
+                    throw Log.error('ERRNOOP', Paths.opcodesFile);
+                });
         }
 
         get opcodeParser(): COpcodeParser {
@@ -70,7 +70,7 @@ module scout.frontend {
             let output = `${opcode.offset}: `;
 
             if (opcode.isLeader) {
-                output = "\n\n" + output;
+                output = '\n\n' + output;
             }
             if (id > 0x7FFF) {
                 output += 'NOT ';

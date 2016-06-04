@@ -1,10 +1,12 @@
-"use strict";
+'use strict';
+
 const args = process.argv.slice(2);
 const inputFile = args[0] || 'gta3.ini';
 let bufToLines = buf => buf.toString().split(require('os').EOL);
 let opcodeNames = {};
 let opcodeNumParams = {};
-let opcodes = new Promise(function (resolve) {
+
+new Promise(function (resolve) {
     require('fs').readFile('opcodes.txt', function (err, buf) {
         resolve(bufToLines(buf)
             .filter(line=>line)
@@ -13,7 +15,7 @@ let opcodes = new Promise(function (resolve) {
                 if (line.charAt(0) == ';') return;
                 let parts = line.split('=');
                 opcodeNames[parts[0].toUpperCase()] = parts[1];
-            }))
+            }));
     });
 }).then(function () {
     return new Promise(function (resolve) {
@@ -28,7 +30,7 @@ let opcodes = new Promise(function (resolve) {
                     opcodeNumParams[opcode] = opcodeNumOfParams;
                 }));
         });
-    })
+    });
 }).then(function () {
     let result = [];
     for (let opcode in opcodeNames) {
@@ -39,15 +41,15 @@ let opcodes = new Promise(function (resolve) {
                     id: opcode,
                     name: opcodeNames[opcode] || 'NOP',
                     params: np === -1 ? null : new Array(np).fill({
-                        type: "any"
+                        type: 'any'
                     })
-                }
+                };
             } catch (e) {
-                console.log(e)
+                console.log(e);
             }
         }
     }
     return result;
 }).then(function (result) {
-    console.log(JSON.stringify(result, undefined, 4))
-})
+    console.log(JSON.stringify(result, undefined, 4));
+});

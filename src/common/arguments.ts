@@ -1,4 +1,4 @@
-module scout.common {
+namespace scout.common {
     import Log = scout.utils.Log;
 
     let game = eGame.GTA3;
@@ -7,38 +7,38 @@ module scout.common {
 
     const args = process.argv.slice(2);
     const argKeys: Object = {
-        "-g": (arg) => {
+        '-g': (arg) => {
 
             const gameMap: Object = {
-                "gta3": eGame.GTA3,
-                "gtavc": eGame.GTAVC,
-                "vc": eGame.GTAVC,
-                "gtasa": eGame.GTASA,
-                "sa": eGame.GTASA,
-            }
+                'gta3': eGame.GTA3,
+                'gtavc': eGame.GTAVC,
+                'vc': eGame.GTAVC,
+                'gtasa': eGame.GTASA,
+                'sa': eGame.GTASA,
+            };
 
             if (!gameMap.hasOwnProperty(arg)) {
-                throw Log.error("ERRGAME", arg)
+                throw Log.error('ERRGAME', arg);
             }
 
             game = gameMap[arg];
         },
-        "-i": (arg) => {
+        '-i': (arg) => {
             inputFile = arg;
         }
-    }
+    };
 
     const singleArgs: Object = {
-        "-p": () => {
+        '-p': () => {
             printAssembly = true;
         }
-    }
+    };
 
     for (let i = 0; i < args.length; i += 1) {
         let arg = args[i];
         if (argKeys.hasOwnProperty(arg)) {
             if (i + 1 >= args.length) {
-                throw Log.error("ERRARGS", arg);
+                throw Log.error('ERRARGS', arg);
             }
             argKeys[arg](args[i + 1]);
             i++;
@@ -55,6 +55,6 @@ module scout.common {
         game,
         inputFile,
         printAssembly
-    }
+    };
 
 }

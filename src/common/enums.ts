@@ -1,4 +1,4 @@
-module scout.common {
+namespace scout.common {
 
     export enum eParamType {
         EOL,

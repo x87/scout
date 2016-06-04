@@ -1,4 +1,4 @@
-module scout.frontend {
+namespace scout.frontend {
 
     import eGame = scout.common.eGame;
     import IOpcode = scout.common.IOpcode;
@@ -26,8 +26,8 @@ module scout.frontend {
     export class CCFGProcessor {
 
         public findBasicBlocks(files: ICompiledFile[]) {
-            files.forEach(this.findLeadersForFile.bind(this))
-            files.forEach(this.findBasicBlocksForFile.bind(this))
+            files.forEach(this.findLeadersForFile.bind(this));
+            files.forEach(this.findBasicBlocksForFile.bind(this));
             files.forEach(this.linkBasicBlocks.bind(this));
             files.forEach(this.findUnreachableBlocks.bind(this));
             files.forEach(this.findIntervals.bind(this));
@@ -44,7 +44,7 @@ module scout.frontend {
                 let interval: Array<IBasicBlock> = [];
                 {
                     let h = headers.shift();
-                    h.processed = true;
+                    h['processed'] = true;
                     interval.push(h);
                 }
 
@@ -54,13 +54,13 @@ module scout.frontend {
                         interval.push(bb);
                         bb.processed = true;
                     }
-                })
+                });
                 file.basicBlocks.forEach((bb: IBasicBlock) => {
                     if (bb.processed) return;
                     if (interval.indexOf(bb) === -1 && helpers.checkArrayIncludeItemFromArray(interval, bb.predecessors)) {
                         headers.push(bb);
                     }
-                })
+                });
                 intervals.push(interval);
             }
             file.intervals = intervals;
@@ -84,11 +84,11 @@ module scout.frontend {
 
                     bb.successors.forEach((successor: IBasicBlock) => {
                         successor.predecessors.splice(successor.predecessors.indexOf(bb), 1);
-                    })
+                    });
 
                     file.basicBlocks.delete(key);
                     unreachableFound = true;
-                })
+                });
             } while (unreachableFound);
         }
 
@@ -111,11 +111,11 @@ module scout.frontend {
 
                 bb.type = branchType;
 
-                if (bb.type == eBasicBlockType.TWO_WAY) {
+                if (bb.type === eBasicBlockType.TWO_WAY) {
                     prevBBtoLink = bb;
                 }
 
-                if (bb.type == eBasicBlockType.N_WAY) {
+                if (bb.type === eBasicBlockType.N_WAY) {
                     // todo; set links to switch cases
                 }
 
@@ -166,14 +166,14 @@ module scout.frontend {
                 let targetOffset = this.getOpcodeTargetOffset(opcode);
 
                 if (targetOffset < 0 && file.type === eCompiledFileType.MAIN) {
-                    throw Log.error("ERRNOFF", offset)
+                    throw Log.error('ERRNOFF', offset);
                 }
                 if (targetOffset >= 0 && file.type !== eCompiledFileType.MAIN) {
-                    throw Log.error("ERRPOFF", offset)
+                    throw Log.error('ERRPOFF', offset);
                 }
                 let targetOpcode = <IOpcode>file.opcodes.get(Math.abs(targetOffset));
                 if (!targetOpcode) {
-                    throw Log.error("ENOTARG", offset)
+                    throw Log.error('ENOTARG', offset);
                 }
                 targetOpcode.isLeader = true;
                 isThisInstructionFollowBranchOpcode = true;
@@ -196,7 +196,7 @@ module scout.frontend {
         }
 
         private getOpcodeTargetOffset(opcode: IOpcode) {
-            return Number(opcode.params[0].value)
+            return Number(opcode.params[0].value);
         }
 
         private setBasicBlockSuccessor(bb, target) {

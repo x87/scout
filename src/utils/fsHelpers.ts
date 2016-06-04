@@ -1,4 +1,4 @@
-module scout.fsHelpers {
+namespace scout.fsHelpers {
     /**
      *
      * @param {string} fileName
@@ -10,7 +10,7 @@ module scout.fsHelpers {
             fs.readFile(fileName, function (err, data) {
                 err ? reject(err) : resolve(data);
             });
-        })
+        });
     }
 
     /**
@@ -24,7 +24,7 @@ module scout.fsHelpers {
             fs.access(fileName, fs.R_OK, function (err) {
                 err ? reject(err) : resolve();
             });
-        })
+        });
 
     }
 

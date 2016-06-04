@@ -5,7 +5,8 @@
   "main": "scout.js",
   "scripts": {
     "postinstall": "node node_modules\\tsd\\build\\cli.js install",
-    "build": "node ./build/scout MAIN.SCM -g gta3 -p > ./build/test3.txt"
+    "build": "node ./build/scout MAIN.SCM -g gta3 -p > ./build/test3.txt",
+    "lint": "tslint -c tslint.json src/main.ts"
   },
   "keywords": [],
   "author": "",

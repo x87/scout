@@ -1,8 +1,8 @@
-module scout.frontend {
+namespace scout.frontend {
 
-    export const PARAM_ANY = "any";
-    export const PARAM_ARGUMENTS = "arguments";
-    export const PARAM_LABEL = "label";
+    export const PARAM_ANY = 'any';
+    export const PARAM_ARGUMENTS = 'arguments';
+    export const PARAM_LABEL = 'label';
 
     export class COpcodeParser {
 
@@ -66,7 +66,7 @@ module scout.frontend {
                 [eParamType.LARRSTR8]:  () => this.getArray(),
                 [eParamType.GARRSTR16]: () => this.getArray(),
                 [eParamType.LARRSTR16]: () => this.getArray(),
-            }
+            };
 
             this._paramTypesHandlers = (() => [...Array(256)].map((v, i) => {
                 switch (i) {
@@ -141,12 +141,12 @@ module scout.frontend {
                             return () => {
                                 this.offset--;
                                 return eParamType.STR128;
-                            }
+                            };
                         } else {
                             return () => {
                                 this.offset--;
                                 return eParamType.STR8;
-                            }
+                            };
                         }
                 }
             }))();
@@ -158,7 +158,7 @@ module scout.frontend {
                 result = this.data.readUInt8(this.offset);
                 this.offset += 1;
             } catch (e) {
-                throw Log.error("EEOFBUF", 1);
+                throw Log.error('EEOFBUF', 1);
             }
             return result;
         }
@@ -169,7 +169,7 @@ module scout.frontend {
                 result = this.data.readInt8(this.offset);
                 this.offset += 1;
             } catch (e) {
-                throw Log.error("EEOFBUF", 1);
+                throw Log.error('EEOFBUF', 1);
             }
             return result;
         }
@@ -180,7 +180,7 @@ module scout.frontend {
                 result = this.data.readUInt16LE(this.offset);
                 this.offset += 2;
             } catch (e) {
-                throw Log.error("EEOFBUF", 2);
+                throw Log.error('EEOFBUF', 2);
             }
             return result;
         }
@@ -191,7 +191,7 @@ module scout.frontend {
                 result = this.data.readInt16LE(this.offset);
                 this.offset += 2;
             } catch (e) {
-                throw Log.error("EEOFBUF", 2);
+                throw Log.error('EEOFBUF', 2);
             }
             return result;
         }
@@ -202,7 +202,7 @@ module scout.frontend {
                 result = this.data.readUInt32LE(this.offset);
                 this.offset += 4;
             } catch (e) {
-                throw Log.error("EEOFBUF", 4);
+                throw Log.error('EEOFBUF', 4);
             }
             return result;
         }
@@ -213,7 +213,7 @@ module scout.frontend {
                 result = this.data.readInt32LE(this.offset);
                 this.offset += 4;
             } catch (e) {
-                throw Log.error("EEOFBUF", 4);
+                throw Log.error('EEOFBUF', 4);
             }
             return result;
         }
@@ -224,7 +224,7 @@ module scout.frontend {
                 result = this.data.readFloatLE(this.offset);
                 this.offset += 4;
             } catch (e) {
-                throw Log.error("EEOFBUF", 4);
+                throw Log.error('EEOFBUF', 4);
             }
             return result;
         }
@@ -243,7 +243,7 @@ module scout.frontend {
                 result = this.data.toString('utf8', this.offset, this.offset + length).split('\0').shift();
                 this.offset += length;
             } catch (e) {
-                throw Log.error("EEOFBUF", length);
+                throw Log.error('EEOFBUF', length);
             }
             return result;
         }
@@ -254,7 +254,7 @@ module scout.frontend {
                 varIndex: this.nextUInt16(),
                 size:     this.nextUInt8(),
                 props:    this.nextUInt8()
-            }
+            };
             return result;
         }
 
@@ -297,8 +297,8 @@ module scout.frontend {
 
             opcodeParams.forEach(opcodeParam => {
 
-                if (opcodeParam.type == PARAM_ARGUMENTS) {
-                    while ((paramType = this.getParamType()) != eParamType.EOL) {
+                if (opcodeParam.type === PARAM_ARGUMENTS) {
+                    while ((paramType = this.getParamType()) !== eParamType.EOL) {
                         params[params.length] = this.getParam(paramType);
                     }
                     return params;
@@ -306,10 +306,10 @@ module scout.frontend {
 
                 paramType = this.getParamType();
                 if (paramType === eParamType.EOL) {
-                    throw Log.error("EUNKPAR", paramType)
+                    throw Log.error('EUNKPAR', paramType);
                 }
                 params[params.length] = this.getParam(paramType);
-            })
+            });
 
             return params;
         }

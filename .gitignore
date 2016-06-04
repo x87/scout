@@ -6,3 +6,4 @@ typings
 *.cs
 build
 opcodes/*.json
+*.log

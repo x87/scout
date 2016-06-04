@@ -1,4 +1,4 @@
-module scout.common {
+namespace scout.common {
     export interface IArguments {
         game: eGame;
         inputFile: string;
@@ -53,7 +53,7 @@ module scout.common {
     export type TBasicBlockMap = Map<number, IBasicBlock>;
 
     export interface ICompiledFile {
-        type: eCompiledFileType,
+        type: eCompiledFileType;
         opcodes: TOpcodesMap;
         basicBlocks: TBasicBlockMap;
         intervals: Array<IBasicBlock>;

@@ -1,7 +1,7 @@
 /// <reference path="import.ts"/>
 
 if (!Arguments.inputFile) {
-    throw Log.error("ENOINPT");
+    throw Log.error('ENOINPT');
 }
 
 let disasm = new CDisassembler();
@@ -9,7 +9,7 @@ disasm.loadOpcodeData()
     .then(
         () => {
             let loader = new Loader();
-            return loader.loadScript(Paths.inputFile)
+            return loader.loadScript(Paths.inputFile);
         }
     )
     .then(
@@ -28,12 +28,12 @@ disasm.loadOpcodeData()
                         disasm.printOpcode(opcode);
                     }
                 }
-            })
+            });
 
         }
     ).catch(
         e => {
-            console.error(e)
+            console.error(e);
         }
     );
 
