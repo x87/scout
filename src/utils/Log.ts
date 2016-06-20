@@ -1,10 +1,11 @@
-import errors = scout.common.errors;
-namespace scout.utils {
+import errors from '../common/errors';
 
-    export class Log {
-        static error(error: string, ...args) {
-            let util = require('util');
-            return util.format(errors[error], (args.length ? args : ''));
-        }
+export default class {
+    static error(error: string, ...args) {
+        let util = require('util');
+        return util.format(errors[error], (args.length ? args : ''));
+    }
+    static msg(msg: string) {
+        console.log(msg);
     }
 }

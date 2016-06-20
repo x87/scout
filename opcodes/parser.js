@@ -5,11 +5,13 @@ const inputFile = args[0] || 'gta3.ini';
 let bufToLines = buf => buf.toString().split(require('os').EOL);
 let opcodeNames = {};
 let opcodeNumParams = {};
+const fs = require('fs');
+const path = require('path');
 
 new Promise(function (resolve) {
-    require('fs').readFile('opcodes.txt', function (err, buf) {
+    fs.readFile(path.join(__dirname, 'opcodes.txt'), function (err, buf) {
         resolve(bufToLines(buf)
-            .filter(line=>line)
+            .filter(line => line)
             .forEach(line => {
                 line = line.trim();
                 if (line.charAt(0) == ';') return;
@@ -19,15 +21,14 @@ new Promise(function (resolve) {
     });
 }).then(function () {
     return new Promise(function (resolve) {
-        require('fs').readFile(inputFile, function (err, buf) {
+        fs.readFile(path.join(__dirname, inputFile), function (err, buf) {
             resolve(bufToLines(buf)
-                .filter(line=>line)
+                .filter(line => line)
                 .forEach(line=> {
                     let data = line.split(',');
                     let parts = data[0].split('=');
                     let opcode = parts[0].toUpperCase();
-                    let opcodeNumOfParams = parts[1];
-                    opcodeNumParams[opcode] = opcodeNumOfParams;
+                    opcodeNumParams[opcode] = parts[1];
                 }));
         });
     });

@@ -1,23 +1,35 @@
 {
   "name": "scout",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "description": "Scout Decompiler",
   "main": "scout.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/x87/scout.js"
+  },
   "scripts": {
     "postinstall": "node node_modules\\tsd\\build\\cli.js install",
-    "build": "node ./build/scout MAIN.SCM -g gta3 -p > ./build/test3.txt",
-    "lint": "tslint -c tslint.json src/main.ts"
+    "lint": "tslint -c tslint.json src/**/*.ts",
+    "build": "browserify --node --igv='' -p [ tsify --target ES6 ] -t [ babelify --presets es2015 --extensions .ts ] -d",
+    "scout": "npm run build -- -e src/main.ts -o build/scout.js && node ./build/scout test3.scm -g gta3 -p",
+    "pretest": "npm run build -- -e src/spec.ts -o build/spec.js",
+    "test": "jasmine build/spec.js",
+    "opcodes": "node ./opcodes/parser",
+    "watch": "watchify src/main.ts --node --igv='' -p [ tsify --target ES6 ] -t [ babelify --presets es2015 --extensions .ts ] -d -o build/scout.js -v",
+    "onwatch": "onchange build/scout.js -- npm run lint"
   },
   "keywords": [],
-  "author": "",
+  "author": "Seemann",
   "license": "ISC",
   "devDependencies": {
     "babel-preset-es2015": "^6.3.13",
-    "gulp": "^3.9.0",
-    "gulp-babel": "^6.1.1",
-    "gulp-jasmine": "^2.3.0",
-    "gulp-load-plugins": "^1.1.0",
-    "gulp-typescript": "^2.10.0",
-    "tsd": "^0.6.5"
+    "babelify": "^7.3.0",
+    "browserify": "^13.0.1",
+    "onchange": "^2.5.0",
+    "source-map-support": "^0.4.0",
+    "tsd": "^0.6.5",
+    "tsify": "^0.16.0",
+    "vinyl-source-stream": "^1.1.0",
+    "watchify": "^3.7.0"
   }
 }

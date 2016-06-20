@@ -1,71 +1,74 @@
-namespace scout.common {
-    export interface IArguments {
-        game: eGame;
-        inputFile: string;
-        printAssembly: boolean;
-    }
+import {
+    eGame,
+    eParamType,
+    eCompiledFileType,
+    eBasicBlockType
+} from './enums';
 
-    export interface IOpcodeParamArray {
-        offset: number;
-        varIndex: number;
-        size: number;
-        props: number;
-    }
+export interface IArguments {
+    game: eGame;
+    inputFile: string;
+    printAssembly: boolean;
+}
 
-    export interface IOpcodeDataParam {
-        type: string;
-    }
+export interface IOpcodeParamArray {
+    offset: number;
+    varIndex: number;
+    size: number;
+    props: number;
+}
 
-    export interface IOpcodeData {
-        name: string;
-        params: IOpcodeDataParam[];
-    }
+export interface IOpcodeDataParam {
+    type: string;
+}
 
-    export interface IOpcode {
-        id: number;
-        offset: number;
-        params: IOpcodeParam[];
-        isLeader: boolean;
-    }
+export interface IOpcodeData {
+    name: string;
+    params: IOpcodeDataParam[];
+}
 
-    export interface IOpcodeParam {
-        type: eParamType;
-        value: number | string | IOpcodeParamArray;
-    }
+export interface IOpcode {
+    id: number;
+    offset: number;
+    params: IOpcodeParam[];
+    isLeader: boolean;
+}
 
-    export interface IScriptFileHeader {
-        modelIds: string[];
-        mainSize: number;
-        largestMission: number;
-        numExclusiveMissions: number;
-        missions: number[];
-        externals: IExternalScriptHeader[];
-    }
+export interface IOpcodeParam {
+    type: eParamType;
+    value: number | string | IOpcodeParamArray;
+}
 
-    export interface IExternalScriptHeader {
-        name: string;
-        offset: number;
-        size: number;
-    }
+export interface IScriptFileHeader {
+    modelIds: string[];
+    mainSize: number;
+    largestMission: number;
+    numExclusiveMissions: number;
+    missions: number[];
+    externals: IExternalScriptHeader[];
+}
 
-    export type TOpcodesMap = Map<number, IOpcode>;
+export interface IExternalScriptHeader {
+    name: string;
+    offset: number;
+    size: number;
+}
 
-    export type TBasicBlockMap = Map<number, IBasicBlock>;
+export type TOpcodesMap = Map<number, IOpcode>;
 
-    export interface ICompiledFile {
-        type: eCompiledFileType;
-        opcodes: TOpcodesMap;
-        basicBlocks: TBasicBlockMap;
-        intervals: Array<IBasicBlock>;
-    }
+export type TBasicBlockMap = Map<number, IBasicBlock>;
 
-    export interface IBasicBlock {
-        type: eBasicBlockType;
-        opcodes: IOpcode[];
-        successors: IBasicBlock[];
-        predecessors: IBasicBlock[];
-        processed: boolean;
-    }
+export interface ICompiledFile {
+    type: eCompiledFileType;
+    opcodes: TOpcodesMap;
+    basicBlocks: TBasicBlockMap;
+    intervals: Array<IBasicBlock>;
+}
 
-
+export interface IBasicBlock {
+    type: eBasicBlockType;
+    opcodes: IOpcode[];
+    successors: IBasicBlock[];
+    predecessors: IBasicBlock[];
+    processed: boolean;
 }

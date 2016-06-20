@@ -1,4 +1,15 @@
-/// <reference path="import.ts"/>
+/// <reference path="../typings/node/node.d.ts"/>
+
+import ErrorHandler from './utils/ErrorHandler';
+
+import Log from './utils/Log';
+import Paths from './common/paths';
+import Arguments from './common/arguments';
+import { CDisassembler } from './frontend/Disassembler';
+import { Loader } from './frontend/Loader';
+import { CCFGProcessor } from './frontend/CFGProcessor';
+
+ErrorHandler();
 
 if (!Arguments.inputFile) {
     throw Log.error('ENOINPT');
@@ -29,12 +40,9 @@ disasm.loadOpcodeData()
                     }
                 }
             });
-
         }
     ).catch(
         e => {
-            console.error(e);
+            console.error(e.stack);
         }
     );
-
-

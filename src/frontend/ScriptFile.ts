@@ -1,215 +1,214 @@
-namespace scout.frontend {
-    import eGame = scout.common.eGame;
-    import eScriptFileSegments = scout.common.eScriptFileSegments;
-    import IExternalScriptHeader = scout.common.IExternalScriptHeader;
-    const scriptFileSegmentsMap: Object = {
-        [eGame.GTA3]:  {
-            [eScriptFileSegments.GLOBAL_VARS]: 0,
-            [eScriptFileSegments.MODELS]:      1,
-            [eScriptFileSegments.MISSIONS]:    2,
-            [eScriptFileSegments.MAIN]:        3,
-        },
-        [eGame.GTAVC]: {
-            [eScriptFileSegments.GLOBAL_VARS]: 0,
-            [eScriptFileSegments.MODELS]:      1,
-            [eScriptFileSegments.MISSIONS]:    2,
-            [eScriptFileSegments.MAIN]:        3,
-        },
-        [eGame.GTASA]: {
-            [eScriptFileSegments.GLOBAL_VARS]: 0,
-            [eScriptFileSegments.MODELS]:      1,
-            [eScriptFileSegments.MISSIONS]:    2,
-            [eScriptFileSegments.EXTERNALS]:   3,
-            [eScriptFileSegments.SASEG5]:      4,
-            [eScriptFileSegments.SASEG6]:      5,
-            [eScriptFileSegments.MAIN]:        6,
-        }
-    };
+import Arguments from '../common/arguments';
+import { eGame, eScriptFileSegments, eCompiledFileType } from '../common/enums';
+import { IExternalScriptHeader, IScriptFileHeader } from '../common/interfaces';
+import { Helpers as helpers } from '../utils/helpers';
 
-    export class CScriptFileHeader implements IScriptFileHeader {
+const scriptFileSegmentsMap: Object = {
+    [eGame.GTA3]:  {
+        [eScriptFileSegments.GLOBAL_VARS]: 0,
+        [eScriptFileSegments.MODELS]:      1,
+        [eScriptFileSegments.MISSIONS]:    2,
+        [eScriptFileSegments.MAIN]:        3,
+    },
+    [eGame.GTAVC]: {
+        [eScriptFileSegments.GLOBAL_VARS]: 0,
+        [eScriptFileSegments.MODELS]:      1,
+        [eScriptFileSegments.MISSIONS]:    2,
+        [eScriptFileSegments.MAIN]:        3,
+    },
+    [eGame.GTASA]: {
+        [eScriptFileSegments.GLOBAL_VARS]: 0,
+        [eScriptFileSegments.MODELS]:      1,
+        [eScriptFileSegments.MISSIONS]:    2,
+        [eScriptFileSegments.EXTERNALS]:   3,
+        [eScriptFileSegments.SASEG5]:      4,
+        [eScriptFileSegments.SASEG6]:      5,
+        [eScriptFileSegments.MAIN]:        6,
+    }
+};
 
-        private _size: number;
-        private _offset: number;
+export class CScriptFileHeader implements IScriptFileHeader {
 
-        modelIds: string[];
-        mainSize: number;
-        largestMission: number;
-        numExclusiveMissions: number;
-        highestLocalInMission: number;
-        missions: number[];
-        largestExternalSize: number;
-        externals: IExternalScriptHeader[];
+    private _size: number;
+    private _offset: number;
 
-        constructor(data: Buffer) {
-            this.loadModelSegment(data);
-            this.loadMissionSegment(data);
+    modelIds: string[];
+    mainSize: number;
+    largestMission: number;
+    numExclusiveMissions: number;
+    highestLocalInMission: number;
+    missions: number[];
+    largestExternalSize: number;
+    externals: IExternalScriptHeader[];
 
-            if (helpers.isGameSA()) {
-                this.loadExternalSegment(data);
-            }
+    constructor(data: Buffer) {
+        this.loadModelSegment(data);
+        this.loadMissionSegment(data);
 
-            this._size = this.getSegmentOffset(data, scriptFileSegmentsMap[Arguments.game][eScriptFileSegments.MAIN], false);
+        if (helpers.isGameSA()) {
+            this.loadExternalSegment(data);
         }
 
-
-        private loadModelSegment(data: Buffer) {
-            this.offset = this.getSegmentOffset(data, scriptFileSegmentsMap[Arguments.game][eScriptFileSegments.MODELS]);
-
-            let numModels = this.read32Bit(data);
-            this.modelIds = [];
-            this.offset += 24; // skip first model (empty)
-
-            for (let i = 1; i < numModels; i += 1) {
-                this.modelIds[this.modelIds.length] = this.readString(data, 24);
-            }
-
-        }
-
-        private loadMissionSegment(data: Buffer) {
-            this.offset = this.getSegmentOffset(data, scriptFileSegmentsMap[Arguments.game][eScriptFileSegments.MISSIONS]);
-            this.mainSize = this.read32Bit(data);
-            this.largestMission = this.read32Bit(data);
-            let numMissions = this.read16Bit(data);
-            this.numExclusiveMissions = this.read16Bit(data);
-
-            if (helpers.isGameSA()) {
-                this.highestLocalInMission = this.read32Bit(data);
-            }
-
-            this.missions = [];
-
-            for (let i = 0; i < numMissions; i += 1) {
-                this.missions[this.missions.length] = this.read32Bit(data);
-            }
-        }
-
-        private loadExternalSegment(data: Buffer) {
-            this.offset = this.getSegmentOffset(data, scriptFileSegmentsMap[Arguments.game][eScriptFileSegments.EXTERNALS]);
-            this.largestExternalSize = this.read32Bit(data);
-            let numExternals = this.read32Bit(data);
-
-            this.externals = [];
-            for (let i = 0; i < numExternals; i += 1) {
-                this.externals[this.externals.length] = <IExternalScriptHeader>{
-                    name:   this.readString(data, 20),
-                    offset: this.read32Bit(data),
-                    size:   this.read32Bit(data)
-                };
-            }
-        }
+        this._size = this.getSegmentOffset(data, scriptFileSegmentsMap[Arguments.game][eScriptFileSegments.MAIN], false);
+    }
 
 
-        private getSegmentOffset(data: Buffer, segmentId: number, skipJumpOpcode: boolean = true): number {
-            let result = 0;
-            while (segmentId--) {
-                result = data.readInt32LE(result + 3);
-            }
-            return result + (skipJumpOpcode ? 8 : 0);
-        }
+    private loadModelSegment(data: Buffer) {
+        this.offset = this.getSegmentOffset(data, scriptFileSegmentsMap[Arguments.game][eScriptFileSegments.MODELS]);
 
-        public getSize(): number {
-            return this._size;
-        }
+        let numModels = this.read32Bit(data);
+        this.modelIds = [];
+        this.offset += 24; // skip first model (empty)
 
-        private readString(data: Buffer, len): string {
-            this.offset += len;
-            return data.toString('utf8', this.offset - len, this.offset).split('\0').shift();
-        }
-
-        private read32Bit(data: Buffer): number {
-            this.offset += 4;
-            return data.readInt32LE(this.offset - 4);
-        }
-
-        private read16Bit(data: Buffer): number {
-            this.offset += 2;
-            return data.readInt16LE(this.offset - 2);
-        }
-
-        get offset(): number {
-            return this._offset;
-        }
-
-        set offset(value: number) {
-            this._offset = value;
+        for (let i = 1; i < numModels; i += 1) {
+            this.modelIds[this.modelIds.length] = this.readString(data, 24);
         }
 
     }
 
-    export class CScriptFile {
+    private loadMissionSegment(data: Buffer) {
+        this.offset = this.getSegmentOffset(data, scriptFileSegmentsMap[Arguments.game][eScriptFileSegments.MISSIONS]);
+        this.mainSize = this.read32Bit(data);
+        this.largestMission = this.read32Bit(data);
+        let numMissions = this.read16Bit(data);
+        this.numExclusiveMissions = this.read16Bit(data);
 
-        private _mainData: Buffer;
-        private _type: eCompiledFileType;
-
-        get mainData(): Buffer {
-            return this._mainData;
+        if (helpers.isGameSA()) {
+            this.highestLocalInMission = this.read32Bit(data);
         }
 
-        set mainData(value: Buffer) {
-            this._mainData = value;
+        this.missions = [];
+
+        for (let i = 0; i < numMissions; i += 1) {
+            this.missions[this.missions.length] = this.read32Bit(data);
         }
-
-        public init(data: Buffer) {
-            this.mainData = data.slice(this.baseOffset);
-            this.type = eCompiledFileType.EXTERNAL;
-        }
-
-        get baseOffset(): number {
-            return 0;
-        }
-
-        get type(): eCompiledFileType {
-            return this._type;
-        }
-
-        set type(value: eCompiledFileType) {
-            this._type = value;
-        }
-
-
     }
 
-    export class CScriptFileSCM extends CScriptFile {
-        private _header: CScriptFileHeader;
-        private _missionsData: Buffer[];
-        private _externalData: Buffer[];
+    private loadExternalSegment(data: Buffer) {
+        this.offset = this.getSegmentOffset(data, scriptFileSegmentsMap[Arguments.game][eScriptFileSegments.EXTERNALS]);
+        this.largestExternalSize = this.read32Bit(data);
+        let numExternals = this.read32Bit(data);
 
-        constructor(data: Buffer) {
-            super();
-            this.header = new CScriptFileHeader(data);
-            this._missionsData = [];
-            this._externalData = [];
+        this.externals = [];
+        for (let i = 0; i < numExternals; i += 1) {
+            this.externals[this.externals.length] = <IExternalScriptHeader>{
+                name:   this.readString(data, 20),
+                offset: this.read32Bit(data),
+                size:   this.read32Bit(data)
+            };
         }
+    }
 
-        public init(data: Buffer) {
-            this.mainData = data.slice(this.baseOffset, this.header.mainSize);
-            this.type = eCompiledFileType.MAIN;
-            for (let i = 0, len = this.header.missions.length; i < len; i += 1) {
-                let nextMissionOffset = i === len - 1 ? data.length : this.header.missions[i + 1];
-                this.missionsData[this.missionsData.length] = data.slice(this.header.missions[i], nextMissionOffset);
-            }
-            // todo; read external data
-        }
 
-        get externalData(): Buffer[] {
-            return this._externalData;
+    private getSegmentOffset(data: Buffer, segmentId: number, skipJumpOpcode: boolean = true): number {
+        let result = 0;
+        while (segmentId--) {
+            result = data.readInt32LE(result + 3);
         }
+        return result + (skipJumpOpcode ? 8 : 0);
+    }
 
-        get missionsData(): Buffer[] {
-            return this._missionsData;
-        }
+    public getSize(): number {
+        return this._size;
+    }
 
-        get baseOffset(): number {
-            return this.header.getSize();
-        }
+    private readString(data: Buffer, len): string {
+        this.offset += len;
+        return data.toString('utf8', this.offset - len, this.offset).split('\0').shift();
+    }
 
-        get header(): CScriptFileHeader {
-            return this._header;
-        }
+    private read32Bit(data: Buffer): number {
+        this.offset += 4;
+        return data.readInt32LE(this.offset - 4);
+    }
 
-        set header(value: CScriptFileHeader) {
-            this._header = value;
-        }
+    private read16Bit(data: Buffer): number {
+        this.offset += 2;
+        return data.readInt16LE(this.offset - 2);
+    }
+
+    get offset(): number {
+        return this._offset;
+    }
+
+    set offset(value: number) {
+        this._offset = value;
     }
 
 }
+
+export class CScriptFile {
+
+    private _mainData: Buffer;
+    private _type: eCompiledFileType;
+
+    get mainData(): Buffer {
+        return this._mainData;
+    }
+
+    set mainData(value: Buffer) {
+        this._mainData = value;
+    }
+
+    public init(data: Buffer) {
+        this.mainData = data.slice(this.baseOffset);
+        this.type = eCompiledFileType.EXTERNAL;
+    }
+
+    get baseOffset(): number {
+        return 0;
+    }
+
+    get type(): eCompiledFileType {
+        return this._type;
+    }
+
+    set type(value: eCompiledFileType) {
+        this._type = value;
+    }
+
+}
+
+export class CScriptFileSCM extends CScriptFile {
+    private _header: CScriptFileHeader;
+    private _missionsData: Buffer[];
+    private _externalData: Buffer[];
+
+    constructor(data: Buffer) {
+        super();
+        this.header = new CScriptFileHeader(data);
+        this._missionsData = [];
+        this._externalData = [];
+    }
+
+    public init(data: Buffer) {
+        this.mainData = data.slice(this.baseOffset, this.header.mainSize);
+        this.type = eCompiledFileType.MAIN;
+        for (let i = 0, len = this.header.missions.length; i < len; i += 1) {
+            let nextMissionOffset = i === len - 1 ? data.length : this.header.missions[i + 1];
+            this.missionsData[this.missionsData.length] = data.slice(this.header.missions[i], nextMissionOffset);
+        }
+        // todo; read external data
+    }
+
+    get externalData(): Buffer[] {
+        return this._externalData;
+    }
+
+    get missionsData(): Buffer[] {
+        return this._missionsData;
+    }
+
+    get baseOffset(): number {
+        return this.header.getSize();
+    }
+
+    get header(): CScriptFileHeader {
+        return this._header;
+    }
+
+    set header(value: CScriptFileHeader) {
+        this._header = value;
+    }
+}
+
