@@ -7,7 +7,7 @@ import Paths from './common/paths';
 import Arguments from './common/arguments';
 import { CDisassembler } from './frontend/Disassembler';
 import { Loader } from './frontend/Loader';
-import { CCFGProcessor } from './frontend/CFGProcessor';
+import { CControlFlowProcessor } from './frontend/ControlFlowProcessor';
 
 ErrorHandler();
 
@@ -27,8 +27,8 @@ disasm.loadOpcodeData()
         scriptFile => disasm.disassemble(scriptFile)
     ).then(
         files => {
-            let CFG = new CCFGProcessor();
-            CFG.findBasicBlocks(files);
+            let CFG = new CControlFlowProcessor();
+            CFG.buildCFG(files);
             return files;
         }
     ).then(

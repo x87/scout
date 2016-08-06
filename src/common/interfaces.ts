@@ -61,8 +61,6 @@ export type TBasicBlockMap = Map<number, IBasicBlock>;
 export interface ICompiledFile {
     type: eCompiledFileType;
     opcodes: TOpcodesMap;
-    basicBlocks: TBasicBlockMap;
-    intervals: Array<IBasicBlock>;
 }
 
 export interface IBasicBlock {

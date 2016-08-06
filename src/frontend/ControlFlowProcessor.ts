@@ -1,4 +1,10 @@
-import { IOpcode, ICompiledFile, IBasicBlock } from '../common/interfaces';
+import {
+    IOpcode,
+    ICompiledFile,
+    IBasicBlock,
+    TBasicBlockMap,
+    TOpcodesMap
+} from '../common/interfaces';
 import { eGame, eBasicBlockType, eCompiledFileType } from '../common/enums';
 import { Helpers } from '../utils/helpers';
 import Arguments from '../common/arguments';
@@ -24,39 +30,45 @@ const branchOpcodesMap: Object = {
     }
 };
 
-export class CCFGProcessor {
+export class CControlFlowProcessor {
 
-    public findBasicBlocks(files: ICompiledFile[]) {
-        files.forEach(this.findLeadersForFile.bind(this));
-        files.forEach(this.findBasicBlocksForFile.bind(this));
-        files.forEach(this.linkBasicBlocks.bind(this));
-        files.forEach(this.findUnreachableBlocks.bind(this));
-        files.forEach(this.findIntervals.bind(this));
+    public buildCFG(files: ICompiledFile[]) {
+        return files.map(file => this.findIntervalsInFile(file));
     }
 
-    private findIntervals(file: ICompiledFile) {
+    public findIntervalsInFile(file: ICompiledFile) {
+        const opcodes = this.findLeadersForFile(file.opcodes, file.type);
+        const basicBlocks = this.findUnreachableBlocks(
+            this.linkBasicBlocks(
+                this.findBasicBlocksForFile(opcodes), opcodes
+            )
+        );
+        return this.findIntervals(basicBlocks);
+    }
 
-        if (!file.basicBlocks.size) {
+    private findIntervals(basicBlocks: TBasicBlockMap) {
+
+        if (!basicBlocks.size) {
             return;
         }
-        let headers = [file.basicBlocks.values().next().value];
+        let headers = [basicBlocks.values().next().value];
         let intervals = [];
         while (headers.length) {
             let interval: Array<IBasicBlock> = [];
             {
                 let h = headers.shift();
-                h['processed'] = true;
+                (<IBasicBlock>h).processed = true;
                 interval.push(h);
             }
 
-            file.basicBlocks.forEach((bb: IBasicBlock) => {
+            basicBlocks.forEach((bb: IBasicBlock) => {
                 if (bb.processed) return;
                 if (interval.indexOf(bb) === -1 && Helpers.checkArrayIncludesArray(interval, bb.predecessors)) {
                     interval.push(bb);
                     bb.processed = true;
                 }
             });
-            file.basicBlocks.forEach((bb: IBasicBlock) => {
+            basicBlocks.forEach((bb: IBasicBlock) => {
                 if (bb.processed) return;
                 if (interval.indexOf(bb) === -1 && Helpers.checkArrayIncludeItemFromArray(interval, bb.predecessors)) {
                     headers.push(bb);
@@ -64,16 +76,17 @@ export class CCFGProcessor {
             });
             intervals.push(interval);
         }
-        file.intervals = intervals;
+
+        return intervals;
     }
 
-    private findUnreachableBlocks(file: ICompiledFile) {
+    private findUnreachableBlocks(basicBlocks: TBasicBlockMap) {
         let unreachableFound;
         let firstFound;
         do {
             unreachableFound = false;
             firstFound = true;
-            file.basicBlocks.forEach((bb: IBasicBlock, key) => {
+            basicBlocks.forEach((bb: IBasicBlock, key) => {
                 if (firstFound) {
                     firstFound = false;
                     return;
@@ -87,15 +100,17 @@ export class CCFGProcessor {
                     successor.predecessors.splice(successor.predecessors.indexOf(bb), 1);
                 });
 
-                file.basicBlocks.delete(key);
+                basicBlocks.delete(key);
                 unreachableFound = true;
             });
         } while (unreachableFound);
+
+        return basicBlocks;
     }
 
-    private linkBasicBlocks(file: ICompiledFile) {
+    private linkBasicBlocks(basicBlocks: TBasicBlockMap, opcodes: TOpcodesMap) {
         let prevBBtoLink = null;
-        for (let [offset, bb] of file.basicBlocks) {
+        for (let [offset, bb] of basicBlocks) {
 
             if (prevBBtoLink) {
                 this.setBasicBlockSuccessor(prevBBtoLink, bb);
@@ -123,39 +138,50 @@ export class CCFGProcessor {
             let targetOffset;
             while (targetOffset = this.getOpcodeTargetOffset(lastOpcode)) {
                 // eliminate jump-to-jump
-                lastOpcode = file.opcodes.get(Math.abs(targetOffset));
+                lastOpcode = opcodes.get(Math.abs(targetOffset));
                 if (lastOpcode.id !== OP_JMP) {
                     break;
                 }
             }
-            let targetBB = file.basicBlocks.get(Math.abs(targetOffset));
+            let targetBB = basicBlocks.get(Math.abs(targetOffset));
             this.setBasicBlockSuccessor(bb, targetBB);
 
         }
+
+        return basicBlocks;
     }
 
-    private findBasicBlocksForFile(file: ICompiledFile) {
+    private findBasicBlocksForFile(opcodes: TOpcodesMap) {
         let currentLeader = null;
-        let opcodes = [];
-        for (let [offset, opcode] of file.opcodes) {
+        let bbOpcodes = [];
+        let basicBlocks = new Map();
+        for (let [offset, opcode] of opcodes) {
             if (opcode.isLeader) {
                 if (currentLeader) {
-                    file.basicBlocks.set(currentLeader.offset, this.createBasicBlock(opcodes));
+                    basicBlocks.set(currentLeader.offset, this.createBasicBlock(bbOpcodes));
                 }
                 currentLeader = opcode;
-                opcodes = [];
+                bbOpcodes = [];
             }
-            opcodes[opcodes.length] = opcode;
+            bbOpcodes[bbOpcodes.length] = opcode;
         }
         // add last bb in the file
-        file.basicBlocks.set(currentLeader.offset, this.createBasicBlock(opcodes));
+        basicBlocks.set(currentLeader.offset, this.createBasicBlock(bbOpcodes));
+
+        return basicBlocks;
     }
 
-    private findLeadersForFile(file: ICompiledFile) {
+    /**
+     *
+     * @param {TOpcodesMap} opcodes Opcodes map
+     * @param {eCompiledFileType} fileType
+     * @returns {TOpcodesMap}
+     */
+    private findLeadersForFile(opcodes: TOpcodesMap, fileType: eCompiledFileType) {
         let isThisFirstInstructionOfFile = true;
         let isThisInstructionFollowBranchOpcode = false;
 
-        for (let [offset, opcode] of file.opcodes) {
+        for (let [offset, opcode] of opcodes) {
 
             opcode.isLeader = opcode.isLeader || isThisFirstInstructionOfFile || isThisInstructionFollowBranchOpcode;
             isThisFirstInstructionOfFile = false;
@@ -166,19 +192,20 @@ export class CCFGProcessor {
 
             let targetOffset = this.getOpcodeTargetOffset(opcode);
 
-            if (targetOffset < 0 && file.type === eCompiledFileType.MAIN) {
+            if (targetOffset < 0 && fileType === eCompiledFileType.MAIN) {
                 throw Log.error('ERRNOFF', offset);
             }
-            if (targetOffset >= 0 && file.type !== eCompiledFileType.MAIN) {
+            if (targetOffset >= 0 && fileType !== eCompiledFileType.MAIN) {
                 throw Log.error('ERRPOFF', offset);
             }
-            let targetOpcode = <IOpcode>file.opcodes.get(Math.abs(targetOffset));
+            let targetOpcode = <IOpcode>opcodes.get(Math.abs(targetOffset));
             if (!targetOpcode) {
                 throw Log.error('ENOTARG', offset);
             }
             targetOpcode.isLeader = true;
             isThisInstructionFollowBranchOpcode = true;
         }
+        return opcodes;
     }
 
     /**
