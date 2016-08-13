@@ -296,9 +296,13 @@ export class COpcodeParser {
     private getOpcodeParams(opcodeId: number): IOpcodeParam[] {
         let params = [];
         let paramType: eParamType;
-        let opcodeParams = this.opcodesData[opcodeId].params;
+        const opcodeData = this.opcodesData[opcodeId];
 
-        opcodeParams.forEach(opcodeParam => {
+        if (!opcodeData || !opcodeData.params) {
+            throw Log.error('ENOPAR', opcodeId, this.offset);
+        }
+
+        opcodeData.params.forEach(opcodeParam => {
 
             if (opcodeParam.type === PARAM_ARGUMENTS) {
                 while ((paramType = this.getParamType()) !== eParamType.EOL) {

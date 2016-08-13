@@ -11,6 +11,7 @@ export default {
     'ERRARGS': 'Command-line error: value for argument %s not found',
     'ERRGAME': 'Command-line error: unknown game alias <%s> passed as argument',
     'EUNKPAR': 'Unknown data type found: <%s>',
+    'ENOPAR' : 'No parameters found for opcode %s at %s',
     'EEOFBUF': 'End of buffer unexpectedly reached while reading %d bytes',
     'ENOINPT': `No input file is provided.
 

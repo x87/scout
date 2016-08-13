@@ -41,7 +41,7 @@ new Promise(function (resolve) {
                 result[result.length] = {
                     id: opcode,
                     name: opcodeNames[opcode] || 'NOP',
-                    params: np === -1 ? null : new Array(np).fill({
+                    params: np === -1 ? [{ type: 'arguments'}] : new Array(np).fill({
                         type: 'any'
                     })
                 };
