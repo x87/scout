@@ -13,6 +13,13 @@ import Log from '../utils/Log';
 const OP_JMP = 0x0002;
 const OP_JT = 0x004c;
 const OP_JF = 0x004d;
+const OP_END = 0x004e;
+const OP_CALL = 0x004f;
+const OP_GOSUB = 0x0050;
+const OP_RETURN = 0x0051;
+const blockEndOpcodes = [OP_END, OP_RETURN];
+const callOpcodes = [OP_GOSUB, OP_CALL];
+
 const branchOpcodesMap: Object = {
     // 'call' opcodes (gosub, start_new_script, etc, is not included as they always have to return back
     [eGame.GTA3]:  {
@@ -56,7 +63,7 @@ export class CControlFlowProcessor {
         while (headers.length) {
             let interval: Array<IBasicBlock> = [];
             {
-                let h = headers.shift();
+                const h = headers.shift();
                 (<IBasicBlock>h).processed = true;
                 interval.push(h);
             }
@@ -82,13 +89,10 @@ export class CControlFlowProcessor {
 
     private findUnreachableBlocks(basicBlocks: TBasicBlockMap) {
         let unreachableFound;
-        let firstFound;
         do {
             unreachableFound = false;
-            firstFound = true;
             basicBlocks.forEach((bb: IBasicBlock, key) => {
-                if (firstFound) {
-                    firstFound = false;
+                if (bb.isHeaderBlock) {
                     return;
                 }
 
@@ -118,7 +122,8 @@ export class CControlFlowProcessor {
             }
 
             let lastOpcode = bb.opcodes[bb.opcodes.length - 1];
-            let branchType = branchOpcodesMap[Arguments.game][lastOpcode.id];
+            const branchType = branchOpcodesMap[Arguments.game][lastOpcode.id];
+
             if (!branchType) {
                 bb.type = eBasicBlockType.FALL_THRU;
                 prevBBtoLink = bb;
@@ -136,14 +141,28 @@ export class CControlFlowProcessor {
             }
 
             let targetOffset;
-            while (targetOffset = this.getOpcodeTargetOffset(lastOpcode)) {
-                // eliminate jump-to-jump
-                lastOpcode = opcodes.get(Math.abs(targetOffset));
-                if (lastOpcode.id !== OP_JMP) {
+            targetOffset = this.getOpcodeTargetOffset(lastOpcode);
+
+            // eliminate jump-to-jump transitions
+            /*while (true) {
+                targetOffset = this.getOpcodeTargetOffset(lastOpcode);
+
+                // check if we got a number, including 0.
+                if (!isFinite(targetOffset)) {
                     break;
                 }
+                lastOpcode = opcodes.get(Math.abs(targetOffset));
+                if (!lastOpcode || lastOpcode.id !== OP_JMP) {
+                    break;
+                }
+            }*/
+
+            const targetBB = basicBlocks.get(Math.abs(targetOffset));
+
+            if (!targetBB) {
+                Log.warn('WNOBRAN', targetOffset);
+                break;
             }
-            let targetBB = basicBlocks.get(Math.abs(targetOffset));
             this.setBasicBlockSuccessor(bb, targetBB);
 
         }
@@ -178,15 +197,20 @@ export class CControlFlowProcessor {
      * @returns {TOpcodesMap}
      */
     private findLeadersForFile(opcodes: TOpcodesMap, fileType: eCompiledFileType) {
-        let isThisFirstInstructionOfFile = true;
         let isThisInstructionFollowBranchOpcode = false;
-
         for (let [offset, opcode] of opcodes) {
 
-            opcode.isLeader = opcode.isLeader || isThisFirstInstructionOfFile || isThisInstructionFollowBranchOpcode;
-            isThisFirstInstructionOfFile = false;
+            opcode.isLeader = opcode.isLeader || isThisInstructionFollowBranchOpcode;
+
+            if (blockEndOpcodes.indexOf(opcode.id) !== -1) {
+                isThisInstructionFollowBranchOpcode = true;
+                continue;
+            }
+
             isThisInstructionFollowBranchOpcode = false;
-            if (!branchOpcodesMap[Arguments.game][opcode.id]) {
+
+            const branchType = branchOpcodesMap[Arguments.game][opcode.id];
+            if (!branchType) {
                 continue;
             }
 
@@ -196,14 +220,17 @@ export class CControlFlowProcessor {
                 throw Log.error('ERRNOFF', offset);
             }
             if (targetOffset >= 0 && fileType !== eCompiledFileType.MAIN) {
+                // todo: gosubs with positive offsets in missions are allowed
                 throw Log.error('ERRPOFF', offset);
             }
             let targetOpcode = <IOpcode>opcodes.get(Math.abs(targetOffset));
             if (!targetOpcode) {
-                throw Log.error('ENOTARG', offset);
+                Log.warn('WNOTARG', offset);
+                continue;
             }
             targetOpcode.isLeader = true;
-            isThisInstructionFollowBranchOpcode = true;
+            targetOpcode.isHeader = callOpcodes.indexOf(opcode.id) !== -1;
+            isThisInstructionFollowBranchOpcode = callOpcodes.indexOf(opcode.id) === -1;
         }
         return opcodes;
     }
@@ -219,7 +246,8 @@ export class CControlFlowProcessor {
             opcodes,
             predecessors: [],
             successors:   [],
-            processed: false
+            processed: false,
+            isHeaderBlock: opcodes[0].isHeader
         };
     }
 

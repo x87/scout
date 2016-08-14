@@ -33,12 +33,19 @@ export class CDisassembler {
         this.opcodeParser.data = data;
         this.opcodeParser.offset = 0;
 
-        let file = <ICompiledFile>{};
-        file.opcodes = new Map();
-        file.type = type;
+        let file = <ICompiledFile>{
+            opcodes: new Map(),
+            type
+        };
 
+        let firstOpcode = true;
         for (let opcode of this.opcodeParser) {
             opcode.offset += base;
+            if (firstOpcode) {
+                opcode.isHeader = true;
+                opcode.isLeader = true;
+                firstOpcode = false;
+            }
             file.opcodes.set(opcode.offset, opcode);
         }
         return file;

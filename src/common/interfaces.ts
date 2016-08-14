@@ -32,6 +32,7 @@ export interface IOpcode {
     offset: number;
     params: IOpcodeParam[];
     isLeader: boolean;
+    isHeader: boolean;
 }
 
 export interface IOpcodeParam {
@@ -69,4 +70,5 @@ export interface IBasicBlock {
     successors: IBasicBlock[];
     predecessors: IBasicBlock[];
     processed: boolean;
+    isHeaderBlock: boolean;
 }

@@ -280,7 +280,8 @@ export class COpcodeParser {
         let opcode = <IOpcode>{
             offset: this.offset,
             id: this.nextUInt16(),
-            isLeader: false
+            isLeader: false,
+            isHeader: false
         };
         opcode.params = this.getOpcodeParams(opcode.id);
         return opcode;
