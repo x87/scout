@@ -43,4 +43,15 @@ export class Helpers {
     public static checkArrayIncludeItemFromArray(a1: Array<any>, a2: Array<any>) {
         return !!this.getArrayIntersection(a2, a1).length;
     }
+
+    /**
+     * Pads a string on the left with a character to desired length
+     * @param str String to pad.
+     * @param length Desired length of the output string
+     * @param char Character to pad with.
+     * @returns {string} Output string.
+     */
+    public static strPadLeft(str: string, length: number, char: string = '0') {
+        return (Array(length + 1).join(char) + str).slice(-1 * length);
+    }
 }

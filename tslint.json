@@ -52,6 +52,7 @@
             "check-operator",
             "check-separator",
             "check-type"
-        ]
+        ],
+        "no-construct": true
     }
 }

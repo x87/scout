@@ -22,8 +22,7 @@ disasm.loadOpcodeData()
             let loader = new Loader();
             return loader.loadScript(Paths.inputFile);
         }
-    )
-    .then(
+    ).then(
         scriptFile => disasm.disassemble(scriptFile)
     ).then(
         files => {

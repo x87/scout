@@ -74,7 +74,7 @@ export class CDisassembler {
     public printOpcode(opcode: IOpcode) {
         let id = opcode.id;
         let info = this.opcodesData[id & 0x7FFF];
-        let output = `${opcode.offset}: `;
+        let output = `/* ${this.padOpcodeOffset(opcode.offset)} */ ${this.opcodeIdToHex(id)}: `;
 
         if (opcode.isLeader) {
             output = '\n\n' + output;
@@ -92,6 +92,14 @@ export class CDisassembler {
             }
         }
         Log.msg(output);
+    }
+
+    private opcodeIdToHex(id) {
+       return helpers.strPadLeft(id.toString(16).toUpperCase(), 4);
+    }
+
+    private padOpcodeOffset(offset) {
+        return helpers.strPadLeft(offset, 8);
     }
 
 }

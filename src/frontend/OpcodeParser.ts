@@ -252,18 +252,17 @@ export class COpcodeParser {
     }
 
     private getArray(): IOpcodeParamArray {
-        let result: IOpcodeParamArray = {
+        return {
             offset:   this.nextUInt16(),
             varIndex: this.nextUInt16(),
             size:     this.nextUInt8(),
             props:    this.nextUInt8()
         };
-        return result;
     }
 
     [Symbol.iterator]() {
-        let self = this;
-        let iterator = {
+        const self = this;
+        return {
             next() {
                 if (self.offset >= self.data.length) {
                     return {value: undefined, done: true};
@@ -275,7 +274,6 @@ export class COpcodeParser {
                 };
             }
         };
-        return iterator;
     }
 
     private getOpcode() {
@@ -284,19 +282,19 @@ export class COpcodeParser {
             id: this.nextUInt16(),
             isLeader: false
         };
-        opcode.params = this.getOpcodeParams(opcode.id & 0x7FFF);
+        opcode.params = this.getOpcodeParams(opcode.id);
         return opcode;
     }
 
     private getParamType(): eParamType {
-        let dataType = this.nextUInt8();
+        const dataType = this.nextUInt8();
         return this.paramTypesHandlers[dataType]();
     }
 
     private getOpcodeParams(opcodeId: number): IOpcodeParam[] {
         let params = [];
         let paramType: eParamType;
-        const opcodeData = this.opcodesData[opcodeId];
+        const opcodeData = this.opcodesData[opcodeId & 0x7FFF];
 
         if (!opcodeData || !opcodeData.params) {
             throw Log.error('ENOPAR', opcodeId, this.offset);
