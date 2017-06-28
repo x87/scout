@@ -11,6 +11,7 @@
     "postinstall": "node node_modules\\tsd\\build\\cli.js install",
     "lint": "tslint -c tslint.json src/**/*.ts",
     "build": "browserify --node --igv='' -p [ tsify --target ES6 ] -t [ babelify --presets es2015 --extensions .ts ] -d",
+    "dev": "concurrently \"npm run watch\" \"npm run onwatch\"",
     "scout": "npm run build -- -e src/main.ts -o build/scout.js && node ./build/scout test3.scm -g gta3 -p",
     "pretest": "npm run build -- -e src/spec.ts -o build/spec.js",
     "test": "jasmine build/spec.js",
@@ -22,14 +23,16 @@
   "author": "Seemann",
   "license": "ISC",
   "devDependencies": {
-    "babel-preset-es2015": "~6.3.13",
-    "babelify": "~7.3.0",
-    "browserify": "~13.0.1",
-    "onchange": "~2.5.0",
-    "source-map-support": "~0.4.2",
-    "tsd": "~0.6.5",
-    "tsify": "~0.16.0",
-    "vinyl-source-stream": "~1.1.0",
-    "watchify": "~3.7.0"
+    "babel-preset-es2015": "6.3.13",
+    "babelify": "7.3.0",
+    "browserify": "13.0.1",
+    "concurrently": "2.2.0",
+    "lodash": "4.15.0",
+    "onchange": "2.5.0",
+    "source-map-support": "0.4.2",
+    "tsd": "0.6.5",
+    "tsify": "0.16.0",
+    "vinyl-source-stream": "1.1.0",
+    "watchify": "3.7.0"
   }
 }

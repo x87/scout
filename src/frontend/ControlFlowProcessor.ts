@@ -1,3 +1,5 @@
+import _ from '../compat/lodash';
+
 import {
     IOpcode,
     ICompiledFile,
@@ -5,10 +7,14 @@ import {
     TBasicBlockMap,
     TOpcodesMap
 } from '../common/interfaces';
-import { eGame, eBasicBlockType, eCompiledFileType } from '../common/enums';
+
+import { eGame, eBasicBlockType, eCompiledFileType, eLoopType } from '../common/enums';
 import { Helpers } from '../utils/helpers';
 import Arguments from '../common/arguments';
+
 import Log from '../utils/Log';
+
+import { LoopService } from './LoopService';
 
 const OP_JMP = 0x0002;
 const OP_JT = 0x004c;
@@ -18,6 +24,13 @@ const OP_CALL = 0x004f;
 const OP_GOSUB = 0x0050;
 const OP_RETURN = 0x0051;
 const blockEndOpcodes = [OP_END, OP_RETURN];
+
+// https://github.com/x87/scout.js/issues/3
+// todo: refactor building flow graph on per-function basic, not per-file
+// each call opcode must create a new subgraph
+// isHeaderBlock is true for the first bb in each subgraph
+// file start with main function and first subgraph
+
 const callOpcodes = [OP_GOSUB, OP_CALL];
 
 const branchOpcodesMap: Object = {
@@ -40,14 +53,48 @@ const branchOpcodesMap: Object = {
 export class CControlFlowProcessor {
 
     public buildCFG(files: ICompiledFile[]) {
-        return files.map(file => this.findIntervalsInFile(file));
+        // https://github.com/x87/scout.js/issues/3
+        // todo: split by functions
+        files.map(file => {
+            const intervals = this.findIntervalsInFile(file);
+            intervals.forEach(interval => this.findLoops(interval));
+        });
+    }
+
+    private findLoops(interval: IBasicBlock[]) {
+        const head = _.head(interval);
+
+        const latchingNode = _(interval)
+            .chain()
+            .intersection(head.predecessors)
+            .head()
+            .value();
+
+        if (latchingNode) {
+            const loopType = LoopService.findLoopType(head, latchingNode);
+            this.findLoopNodes(interval, head, latchingNode);
+        }
+    };
+
+    private findLoopNodes(interval: IBasicBlock[], head: IBasicBlock, latchingNode: IBasicBlock) {
+
+        const start = _.findIndex(interval, head);
+        const end = _.findIndex(interval, latchingNode);
+        const nodes = _.slice(interval, start, end - start + 1);
+
+        _.each(nodes, node => {
+            if (node.inLoop) {
+                console.log('node already in a loop');
+            }
+            node.inLoop = true;
+        });
     }
 
     public findIntervalsInFile(file: ICompiledFile) {
         const opcodes = this.findLeadersForFile(file.opcodes, file.type);
         const basicBlocks = this.findUnreachableBlocks(
             this.linkBasicBlocks(
-                this.findBasicBlocksForFile(opcodes), opcodes
+                this.findBasicBlocksForFile(opcodes)
             )
         );
         return this.findIntervals(basicBlocks);
@@ -61,23 +108,21 @@ export class CControlFlowProcessor {
         let headers = [basicBlocks.values().next().value];
         let intervals = [];
         while (headers.length) {
-            let interval: Array<IBasicBlock> = [];
-            {
-                const h = headers.shift();
-                (<IBasicBlock>h).processed = true;
-                interval.push(h);
-            }
+            const header: IBasicBlock = headers.shift();
+            header.processed = true;
+
+            let interval: IBasicBlock[] = [header];
 
             basicBlocks.forEach((bb: IBasicBlock) => {
                 if (bb.processed) return;
-                if (interval.indexOf(bb) === -1 && Helpers.checkArrayIncludesArray(interval, bb.predecessors)) {
+                if (!_.includes(interval, bb) && Helpers.checkArrayIncludesArray(interval, bb.predecessors)) {
                     interval.push(bb);
                     bb.processed = true;
                 }
             });
             basicBlocks.forEach((bb: IBasicBlock) => {
                 if (bb.processed) return;
-                if (interval.indexOf(bb) === -1 && Helpers.checkArrayIncludeItemFromArray(interval, bb.predecessors)) {
+                if (!_.includes(interval, bb) && Helpers.checkArrayIncludeItemFromArray(interval, bb.predecessors)) {
                     headers.push(bb);
                 }
             });
@@ -106,13 +151,15 @@ export class CControlFlowProcessor {
 
                 basicBlocks.delete(key);
                 unreachableFound = true;
+
+                Log.warn('WUNREAC', bb.opcodes[0].offset);
             });
         } while (unreachableFound);
 
         return basicBlocks;
     }
 
-    private linkBasicBlocks(basicBlocks: TBasicBlockMap, opcodes: TOpcodesMap) {
+    private linkBasicBlocks(basicBlocks: TBasicBlockMap) {
         let prevBBtoLink = null;
         for (let [offset, bb] of basicBlocks) {
 
@@ -229,7 +276,11 @@ export class CControlFlowProcessor {
                 continue;
             }
             targetOpcode.isLeader = true;
+
+            // https://github.com/x87/scout.js/issues/3
+            // todo: refactor graphs on per-function and remove this
             targetOpcode.isHeader = callOpcodes.indexOf(opcode.id) !== -1;
+
             isThisInstructionFollowBranchOpcode = callOpcodes.indexOf(opcode.id) === -1;
         }
         return opcodes;
@@ -247,7 +298,12 @@ export class CControlFlowProcessor {
             predecessors: [],
             successors:   [],
             processed: false,
+            inLoop: false,
+
+            // https://github.com/x87/scout.js/issues/3
+            // todo: true for the first bb in subgraph
             isHeaderBlock: opcodes[0].isHeader
+
         };
     }
 

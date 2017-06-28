@@ -57,3 +57,10 @@ export enum eBasicBlockType {
     FALL_THRU,
     N_WAY // switch
 }
+
+export enum eLoopType {
+    NONE,
+    WHILE,
+    REPEAT,
+    ENDLESS
+}

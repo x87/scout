@@ -70,5 +70,6 @@ export interface IBasicBlock {
     successors: IBasicBlock[];
     predecessors: IBasicBlock[];
     processed: boolean;
+    inLoop: boolean;
     isHeaderBlock: boolean;
 }

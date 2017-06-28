@@ -10,6 +10,9 @@
     },
     "jasmine/jasmine.d.ts": {
       "commit": "3a86e056dc018541d82dd74639fca18ba8d605da"
+    },
+    "lodash/lodash.d.ts": {
+      "commit": "0c5c7a2d2bd0ce7dcab963a8402a9042749ca2da"
     }
   }
 }

@@ -312,7 +312,7 @@ export class COpcodeParser {
 
             paramType = this.getParamType();
             if (paramType === eParamType.EOL) {
-                throw Log.error('EUNKPAR', paramType);
+                throw Log.error('EUNKPAR', paramType, this.offset);
             }
             params[params.length] = this.getParam(paramType);
         });
