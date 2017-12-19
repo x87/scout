@@ -1,12 +1,10 @@
-import errors from  '../common/errors';
+import AppError from '../common/errors';
 import Log from '../utils/Log';
 
-export default function () {
+export default function() {
 
-    it('should return formatted string from errors object', () => {
-        errors['test'] = 'TEST %s STRING';
-        expect(Log.error('test', ['output'])).toBe('TEST output STRING');
-    });
+	it('should return formatted string from errors object', () => {
+		expect(() => Log.error('TEST %s STRING' as AppError, ['output'])).toThrowError('TEST output STRING');
+	});
 
 }
-

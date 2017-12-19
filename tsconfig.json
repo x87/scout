@@ -1,0 +1,21 @@
+{
+	"compilerOptions": {
+		"baseUrl": "src",
+		"typeRoots": ["node_modules/@types"],
+		"target": "es5",
+		"module": "commonjs",
+		"moduleResolution": "node",
+		"lib": ["es6", "es7", "dom", "dom.iterable"],
+		"allowJs": true,
+		"checkJs": true,
+		"sourceMap": true,
+		"downlevelIteration": true,
+		"pretty": true,
+		"alwaysStrict": true,
+		"experimentalDecorators": true,
+		"emitDecoratorMetadata": true
+	},
+	"include": [
+		"src"
+	]
+}
