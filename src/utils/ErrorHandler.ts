@@ -1,5 +1,7 @@
-export default function () {
-    require('source-map-support').install({
-        environment: 'node'
-    });
-}
+// import SourceMapSupport from 'source-map-support';
+//
+// export default function() {
+// 	SourceMapSupport.install({
+// 		environment: 'node'
+// 	});
+// }

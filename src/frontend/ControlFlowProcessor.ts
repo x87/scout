@@ -1,14 +1,13 @@
-import {
-    IOpcode,
-    ICompiledFile,
-    IBasicBlock,
-    TBasicBlockMap,
-    TOpcodesMap
-} from '../common/interfaces';
-import { eGame, eBasicBlockType, eCompiledFileType } from '../common/enums';
-import { Helpers } from '../utils/helpers';
-import Arguments from '../common/arguments';
-import Log from '../utils/Log';
+import * as _ from 'lodash';
+import * as utils from 'utils';
+import Log from 'utils/Log';
+
+import Arguments from 'common/arguments';
+import AppError from 'common/errors';
+import LoopService from './LoopService';
+
+import { IBasicBlock, ICompiledFile, IOpcode, TBasicBlockMap, TOpcodesMap } from 'common/interfaces';
+import { eBasicBlockType, eCompiledFileType, eGame } from 'common/enums';
 
 const OP_JMP = 0x0002;
 const OP_JT = 0x004c;
@@ -18,247 +17,285 @@ const OP_CALL = 0x004f;
 const OP_GOSUB = 0x0050;
 const OP_RETURN = 0x0051;
 const blockEndOpcodes = [OP_END, OP_RETURN];
+
+// https://github.com/x87/scout.js/issues/3
+// todo: refactor building flow graph on per-function basic, not per-file
+// each call opcode must create a new subgraph
+// isHeaderBlock is true for the first bb in each subgraph
+// file start with main function and first subgraph
+
 const callOpcodes = [OP_GOSUB, OP_CALL];
 
-const branchOpcodesMap: Object = {
-    // 'call' opcodes (gosub, start_new_script, etc, is not included as they always have to return back
-    [eGame.GTA3]:  {
-        [OP_JMP]: eBasicBlockType.ONE_WAY,
-        [OP_JF]:  eBasicBlockType.TWO_WAY,
-        [OP_JT]:  eBasicBlockType.TWO_WAY
-    },
-    [eGame.GTAVC]: {
-        [OP_JMP]: eBasicBlockType.ONE_WAY,
-        [OP_JF]:  eBasicBlockType.TWO_WAY
-    },
-    [eGame.GTASA]: {
-        [OP_JMP]: eBasicBlockType.ONE_WAY,
-        [OP_JF]:  eBasicBlockType.TWO_WAY
-    }
+const branchOpcodesMap: any = {
+	// 'call' opcodes (gosub, start_new_script, etc, is not included as they always have to return back
+	[eGame.GTA3]: {
+		[OP_JMP]: eBasicBlockType.ONE_WAY,
+		[OP_JF]: eBasicBlockType.TWO_WAY,
+		[OP_JT]: eBasicBlockType.TWO_WAY
+	},
+	[eGame.GTAVC]: {
+		[OP_JMP]: eBasicBlockType.ONE_WAY,
+		[OP_JF]: eBasicBlockType.TWO_WAY
+	},
+	[eGame.GTASA]: {
+		[OP_JMP]: eBasicBlockType.ONE_WAY,
+		[OP_JF]: eBasicBlockType.TWO_WAY
+	}
 };
 
-export class CControlFlowProcessor {
+export default class CControlFlowProcessor {
 
-    public buildCFG(files: ICompiledFile[]) {
-        return files.map(file => this.findIntervalsInFile(file));
-    }
+	buildCFG(files: ICompiledFile[]) {
+		// https://github.com/x87/scout.js/issues/3
+		// todo: split by functions
+		files.map(file => {
+			const intervals = this.findIntervalsInFile(file);
+			intervals.forEach(interval => this.findLoops(interval));
+		});
+	}
 
-    public findIntervalsInFile(file: ICompiledFile) {
-        const opcodes = this.findLeadersForFile(file.opcodes, file.type);
-        const basicBlocks = this.findUnreachableBlocks(
-            this.linkBasicBlocks(
-                this.findBasicBlocksForFile(opcodes), opcodes
-            )
-        );
-        return this.findIntervals(basicBlocks);
-    }
+	findIntervalsInFile(file: ICompiledFile) {
+		const opcodes = this.findLeadersForFile(file.opcodes, file.type);
+		const basicBlocks = this.findUnreachableBlocks(
+			this.linkBasicBlocks(
+				this.findBasicBlocksForFile(opcodes)
+			)
+		);
+		return this.findIntervals(basicBlocks);
+	}
 
-    private findIntervals(basicBlocks: TBasicBlockMap) {
+	private findLoops(interval: IBasicBlock[]) {
+		const head = _.head(interval);
 
-        if (!basicBlocks.size) {
-            return;
-        }
-        let headers = [basicBlocks.values().next().value];
-        let intervals = [];
-        while (headers.length) {
-            let interval: Array<IBasicBlock> = [];
-            {
-                const h = headers.shift();
-                (<IBasicBlock>h).processed = true;
-                interval.push(h);
-            }
+		const latchingNode = _(interval)
+		.chain()
+		.intersection(head.predecessors)
+		.head()
+		.value();
 
-            basicBlocks.forEach((bb: IBasicBlock) => {
-                if (bb.processed) return;
-                if (interval.indexOf(bb) === -1 && Helpers.checkArrayIncludesArray(interval, bb.predecessors)) {
-                    interval.push(bb);
-                    bb.processed = true;
-                }
-            });
-            basicBlocks.forEach((bb: IBasicBlock) => {
-                if (bb.processed) return;
-                if (interval.indexOf(bb) === -1 && Helpers.checkArrayIncludeItemFromArray(interval, bb.predecessors)) {
-                    headers.push(bb);
-                }
-            });
-            intervals.push(interval);
-        }
+		if (latchingNode) {
+			const loopType = LoopService.findLoopType(head, latchingNode);
+			this.findLoopNodes(interval, head, latchingNode);
+		}
+	}
 
-        return intervals;
-    }
+	private findLoopNodes(interval: IBasicBlock[], head: IBasicBlock, latchingNode: IBasicBlock) {
 
-    private findUnreachableBlocks(basicBlocks: TBasicBlockMap) {
-        let unreachableFound;
-        do {
-            unreachableFound = false;
-            basicBlocks.forEach((bb: IBasicBlock, key) => {
-                if (bb.isHeaderBlock) {
-                    return;
-                }
+		const start = _.findIndex(interval, head);
+		const end = _.findIndex(interval, latchingNode);
+		const nodes = _.slice(interval, start, end - start + 1);
 
-                if (bb.predecessors.length > 0) {
-                    return;
-                }
+		_.each(nodes, node => {
+			if (node.inLoop) {
+				console.log('node already in a loop');
+			}
+			node.inLoop = true;
+		});
+	}
 
-                bb.successors.forEach((successor: IBasicBlock) => {
-                    successor.predecessors.splice(successor.predecessors.indexOf(bb), 1);
-                });
+	private findIntervals(basicBlocks: TBasicBlockMap) {
 
-                basicBlocks.delete(key);
-                unreachableFound = true;
-            });
-        } while (unreachableFound);
+		if (!basicBlocks.size) {
+			return;
+		}
+		const headers = [basicBlocks.values().next().value];
+		const intervals = [];
+		while (headers.length) {
+			const header: IBasicBlock = headers.shift();
+			header.processed = true;
 
-        return basicBlocks;
-    }
+			const interval: IBasicBlock[] = [header];
 
-    private linkBasicBlocks(basicBlocks: TBasicBlockMap, opcodes: TOpcodesMap) {
-        let prevBBtoLink = null;
-        for (let [offset, bb] of basicBlocks) {
+			basicBlocks.forEach((bb: IBasicBlock) => {
+				if (bb.processed) return;
+				if (!_.includes(interval, bb) && utils.checkArrayIncludesArray(interval, bb.predecessors)) {
+					interval.push(bb);
+					bb.processed = true;
+				}
+			});
+			basicBlocks.forEach((bb: IBasicBlock) => {
+				if (bb.processed) return;
+				if (!_.includes(interval, bb) && utils.checkArrayIncludeItemFromArray(interval, bb.predecessors)) {
+					headers.push(bb);
+				}
+			});
+			intervals.push(interval);
+		}
 
-            if (prevBBtoLink) {
-                this.setBasicBlockSuccessor(prevBBtoLink, bb);
-                prevBBtoLink = null;
-            }
+		return intervals;
+	}
 
-            let lastOpcode = bb.opcodes[bb.opcodes.length - 1];
-            const branchType = branchOpcodesMap[Arguments.game][lastOpcode.id];
+	private findUnreachableBlocks(basicBlocks: TBasicBlockMap) {
+		let unreachableFound;
+		do {
+			unreachableFound = false;
+			basicBlocks.forEach((bb: IBasicBlock, key) => {
+				if (bb.isHeaderBlock) {
+					return;
+				}
 
-            if (!branchType) {
-                bb.type = eBasicBlockType.FALL_THRU;
-                prevBBtoLink = bb;
-                continue;
-            }
+				if (bb.predecessors.length > 0) {
+					return;
+				}
 
-            bb.type = branchType;
+				bb.successors.forEach((successor: IBasicBlock) => {
+					successor.predecessors.splice(successor.predecessors.indexOf(bb), 1);
+				});
 
-            if (bb.type === eBasicBlockType.TWO_WAY) {
-                prevBBtoLink = bb;
-            }
+				basicBlocks.delete(key);
+				unreachableFound = true;
 
-            if (bb.type === eBasicBlockType.N_WAY) {
-                // todo; set links to switch cases
-            }
+				Log.warn(AppError.WUNREAC, bb.opcodes[0].offset);
+			});
+		} while (unreachableFound);
 
-            let targetOffset;
-            targetOffset = this.getOpcodeTargetOffset(lastOpcode);
+		return basicBlocks;
+	}
 
-            // eliminate jump-to-jump transitions
-            /*while (true) {
-                targetOffset = this.getOpcodeTargetOffset(lastOpcode);
+	private linkBasicBlocks(basicBlocks: TBasicBlockMap) {
+		let prevBBtoLink = null;
+		for (const [offset, bb] of basicBlocks) {
 
-                // check if we got a number, including 0.
-                if (!isFinite(targetOffset)) {
-                    break;
-                }
-                lastOpcode = opcodes.get(Math.abs(targetOffset));
-                if (!lastOpcode || lastOpcode.id !== OP_JMP) {
-                    break;
-                }
-            }*/
+			if (prevBBtoLink) {
+				this.setBasicBlockSuccessor(prevBBtoLink, bb);
+				prevBBtoLink = null;
+			}
 
-            const targetBB = basicBlocks.get(Math.abs(targetOffset));
+			const lastOpcode = bb.opcodes[bb.opcodes.length - 1];
+			const branchType = branchOpcodesMap[Arguments.game][lastOpcode.id];
 
-            if (!targetBB) {
-                Log.warn('WNOBRAN', targetOffset);
-                break;
-            }
-            this.setBasicBlockSuccessor(bb, targetBB);
+			if (!branchType) {
+				bb.type = eBasicBlockType.FALL_THRU;
+				prevBBtoLink = bb;
+				continue;
+			}
 
-        }
+			bb.type = branchType;
 
-        return basicBlocks;
-    }
+			if (bb.type === eBasicBlockType.TWO_WAY) {
+				prevBBtoLink = bb;
+			}
 
-    private findBasicBlocksForFile(opcodes: TOpcodesMap) {
-        let currentLeader = null;
-        let bbOpcodes = [];
-        let basicBlocks = new Map();
-        for (let [offset, opcode] of opcodes) {
-            if (opcode.isLeader) {
-                if (currentLeader) {
-                    basicBlocks.set(currentLeader.offset, this.createBasicBlock(bbOpcodes));
-                }
-                currentLeader = opcode;
-                bbOpcodes = [];
-            }
-            bbOpcodes[bbOpcodes.length] = opcode;
-        }
-        // add last bb in the file
-        basicBlocks.set(currentLeader.offset, this.createBasicBlock(bbOpcodes));
+			if (bb.type === eBasicBlockType.N_WAY) {
+				// todo; set links to switch cases
+			}
 
-        return basicBlocks;
-    }
+			let targetOffset;
+			targetOffset = this.getOpcodeTargetOffset(lastOpcode);
 
-    /**
-     *
-     * @param {TOpcodesMap} opcodes Opcodes map
-     * @param {eCompiledFileType} fileType
-     * @returns {TOpcodesMap}
-     */
-    private findLeadersForFile(opcodes: TOpcodesMap, fileType: eCompiledFileType) {
-        let isThisInstructionFollowBranchOpcode = false;
-        for (let [offset, opcode] of opcodes) {
+			// eliminate jump-to-jump transitions
+			/*while (true) {
+				targetOffset = this.getOpcodeTargetOffset(lastOpcode);
 
-            opcode.isLeader = opcode.isLeader || isThisInstructionFollowBranchOpcode;
+				// check if we got a number, including 0.
+				if (!isFinite(targetOffset)) {
+					break;
+				}
+				lastOpcode = opcodes.get(Math.abs(targetOffset));
+				if (!lastOpcode || lastOpcode.id !== OP_JMP) {
+					break;
+				}
+			}*/
 
-            if (blockEndOpcodes.indexOf(opcode.id) !== -1) {
-                isThisInstructionFollowBranchOpcode = true;
-                continue;
-            }
+			const targetBB = basicBlocks.get(Math.abs(targetOffset));
 
-            isThisInstructionFollowBranchOpcode = false;
+			if (!targetBB) {
+				Log.warn(AppError.WNOBRAN, targetOffset);
+				break;
+			}
+			this.setBasicBlockSuccessor(bb, targetBB);
 
-            const branchType = branchOpcodesMap[Arguments.game][opcode.id];
-            if (!branchType) {
-                continue;
-            }
+		}
 
-            let targetOffset = this.getOpcodeTargetOffset(opcode);
+		return basicBlocks;
+	}
 
-            if (targetOffset < 0 && fileType === eCompiledFileType.MAIN) {
-                throw Log.error('ERRNOFF', offset);
-            }
-            if (targetOffset >= 0 && fileType !== eCompiledFileType.MAIN) {
-                // todo: gosubs with positive offsets in missions are allowed
-                throw Log.error('ERRPOFF', offset);
-            }
-            let targetOpcode = <IOpcode>opcodes.get(Math.abs(targetOffset));
-            if (!targetOpcode) {
-                Log.warn('WNOTARG', offset);
-                continue;
-            }
-            targetOpcode.isLeader = true;
-            targetOpcode.isHeader = callOpcodes.indexOf(opcode.id) !== -1;
-            isThisInstructionFollowBranchOpcode = callOpcodes.indexOf(opcode.id) === -1;
-        }
-        return opcodes;
-    }
+	private findBasicBlocksForFile(opcodes: TOpcodesMap) {
+		let currentLeader = null;
+		let bbOpcodes = [];
+		const basicBlocks = new Map();
+		for (const [offset, opcode] of opcodes) {
+			if (opcode.isLeader) {
+				if (currentLeader) {
+					basicBlocks.set(currentLeader.offset, this.createBasicBlock(bbOpcodes));
+				}
+				currentLeader = opcode;
+				bbOpcodes = [];
+			}
+			bbOpcodes[bbOpcodes.length] = opcode;
+		}
+		// add last bb in the file
+		basicBlocks.set(currentLeader.offset, this.createBasicBlock(bbOpcodes));
 
-    /**
-     *
-     * @param opcodes
-     * @returns {IBasicBlock}
-     */
-    private createBasicBlock(opcodes) {
-        return <IBasicBlock>{
-            type: eBasicBlockType.UNDEFINED,
-            opcodes,
-            predecessors: [],
-            successors:   [],
-            processed: false,
-            isHeaderBlock: opcodes[0].isHeader
-        };
-    }
+		return basicBlocks;
+	}
 
-    private getOpcodeTargetOffset(opcode: IOpcode) {
-        return Number(opcode.params[0].value);
-    }
+	private findLeadersForFile(opcodes: TOpcodesMap, fileType: eCompiledFileType) {
+		let isThisInstructionFollowBranchOpcode = false;
+		for (const [offset, opcode] of opcodes) {
 
-    private setBasicBlockSuccessor(bb, target) {
-        bb.successors.push(target);
-        target.predecessors.push(bb);
-    }
+			opcode.isLeader = opcode.isLeader || isThisInstructionFollowBranchOpcode;
+
+			if (blockEndOpcodes.indexOf(opcode.id) !== -1) {
+				isThisInstructionFollowBranchOpcode = true;
+				continue;
+			}
+
+			isThisInstructionFollowBranchOpcode = false;
+
+			const branchType = branchOpcodesMap[Arguments.game][opcode.id];
+			if (!branchType) {
+				continue;
+			}
+
+			const targetOffset = this.getOpcodeTargetOffset(opcode);
+
+			if (targetOffset < 0 && fileType === eCompiledFileType.MAIN) {
+				throw Log.error(AppError.ERRNOFF, offset);
+			}
+			if (targetOffset >= 0 && fileType !== eCompiledFileType.MAIN) {
+				// todo: gosubs with positive offsets in missions are allowed
+				throw Log.error(AppError.ERRPOFF, offset);
+			}
+			const targetOpcode: IOpcode = opcodes.get(Math.abs(targetOffset));
+			if (!targetOpcode) {
+				Log.warn(AppError.WNOTARG, offset);
+				continue;
+			}
+			targetOpcode.isLeader = true;
+
+			// https://github.com/x87/scout.js/issues/3
+			// todo: refactor graphs on per-function and remove this
+			targetOpcode.isHeader = callOpcodes.indexOf(opcode.id) !== -1;
+
+			isThisInstructionFollowBranchOpcode = callOpcodes.indexOf(opcode.id) === -1;
+		}
+		return opcodes;
+	}
+
+	private createBasicBlock(opcodes) {
+		return {
+			type: eBasicBlockType.UNDEFINED,
+			opcodes,
+			predecessors: [],
+			successors: [],
+			processed: false,
+			inLoop: false,
+
+			// https://github.com/x87/scout.js/issues/3
+			// todo: true for the first bb in subgraph
+			isHeaderBlock: opcodes[0].isHeader
+
+		} as IBasicBlock;
+	}
+
+	private getOpcodeTargetOffset(opcode: IOpcode) {
+		return Number(opcode.params[0].value);
+	}
+
+	private setBasicBlockSuccessor(bb, target) {
+		bb.successors.push(target);
+		target.predecessors.push(bb);
+	}
 
 }
-

@@ -1,112 +1,101 @@
-import Paths from '../common/paths';
-import Log from '../utils/Log';
+import * as file from 'utils/file';
+import * as utils from 'utils';
+import Log from 'utils/Log';
 
-import { IOpcodeData, ICompiledFile, IOpcode, IOpcodeParamArray } from '../common/interfaces';
-import { COpcodeParser } from '../frontend/OpcodeParser';
-import { CScriptFile, CScriptFileSCM } from '../frontend/ScriptFile';
-import { eCompiledFileType } from '../common/enums';
-import * as fsHelpers from '../utils/fsHelpers';
-import { Helpers as helpers } from '../utils/helpers';
+import AppError from 'common/errors';
+import Arguments from 'common/arguments';
+import COpcodeParser from './OpcodeParser';
+import CScriptFileSCM from './CScriptFileSCM';
+import CScriptFile from './ScriptFile';
 
-export class CDisassembler {
-    private _opcodeParser: COpcodeParser;
-    private _opcodesData: IOpcodeData[];
+import { ICompiledFile, IOpcode, IOpcodeData, IOpcodeParamArray } from 'common/interfaces';
+import { eCompiledFileType } from 'common/enums';
 
-    constructor () {
-        this._opcodeParser = new COpcodeParser();
-    }
+export default class CDisassembler {
+	opcodesData: IOpcodeData[];
+	readonly opcodeParser: COpcodeParser;
 
-    public disassemble(scriptFile: CScriptFile) {
-        let files: ICompiledFile[] = [];
-        files[files.length] = this.parseBuffer(scriptFile.baseOffset, scriptFile.type, scriptFile.mainData);
+	constructor() {
+		this.opcodeParser = new COpcodeParser();
+	}
 
-        if (scriptFile instanceof CScriptFileSCM) {
-            for (let i = 0, len = scriptFile.missionsData.length; i < len; i += 1) {
-                files[files.length] = this.parseBuffer(0, eCompiledFileType.MISSION, scriptFile.missionsData[i]);
-            }
-        }
-        // todo; external data
-        return files;
-    }
+	disassemble(scriptFile: CScriptFile) {
+		const files: ICompiledFile[] = [];
+		files[files.length] = this.parseBuffer(scriptFile.baseOffset, scriptFile.type, scriptFile.mainData);
 
-    private parseBuffer(base: number, type: eCompiledFileType, data: Buffer) {
-        this.opcodeParser.data = data;
-        this.opcodeParser.offset = 0;
+		if (scriptFile instanceof CScriptFileSCM) {
+			for (let i = 0, len = scriptFile.missionsData.length; i < len; i += 1) {
+				files[files.length] = this.parseBuffer(0, eCompiledFileType.MISSION, scriptFile.missionsData[i]);
+			}
+		}
+		// todo; external data
+		return files;
+	}
 
-        let file = <ICompiledFile>{
-            opcodes: new Map(),
-            type
-        };
+	printOpcode(opcode: IOpcode) {
+		const id = opcode.id;
+		const info = this.opcodesData[id & 0x7FFF];
+		let output = `/* ${this.padOpcodeOffset(opcode.offset)} */ ${this.opcodeIdToHex(id)}: `;
 
-        let firstOpcode = true;
-        for (let opcode of this.opcodeParser) {
-            opcode.offset += base;
-            if (firstOpcode) {
-                opcode.isHeader = true;
-                opcode.isLeader = true;
-                firstOpcode = false;
-            }
-            file.opcodes.set(opcode.offset, opcode);
-        }
-        return file;
-    }
+		if (opcode.isLeader) {
+			output = '\n\n' + output;
+		}
+		if (id > 0x7FFF) {
+			output += 'NOT ';
+		}
+		output += info.name;
+		for (const param of opcode.params) {
+			if (utils.isArrayParam(param.type)) {
+				const a = param.value as IOpcodeParamArray;
+				output += ` (${a.varIndex} ${a.offset} ${a.size} ${a.props})`;
+			} else {
+				output += ' ' + param.value;
+			}
+		}
+		Log.msg(output);
+	}
 
-    /**
-     *
-     * @returns {Promise<TResult>|Promise<T>}
-     */
-    public loadOpcodeData() {
-        return fsHelpers.isReadable(Paths.opcodesFile)
-            .then(() => this.opcodesData = require(Paths.opcodesFile))
-            .then(
-                opcodesData => this._opcodeParser.opcodesData = opcodesData
-            )
-            .catch(() => {
-                throw Log.error('ERRNOOP', Paths.opcodesFile);
-            });
-    }
+	loadOpcodeData(): Promise<any> {
+		return file.isReadable(Arguments.opcodesFile)
+			.then(() => file.loadText(Arguments.opcodesFile))
+			.then((opcodesData: any) => {
+				const data = JSON.parse(opcodesData);
+				this.opcodeParser.opcodesData = data;
+				this.opcodesData = data;
+			})
+			.catch(() => {
+				throw Log.error(AppError.ERRNOOP, Arguments.opcodesFile);
+			});
+	}
 
-    get opcodeParser(): COpcodeParser {
-        return this._opcodeParser;
-    }
+	private parseBuffer(base: number, type: eCompiledFileType, data: Buffer) {
+		this.opcodeParser.data = data;
+		this.opcodeParser.offset = 0;
 
-    get opcodesData(): IOpcodeData[] {
-        return this._opcodesData;
-    }
+		const compiledFile = {
+			opcodes: new Map(),
+			type
+		} as ICompiledFile;
 
-    set opcodesData(value: IOpcodeData[]) {
-        this._opcodesData = value;
-    }
+		let firstOpcode = true;
+		for (const opcode of this.opcodeParser) {
+			opcode.offset += base;
+			if (firstOpcode) {
+				opcode.isHeader = true;
+				opcode.isLeader = true;
+				firstOpcode = false;
+			}
+			compiledFile.opcodes.set(opcode.offset, opcode);
+		}
+		return compiledFile;
+	}
 
-    public printOpcode(opcode: IOpcode) {
-        let id = opcode.id;
-        let info = this.opcodesData[id & 0x7FFF];
-        let output = `/* ${this.padOpcodeOffset(opcode.offset)} */ ${this.opcodeIdToHex(id)}: `;
+	private opcodeIdToHex(id) {
+		return utils.strPadLeft(id.toString(16).toUpperCase(), 4);
+	}
 
-        if (opcode.isLeader) {
-            output = '\n\n' + output;
-        }
-        if (id > 0x7FFF) {
-            output += 'NOT ';
-        }
-        output += info.name;
-        for (let param of opcode.params) {
-            if (helpers.isArrayParam(param.type)) {
-                let a = <IOpcodeParamArray>param.value;
-                output += ` (${a.varIndex} ${a.offset} ${a.size} ${a.props})`;
-            } else {
-                output += ' ' + param.value;
-            }
-        }
-        Log.msg(output);
-    }
-
-    private opcodeIdToHex(id) {
-       return helpers.strPadLeft(id.toString(16).toUpperCase(), 4);
-    }
-
-    private padOpcodeOffset(offset) {
-        return helpers.strPadLeft(offset, 8);
-    }
+	private padOpcodeOffset(offset) {
+		return utils.strPadLeft(offset, 8);
+	}
 
 }

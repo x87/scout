@@ -1,58 +1,53 @@
-import {
-    eGame,
-    eParamType,
-    eCompiledFileType,
-    eBasicBlockType
-} from './enums';
+import { eBasicBlockType, eCompiledFileType, eGame, eParamType } from './enums';
 
 export interface IArguments {
-    game: eGame;
-    inputFile: string;
-    printAssembly: boolean;
+	game: eGame;
+	inputFile: string;
+	printAssembly: boolean;
 }
 
 export interface IOpcodeParamArray {
-    offset: number;
-    varIndex: number;
-    size: number;
-    props: number;
+	offset: number;
+	varIndex: number;
+	size: number;
+	props: number;
 }
 
 export interface IOpcodeDataParam {
-    type: string;
+	type: string;
 }
 
 export interface IOpcodeData {
-    name: string;
-    params: IOpcodeDataParam[];
+	name: string;
+	params: IOpcodeDataParam[];
 }
 
 export interface IOpcode {
-    id: number;
-    offset: number;
-    params: IOpcodeParam[];
-    isLeader: boolean;
-    isHeader: boolean;
+	id: number;
+	offset: number;
+	params: IOpcodeParam[];
+	isLeader: boolean;
+	isHeader: boolean;
 }
 
 export interface IOpcodeParam {
-    type: eParamType;
-    value: number | string | IOpcodeParamArray;
+	type: eParamType;
+	value: number | string | IOpcodeParamArray;
 }
 
 export interface IScriptFileHeader {
-    modelIds: string[];
-    mainSize: number;
-    largestMission: number;
-    numExclusiveMissions: number;
-    missions: number[];
-    externals: IExternalScriptHeader[];
+	modelIds: string[];
+	mainSize: number;
+	largestMission: number;
+	numExclusiveMissions: number;
+	missions: number[];
+	externals: IExternalScriptHeader[];
 }
 
 export interface IExternalScriptHeader {
-    name: string;
-    offset: number;
-    size: number;
+	name: string;
+	offset: number;
+	size: number;
 }
 
 export type TOpcodesMap = Map<number, IOpcode>;
@@ -60,15 +55,16 @@ export type TOpcodesMap = Map<number, IOpcode>;
 export type TBasicBlockMap = Map<number, IBasicBlock>;
 
 export interface ICompiledFile {
-    type: eCompiledFileType;
-    opcodes: TOpcodesMap;
+	type: eCompiledFileType;
+	opcodes: TOpcodesMap;
 }
 
 export interface IBasicBlock {
-    type: eBasicBlockType;
-    opcodes: IOpcode[];
-    successors: IBasicBlock[];
-    predecessors: IBasicBlock[];
-    processed: boolean;
-    isHeaderBlock: boolean;
+	type: eBasicBlockType;
+	opcodes: IOpcode[];
+	successors: IBasicBlock[];
+	predecessors: IBasicBlock[];
+	processed: boolean;
+	inLoop: boolean;
+	isHeaderBlock: boolean;
 }
