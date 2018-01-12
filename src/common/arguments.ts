@@ -53,8 +53,17 @@ for (let i = 0; i < args.length; i += 1) {
 	}
 }
 
+const map = {
+	[eGame.GTA3]: 'gta3.json',
+	[eGame.GTAVC]: 'gtavc.json',
+	[eGame.GTASA]: 'gtasa.json'
+};
+
+const opcodesFile = map[game];
+
 export default {
 	game,
 	inputFile,
-	printAssembly
+	printAssembly,
+	opcodesFile
 };

@@ -1,7 +1,6 @@
 // import ErrorHandler from './utils/ErrorHandler';
 
 import Log from 'utils/Log';
-import Paths from 'common/paths';
 import Arguments from 'common/arguments';
 import CDisassembler from 'frontend/Disassembler';
 import Loader from 'frontend/Loader';
@@ -16,7 +15,7 @@ const disasm = new CDisassembler();
 disasm.loadOpcodeData()
 	.then(() => {
 		const loader = new Loader();
-		return loader.loadScript(Paths.inputFile);
+		return loader.loadScript(Arguments.inputFile);
 	})
 	.then(scriptFile => disasm.disassemble(scriptFile))
 	.then(files => {

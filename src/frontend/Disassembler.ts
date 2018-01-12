@@ -1,9 +1,9 @@
 import * as file from 'utils/file';
 import * as utils from 'utils';
 import Log from 'utils/Log';
-import Paths from 'common/paths';
-import AppError from 'common/errors';
 
+import AppError from 'common/errors';
+import Arguments from 'common/arguments';
 import COpcodeParser from './OpcodeParser';
 import CScriptFileSCM from './CScriptFileSCM';
 import CScriptFile from './ScriptFile';
@@ -56,15 +56,15 @@ export default class CDisassembler {
 	}
 
 	loadOpcodeData(): Promise<any> {
-		return file.isReadable(Paths.opcodesFile)
-			.then(() => file.loadText(Paths.opcodesFile))
+		return file.isReadable(Arguments.opcodesFile)
+			.then(() => file.loadText(Arguments.opcodesFile))
 			.then((opcodesData: any) => {
 				const data = JSON.parse(opcodesData);
 				this.opcodeParser.opcodesData = data;
 				this.opcodesData = data;
 			})
 			.catch(() => {
-				throw Log.error(AppError.ERRNOOP, Paths.opcodesFile);
+				throw Log.error(AppError.ERRNOOP, Arguments.opcodesFile);
 			});
 	}
 
