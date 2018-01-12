@@ -10,9 +10,10 @@
   "scripts": {
     "lint": "tslint -c tslint.json src/**/*.ts",
     "build": "webpack",
-    "postbuild": "cd build && node scout test3.scm -g gta3 -p",
-    "pretest": "npm run build -- -e src/spec.ts -o build/spec.js",
-    "test": "jasmine build/spec.js",
+    "predev": "npm run build",
+    "dev": "cd build && node scout test3.scm -g gta3 -p",
+    "pretest": "npm run build -- --entry ./src/spec.ts --output-filename spec.js",
+    "test": "jasmine ./build/spec.js",
     "opcodes": "node ./opcodes/parser"
   },
   "keywords": [],
@@ -21,9 +22,10 @@
   "devDependencies": {
     "@types/jasmine": "2.8.2",
     "@types/lodash": "4.14.91",
-    "@types/node": "^8.5.1",
+    "@types/node": "8.5.1",
     "awesome-typescript-loader": "3.2.3",
     "jasmine-core": "2.8.0",
+    "jasmine": "2.8.0",
     "lodash": "4.17.4",
     "source-map-support": "0.4.2",
     "tslint": "5.8.0",
