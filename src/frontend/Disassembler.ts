@@ -5,8 +5,8 @@ import { ICompiledFile, IOpcode, IOpcodeData, IOpcodeParamArray } from '../commo
 import { COpcodeParser } from './OpcodeParser';
 import { CScriptFile } from './ScriptFile';
 import { eCompiledFileType } from '../common/enums';
-import * as fsHelpers from '../utils/fsHelpers';
-import { Helpers as helpers } from '../utils/helpers';
+import * as file from '../utils/file';
+import * as utils from '../utils';
 import { CScriptFileSCM } from './CScriptFileSCM';
 import AppError from '../common/errors';
 
@@ -44,7 +44,7 @@ export class CDisassembler {
 		}
 		output += info.name;
 		for (const param of opcode.params) {
-			if (helpers.isArrayParam(param.type)) {
+			if (utils.isArrayParam(param.type)) {
 				const a = param.value as IOpcodeParamArray;
 				output += ` (${a.varIndex} ${a.offset} ${a.size} ${a.props})`;
 			} else {
@@ -55,8 +55,8 @@ export class CDisassembler {
 	}
 
 	loadOpcodeData(): Promise<any> {
-		return fsHelpers.isReadable(Paths.opcodesFile)
-			.then(() => fsHelpers.loadText(Paths.opcodesFile))
+		return file.isReadable(Paths.opcodesFile)
+			.then(() => file.loadText(Paths.opcodesFile))
 			.then((opcodesData: any) => {
 				const data = JSON.parse(opcodesData);
 				this.opcodeParser.opcodesData = data;
@@ -71,7 +71,7 @@ export class CDisassembler {
 		this.opcodeParser.data = data;
 		this.opcodeParser.offset = 0;
 
-		const file = {
+		const compiledFile = {
 			opcodes: new Map(),
 			type
 		} as ICompiledFile;
@@ -84,17 +84,17 @@ export class CDisassembler {
 				opcode.isLeader = true;
 				firstOpcode = false;
 			}
-			file.opcodes.set(opcode.offset, opcode);
+			compiledFile.opcodes.set(opcode.offset, opcode);
 		}
-		return file;
+		return compiledFile;
 	}
 
 	private opcodeIdToHex(id) {
-		return helpers.strPadLeft(id.toString(16).toUpperCase(), 4);
+		return utils.strPadLeft(id.toString(16).toUpperCase(), 4);
 	}
 
 	private padOpcodeOffset(offset) {
-		return helpers.strPadLeft(offset, 8);
+		return utils.strPadLeft(offset, 8);
 	}
 
 }

@@ -1,4 +1,4 @@
-import * as fsHelpers from '../utils/fsHelpers';
+import * as file from '../utils/file';
 import Log from '../utils/Log';
 import { CScriptFile } from '../frontend/ScriptFile';
 import { CScriptFileSCM } from '../frontend/CScriptFileSCM';
@@ -13,10 +13,10 @@ export class Loader {
 	loadScript(fileName: string): Promise<CScriptFile> {
 
 		if (!this.isScriptFileValidExtension(fileName)) {
-			throw Log.error(AppError.ERRIEXT, fsHelpers.getFileExtension(fileName));
+			throw Log.error(AppError.ERRIEXT, file.getFileExtension(fileName));
 		}
-		return fsHelpers.isReadable(fileName)
-			.then(() => fsHelpers.load(fileName))
+		return file.isReadable(fileName)
+			.then(() => file.load(fileName))
 			.then(buffer => {
 				if (Buffer.isBuffer(buffer)) {
 					let scriptFile: CScriptFile;
@@ -38,12 +38,12 @@ export class Loader {
 	}
 
 	isScriptFileWithHeader(fileName: string): boolean {
-		const extension = fsHelpers.getFileExtension(fileName);
+		const extension = file.getFileExtension(fileName);
 		return !!HEADER_EXTENSION_MAP[extension];
 	}
 
 	isScriptFileValidExtension(fileName: string): boolean {
-		const extension = fsHelpers.getFileExtension(fileName);
+		const extension = file.getFileExtension(fileName);
 		return (HEADER_EXTENSION_MAP.hasOwnProperty(extension));
 	}
 }

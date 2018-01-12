@@ -3,7 +3,7 @@ import * as _ from 'lodash';
 import { IBasicBlock, ICompiledFile, IOpcode, TBasicBlockMap, TOpcodesMap } from '../common/interfaces';
 
 import { eBasicBlockType, eCompiledFileType, eGame } from '../common/enums';
-import { Helpers } from '../utils/helpers';
+import * as utils from '../utils';
 import Arguments from '../common/arguments';
 
 import Log from '../utils/Log';
@@ -110,14 +110,14 @@ export class CControlFlowProcessor {
 
 			basicBlocks.forEach((bb: IBasicBlock) => {
 				if (bb.processed) return;
-				if (!_.includes(interval, bb) && Helpers.checkArrayIncludesArray(interval, bb.predecessors)) {
+				if (!_.includes(interval, bb) && utils.checkArrayIncludesArray(interval, bb.predecessors)) {
 					interval.push(bb);
 					bb.processed = true;
 				}
 			});
 			basicBlocks.forEach((bb: IBasicBlock) => {
 				if (bb.processed) return;
-				if (!_.includes(interval, bb) && Helpers.checkArrayIncludeItemFromArray(interval, bb.predecessors)) {
+				if (!_.includes(interval, bb) && utils.checkArrayIncludeItemFromArray(interval, bb.predecessors)) {
 					headers.push(bb);
 				}
 			});

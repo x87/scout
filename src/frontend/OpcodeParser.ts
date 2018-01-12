@@ -1,6 +1,6 @@
 import { eParamType } from '../common/enums';
 import { IOpcode, IOpcodeData, IOpcodeParam, IOpcodeParamArray } from '../common/interfaces';
-import { Helpers as helpers } from '../utils/helpers';
+import * as utils from '../utils';
 import Log from '../utils/Log';
 import AppError from '../common/errors';
 
@@ -57,59 +57,59 @@ export class COpcodeParser {
 				case 6:
 					return () => eParamType.FLOAT;
 				case 7:
-					if (helpers.isGameSA()) {
+					if (utils.isGameSA()) {
 						return () => eParamType.GARRNUM32;
 					}
 				case 8:
-					if (helpers.isGameSA()) {
+					if (utils.isGameSA()) {
 						return () => eParamType.LARRNUM32;
 					}
 				case 9:
-					if (helpers.isGameSA()) {
+					if (utils.isGameSA()) {
 						return () => eParamType.STR8;
 					}
 				case 0xA:
-					if (helpers.isGameSA()) {
+					if (utils.isGameSA()) {
 						return () => eParamType.GVARSTR8;
 					}
 				case 0xB:
-					if (helpers.isGameSA()) {
+					if (utils.isGameSA()) {
 						return () => eParamType.LVARSTR8;
 					}
 				case 0xC:
-					if (helpers.isGameSA()) {
+					if (utils.isGameSA()) {
 						return () => eParamType.GARRSTR8;
 					}
 				case 0xD:
-					if (helpers.isGameSA()) {
+					if (utils.isGameSA()) {
 						return () => eParamType.LARRSTR8;
 					}
 				case 0xE:
-					if (helpers.isGameSA()) {
+					if (utils.isGameSA()) {
 						return () => eParamType.STR;
 					}
 				case 0xF:
-					if (helpers.isGameSA()) {
+					if (utils.isGameSA()) {
 						return () => eParamType.STR16;
 					}
 				case 0x10:
-					if (helpers.isGameSA()) {
+					if (utils.isGameSA()) {
 						return () => eParamType.GVARSTR16;
 					}
 				case 0x11:
-					if (helpers.isGameSA()) {
+					if (utils.isGameSA()) {
 						return () => eParamType.LVARSTR16;
 					}
 				case 0x12:
-					if (helpers.isGameSA()) {
+					if (utils.isGameSA()) {
 						return () => eParamType.GARRSTR16;
 					}
 				case 0x13:
-					if (helpers.isGameSA()) {
+					if (utils.isGameSA()) {
 						return () => eParamType.LARRSTR16;
 					}
 				default:
-					if (helpers.isGameSA()) {
+					if (utils.isGameSA()) {
 						return () => {
 							this.offset--;
 							return eParamType.STR128;
@@ -218,7 +218,7 @@ export class COpcodeParser {
 	}
 
 	private getFloat(): number {
-		if (helpers.isGameGTA3()) {
+		if (utils.isGameGTA3()) {
 			const val = this.nextInt16();
 			return val / 16.0;
 		}

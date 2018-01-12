@@ -1,6 +1,6 @@
 import { IExternalScriptHeader, IScriptFileHeader } from '../common/interfaces';
 import { eGame, eScriptFileSegments } from '../common/enums';
-import { Helpers as helpers } from '../utils/helpers';
+import * as utils from '../utils';
 import Arguments from '../common/arguments';
 
 const scriptFileSegmentsMap: any = {
@@ -45,7 +45,7 @@ export class CScriptFileHeader implements IScriptFileHeader {
 		this.loadModelSegment(data);
 		this.loadMissionSegment(data);
 
-		if (helpers.isGameSA()) {
+		if (utils.isGameSA()) {
 			this.loadExternalSegment(data);
 		}
 
@@ -72,7 +72,7 @@ export class CScriptFileHeader implements IScriptFileHeader {
 		const numMissions = this.read16Bit(data);
 		this.numExclusiveMissions = this.read16Bit(data);
 
-		if (helpers.isGameSA()) {
+		if (utils.isGameSA()) {
 			this.highestLocalInMission = this.read32Bit(data);
 		}
 
