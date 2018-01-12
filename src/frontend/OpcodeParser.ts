@@ -1,14 +1,14 @@
-import { eParamType } from '../common/enums';
-import { IOpcode, IOpcodeData, IOpcodeParam, IOpcodeParamArray } from '../common/interfaces';
-import * as utils from '../utils';
-import Log from '../utils/Log';
-import AppError from '../common/errors';
+import { eParamType } from 'common/enums';
+import { IOpcode, IOpcodeData, IOpcodeParam, IOpcodeParamArray } from 'common/interfaces';
+import * as utils from 'utils';
+import Log from 'utils/Log';
+import AppError from 'common/errors';
 
 export const PARAM_ANY = 'any';
 export const PARAM_ARGUMENTS = 'arguments';
 export const PARAM_LABEL = 'label';
 
-export class COpcodeParser {
+export default  class COpcodeParser {
 
 	data: Buffer;
 	offset: number;

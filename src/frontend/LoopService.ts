@@ -1,11 +1,10 @@
-import { IBasicBlock } from '../common/interfaces';
+import Log from 'utils/Log';
+import AppError from 'common/errors';
 
-import { eBasicBlockType, eLoopType } from '../common/enums';
+import { IBasicBlock } from 'common/interfaces';
+import { eBasicBlockType, eLoopType } from 'common/enums';
 
-import Log from '../utils/Log';
-import AppError from '../common/errors';
-
-export class LoopService {
+export default class LoopService {
 
 	static findLoopType(head: IBasicBlock, latchingNode: IBasicBlock): eLoopType {
 		if (head.type === eBasicBlockType.TWO_WAY && latchingNode.type !== eBasicBlockType.TWO_WAY) {

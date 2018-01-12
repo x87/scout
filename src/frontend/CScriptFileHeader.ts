@@ -1,7 +1,7 @@
-import { IExternalScriptHeader, IScriptFileHeader } from '../common/interfaces';
-import { eGame, eScriptFileSegments } from '../common/enums';
-import * as utils from '../utils';
-import Arguments from '../common/arguments';
+import * as utils from 'utils';
+import Arguments from 'common/arguments';
+import { IExternalScriptHeader, IScriptFileHeader } from 'common/interfaces';
+import { eGame, eScriptFileSegments } from 'common/enums';
 
 const scriptFileSegmentsMap: any = {
 	[eGame.GTA3]: {
@@ -27,7 +27,7 @@ const scriptFileSegmentsMap: any = {
 	}
 };
 
-export class CScriptFileHeader implements IScriptFileHeader {
+export default class CScriptFileHeader implements IScriptFileHeader {
 
 	readonly size: number;
 	offset: number;

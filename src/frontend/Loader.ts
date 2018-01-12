@@ -1,15 +1,15 @@
-import * as file from '../utils/file';
-import Log from '../utils/Log';
-import { CScriptFile } from '../frontend/ScriptFile';
-import { CScriptFileSCM } from '../frontend/CScriptFileSCM';
-import AppError from '../common/errors';
+import * as file from 'utils/file';
+import Log from 'utils/Log';
+import CScriptFile from 'frontend/ScriptFile';
+import CScriptFileSCM from 'frontend/CScriptFileSCM';
+import AppError from 'common/errors';
 
 const HEADER_EXTENSION_MAP: any = {
 	'.scm': true,
 	'.cs': false
 };
 
-export class Loader {
+export default class Loader {
 	loadScript(fileName: string): Promise<CScriptFile> {
 
 		if (!this.isScriptFileValidExtension(fileName)) {

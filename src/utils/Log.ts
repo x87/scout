@@ -1,4 +1,4 @@
-import AppError from '../common/errors';
+import AppError from 'common/errors';
 import * as util from 'util';
 
 export default class {

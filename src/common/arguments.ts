@@ -1,5 +1,5 @@
-import Log from '../utils/Log';
-import AppError from '../common/errors';
+import Log from 'utils/Log';
+import AppError from 'common/errors';
 import { eGame } from './enums';
 
 let game = eGame.GTA3;

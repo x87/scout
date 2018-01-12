@@ -1,5 +1,5 @@
-import AppError from '../common/errors';
-import Log from '../utils/Log';
+import AppError from 'common/errors';
+import Log from 'utils/Log';
 
 export default function() {
 

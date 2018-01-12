@@ -1,16 +1,17 @@
-import Paths from '../common/paths';
-import Log from '../utils/Log';
+import * as file from 'utils/file';
+import * as utils from 'utils';
+import Log from 'utils/Log';
+import Paths from 'common/paths';
+import AppError from 'common/errors';
 
-import { ICompiledFile, IOpcode, IOpcodeData, IOpcodeParamArray } from '../common/interfaces';
-import { COpcodeParser } from './OpcodeParser';
-import { CScriptFile } from './ScriptFile';
-import { eCompiledFileType } from '../common/enums';
-import * as file from '../utils/file';
-import * as utils from '../utils';
-import { CScriptFileSCM } from './CScriptFileSCM';
-import AppError from '../common/errors';
+import COpcodeParser from './OpcodeParser';
+import CScriptFileSCM from './CScriptFileSCM';
+import CScriptFile from './ScriptFile';
 
-export class CDisassembler {
+import { ICompiledFile, IOpcode, IOpcodeData, IOpcodeParamArray } from 'common/interfaces';
+import { eCompiledFileType } from 'common/enums';
+
+export default class CDisassembler {
 	opcodesData: IOpcodeData[];
 	readonly opcodeParser: COpcodeParser;
 

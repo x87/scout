@@ -1,6 +1,6 @@
-import { eCompiledFileType } from '../common/enums';
+import { eCompiledFileType } from 'common/enums';
 
-export class CScriptFile {
+export default class CScriptFile {
 
 	mainData: Buffer;
 	type: eCompiledFileType;

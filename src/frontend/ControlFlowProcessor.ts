@@ -1,15 +1,13 @@
 import * as _ from 'lodash';
+import * as utils from 'utils';
+import Log from 'utils/Log';
 
-import { IBasicBlock, ICompiledFile, IOpcode, TBasicBlockMap, TOpcodesMap } from '../common/interfaces';
+import Arguments from 'common/arguments';
+import AppError from 'common/errors';
+import LoopService from './LoopService';
 
-import { eBasicBlockType, eCompiledFileType, eGame } from '../common/enums';
-import * as utils from '../utils';
-import Arguments from '../common/arguments';
-
-import Log from '../utils/Log';
-
-import { LoopService } from './LoopService';
-import AppError from '../common/errors';
+import { IBasicBlock, ICompiledFile, IOpcode, TBasicBlockMap, TOpcodesMap } from 'common/interfaces';
+import { eBasicBlockType, eCompiledFileType, eGame } from 'common/enums';
 
 const OP_JMP = 0x0002;
 const OP_JT = 0x004c;
@@ -45,7 +43,7 @@ const branchOpcodesMap: any = {
 	}
 };
 
-export class CControlFlowProcessor {
+export default class CControlFlowProcessor {
 
 	buildCFG(files: ICompiledFile[]) {
 		// https://github.com/x87/scout.js/issues/3

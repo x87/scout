@@ -1,4 +1,4 @@
-import { Loader } from '../frontend/Loader';
+import Loader from 'frontend/Loader';
 
 export default function() {
 

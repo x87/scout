@@ -3,9 +3,9 @@
 import Log from 'utils/Log';
 import Paths from 'common/paths';
 import Arguments from 'common/arguments';
-import { CDisassembler } from 'frontend/Disassembler';
-import { Loader } from 'frontend/Loader';
-import { CControlFlowProcessor } from 'frontend/ControlFlowProcessor';
+import CDisassembler from 'frontend/Disassembler';
+import Loader from 'frontend/Loader';
+import CControlFlowProcessor from 'frontend/ControlFlowProcessor';
 import AppError from 'common/errors';
 
 if (!Arguments.inputFile) {

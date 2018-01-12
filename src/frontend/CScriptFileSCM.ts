@@ -1,8 +1,8 @@
-import { eCompiledFileType } from '../common/enums';
-import { CScriptFile } from './ScriptFile';
-import { CScriptFileHeader } from './CScriptFileHeader';
+import { eCompiledFileType } from 'common/enums';
+import CScriptFile from './ScriptFile';
+import CScriptFileHeader from './CScriptFileHeader';
 
-export class CScriptFileSCM extends CScriptFile {
+export default class CScriptFileSCM extends CScriptFile {
 	readonly missionsData: Buffer[];
 	readonly externalData: Buffer[];
 	header: CScriptFileHeader;

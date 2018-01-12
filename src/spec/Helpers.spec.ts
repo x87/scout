@@ -1,6 +1,6 @@
-import * as utils from '../utils';
-import Arguments from '../common/arguments';
-import { eGame, eParamType } from '../common/enums';
+import * as utils from 'utils';
+import Arguments from 'common/arguments';
+import { eGame, eParamType } from 'common/enums';
 
 export default function() {
 
