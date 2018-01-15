@@ -19,7 +19,7 @@ const argKeys: any = {
 		};
 
 		if (!gameMap.hasOwnProperty(arg)) {
-			throw Log.error(AppError.ERRGAME, arg);
+			throw Log.error(AppError.UNKNOWN_GAME, arg);
 		}
 
 		game = gameMap[arg];
@@ -39,7 +39,7 @@ for (let i = 0; i < args.length; i += 1) {
 	const arg = args[i];
 	if (argKeys.hasOwnProperty(arg)) {
 		if (i + 1 >= args.length) {
-			throw Log.error(AppError.ERRARGS, arg);
+			throw Log.error(AppError.NO_ARG_VALUE, arg);
 		}
 		argKeys[arg](args[i + 1]);
 		i++;

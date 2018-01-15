@@ -4,35 +4,37 @@ import Log from 'utils/Log';
 
 import AppError from 'common/errors';
 import Arguments from 'common/arguments';
-import COpcodeParser from './OpcodeParser';
-import CScriptFileSCM from './CScriptFileSCM';
-import CScriptFile from './ScriptFile';
+import Parser from './Parser';
+import ScriptMultifile from './script/ScriptMultifile';
+import ScriptFile from './script/ScriptFile';
 
-import { ICompiledFile, IOpcode, IOpcodeData, IOpcodeParamArray } from 'common/interfaces';
-import { eCompiledFileType } from 'common/enums';
+import { IScript, IOpcode, IOpcodeData, IOpcodeParamArray } from 'common/interfaces';
+import { eScriptType } from 'common/enums';
 
-export default class CDisassembler {
-	opcodesData: IOpcodeData[];
-	readonly opcodeParser: COpcodeParser;
+export default class Disassembler {
+	private parser: Parser;
+	private opcodesData: IOpcodeData[];
 
-	constructor() {
-		this.opcodeParser = new COpcodeParser();
-	}
+	disassemble(inputFile: ScriptFile): Promise<IScript[]> {
+		return this.getOpcodes().then(opcodes => {
+			this.opcodesData = opcodes;
 
-	disassemble(scriptFile: CScriptFile) {
-		const files: ICompiledFile[] = [];
-		files[files.length] = this.parseBuffer(scriptFile.baseOffset, scriptFile.type, scriptFile.mainData);
-
-		if (scriptFile instanceof CScriptFileSCM) {
-			for (let i = 0, len = scriptFile.missionsData.length; i < len; i += 1) {
-				files[files.length] = this.parseBuffer(0, eCompiledFileType.MISSION, scriptFile.missionsData[i]);
+			const files = [
+				this.getScriptFromBuffer(inputFile.baseOffset, inputFile.type, inputFile.buffer)
+			];
+			if (inputFile instanceof ScriptMultifile) {
+				return inputFile.missions.reduce((memo, mission) => {
+					memo.push(this.getScriptFromBuffer(0, eScriptType.HEADLESS, mission));
+					return memo;
+				}, files);
 			}
-		}
-		// todo; external data
-		return files;
+			// todo; external scripts
+			return files;
+
+		});
 	}
 
-	printOpcode(opcode: IOpcode) {
+	printOpcode(opcode: IOpcode): void {
 		const id = opcode.id;
 		const info = this.opcodesData[id & 0x7FFF];
 		let output = `/* ${this.padOpcodeOffset(opcode.offset)} */ ${this.opcodeIdToHex(id)}: `;
@@ -55,39 +57,36 @@ export default class CDisassembler {
 		Log.msg(output);
 	}
 
-	loadOpcodeData(): Promise<any> {
+	private getOpcodes(): Promise<IOpcodeData[]> {
+		if (this.opcodesData) return Promise.resolve(this.opcodesData);
+
 		return file.isReadable(Arguments.opcodesFile)
 			.then(() => file.loadText(Arguments.opcodesFile))
-			.then((opcodesData: any) => {
-				const data = JSON.parse(opcodesData);
-				this.opcodeParser.opcodesData = data;
-				this.opcodesData = data;
-			})
+			.then((opcodesData: string) => JSON.parse(opcodesData))
 			.catch(() => {
-				throw Log.error(AppError.ERRNOOP, Arguments.opcodesFile);
+				throw Log.error(AppError.NO_OPCODE, Arguments.opcodesFile);
 			});
 	}
 
-	private parseBuffer(base: number, type: eCompiledFileType, data: Buffer) {
-		this.opcodeParser.data = data;
-		this.opcodeParser.offset = 0;
+	private getScriptFromBuffer(base: number, type: eScriptType, data: Buffer): IScript {
+		const parser = new Parser(this.opcodesData, data, 0);
 
-		const compiledFile = {
+		const script: IScript = {
 			opcodes: new Map(),
 			type
-		} as ICompiledFile;
+		};
 
 		let firstOpcode = true;
-		for (const opcode of this.opcodeParser) {
+		for (const opcode of parser) {
 			opcode.offset += base;
 			if (firstOpcode) {
 				opcode.isHeader = true;
 				opcode.isLeader = true;
 				firstOpcode = false;
 			}
-			compiledFile.opcodes.set(opcode.offset, opcode);
+			script.opcodes.set(opcode.offset, opcode);
 		}
-		return compiledFile;
+		return script;
 	}
 
 	private opcodeIdToHex(id) {

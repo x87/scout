@@ -8,15 +8,19 @@ export const PARAM_ANY = 'any';
 export const PARAM_ARGUMENTS = 'arguments';
 export const PARAM_LABEL = 'label';
 
-export default  class COpcodeParser {
+export default class Parser {
 
 	data: Buffer;
 	offset: number;
-	opcodesData: IOpcodeData[];
+	opcodes: IOpcodeData[];
 	private readonly paramTypesHandlers: any;
 	private readonly paramValuesHandlers: any;
 
-	constructor() {
+	constructor(opcodes: IOpcodeData[], data: Buffer, offset: number) {
+		this.offset = offset;
+		this.data = data;
+		this.opcodes = opcodes;
+
 		this.paramValuesHandlers = {
 			[eParamType.NUM8]: () => this.nextInt8(),
 			[eParamType.NUM16]: () => this.nextInt16(),
@@ -145,8 +149,8 @@ export default  class COpcodeParser {
 		try {
 			result = this.data.readUInt8(this.offset);
 			this.offset += 1;
-		} catch (e) {
-			throw Log.error(AppError.EEOFBUF, 1);
+		} catch {
+			throw Log.error(AppError.END_OF_BUFFER, 1);
 		}
 		return result;
 	}
@@ -156,8 +160,8 @@ export default  class COpcodeParser {
 		try {
 			result = this.data.readInt8(this.offset);
 			this.offset += 1;
-		} catch (e) {
-			throw Log.error(AppError.EEOFBUF, 1);
+		} catch {
+			throw Log.error(AppError.END_OF_BUFFER, 1);
 		}
 		return result;
 	}
@@ -167,8 +171,8 @@ export default  class COpcodeParser {
 		try {
 			result = this.data.readUInt16LE(this.offset);
 			this.offset += 2;
-		} catch (e) {
-			throw Log.error(AppError.EEOFBUF, 2);
+		} catch {
+			throw Log.error(AppError.END_OF_BUFFER, 2);
 		}
 		return result;
 	}
@@ -178,8 +182,8 @@ export default  class COpcodeParser {
 		try {
 			result = this.data.readInt16LE(this.offset);
 			this.offset += 2;
-		} catch (e) {
-			throw Log.error(AppError.EEOFBUF, 2);
+		} catch {
+			throw Log.error(AppError.END_OF_BUFFER, 2);
 		}
 		return result;
 	}
@@ -189,8 +193,8 @@ export default  class COpcodeParser {
 		try {
 			result = this.data.readUInt32LE(this.offset);
 			this.offset += 4;
-		} catch (e) {
-			throw Log.error(AppError.EEOFBUF, 4);
+		} catch {
+			throw Log.error(AppError.END_OF_BUFFER, 4);
 		}
 		return result;
 	}
@@ -200,8 +204,8 @@ export default  class COpcodeParser {
 		try {
 			result = this.data.readInt32LE(this.offset);
 			this.offset += 4;
-		} catch (e) {
-			throw Log.error(AppError.EEOFBUF, 4);
+		} catch {
+			throw Log.error(AppError.END_OF_BUFFER, 4);
 		}
 		return result;
 	}
@@ -211,8 +215,8 @@ export default  class COpcodeParser {
 		try {
 			result = this.data.readFloatLE(this.offset);
 			this.offset += 4;
-		} catch (e) {
-			throw Log.error(AppError.EEOFBUF, 4);
+		} catch {
+			throw Log.error(AppError.END_OF_BUFFER, 4);
 		}
 		return result;
 	}
@@ -230,8 +234,8 @@ export default  class COpcodeParser {
 		try {
 			result = this.data.toString('utf8', this.offset, this.offset + length).split('\0').shift();
 			this.offset += length;
-		} catch (e) {
-			throw Log.error(AppError.EEOFBUF, length);
+		} catch {
+			throw Log.error(AppError.END_OF_BUFFER, length);
 		}
 		return result;
 	}
@@ -263,10 +267,10 @@ export default  class COpcodeParser {
 
 	private getOpcodeParams(opcodeId: number): IOpcodeParam[] {
 		const params = [];
-		const opcodeData = this.opcodesData[opcodeId & 0x7FFF];
+		const opcodeData = this.opcodes[opcodeId & 0x7FFF];
 
 		if (!opcodeData || !opcodeData.params) {
-			throw Log.error(AppError.ENOPAR, opcodeId, this.offset);
+			throw Log.error(AppError.NO_PARAM, opcodeId, this.offset);
 		}
 
 		opcodeData.params.forEach(opcodeParam => {
@@ -283,7 +287,7 @@ export default  class COpcodeParser {
 
 			const paramType = this.getParamType();
 			if (paramType === eParamType.EOL) {
-				throw Log.error(AppError.EUNKPAR, paramType, this.offset);
+				throw Log.error(AppError.UNKNOWN_PARAM, paramType, this.offset);
 			}
 			params[params.length] = this.getParam(paramType);
 		});

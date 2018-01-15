@@ -1,7 +1,7 @@
 import * as file from 'utils/file';
 import Log from 'utils/Log';
-import CScriptFile from 'frontend/ScriptFile';
-import CScriptFileSCM from 'frontend/CScriptFileSCM';
+import ScriptFile from 'frontend/script/ScriptFile';
+import ScriptMultifile from 'frontend/script/ScriptMultifile';
 import AppError from 'common/errors';
 
 const HEADER_EXTENSION_MAP: any = {
@@ -10,40 +10,29 @@ const HEADER_EXTENSION_MAP: any = {
 };
 
 export default class Loader {
-	loadScript(fileName: string): Promise<CScriptFile> {
-
-		if (!this.isScriptFileValidExtension(fileName)) {
-			throw Log.error(AppError.ERRIEXT, file.getFileExtension(fileName));
+	loadScript(fileName: string): Promise<ScriptFile> {
+		if (!this.isFileTypeSupported(fileName)) {
+			throw Log.error(AppError.UNKNOWN_FILE_EXTENSION, file.getFileExtension(fileName));
 		}
 		return file.isReadable(fileName)
 			.then(() => file.load(fileName))
 			.then(buffer => {
 				if (Buffer.isBuffer(buffer)) {
-					let scriptFile: CScriptFile;
-
-					if (this.isScriptFileWithHeader(fileName)) {
-						scriptFile = new CScriptFileSCM(buffer);
-					} else {
-						scriptFile = new CScriptFile();
-					}
-					scriptFile.init(buffer);
-					return scriptFile;
+					return this.isHeaderPresent(fileName)
+						? new ScriptMultifile(buffer)
+						: new ScriptFile(buffer);
 				}
-				throw Log.error(AppError.ERRTYPE, 'Buffer');
-			})
-			.catch(e => {
-				console.error(e);
-				throw e;
+				throw Log.error(AppError.INVALID_TYPE, 'Buffer');
 			});
 	}
 
-	isScriptFileWithHeader(fileName: string): boolean {
+	private isHeaderPresent(fileName: string): boolean {
 		const extension = file.getFileExtension(fileName);
 		return !!HEADER_EXTENSION_MAP[extension];
 	}
 
-	isScriptFileValidExtension(fileName: string): boolean {
+	private isFileTypeSupported(fileName: string): boolean {
 		const extension = file.getFileExtension(fileName);
-		return (HEADER_EXTENSION_MAP.hasOwnProperty(extension));
+		return HEADER_EXTENSION_MAP.hasOwnProperty(extension);
 	}
 }

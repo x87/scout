@@ -6,8 +6,8 @@ import Arguments from 'common/arguments';
 import AppError from 'common/errors';
 import LoopService from './LoopService';
 
-import { IBasicBlock, ICompiledFile, IOpcode, TBasicBlockMap, TOpcodesMap } from 'common/interfaces';
-import { eBasicBlockType, eCompiledFileType, eGame } from 'common/enums';
+import { IBasicBlock, IScript, IOpcode, TBasicBlockMap, TOpcodesMap } from 'common/interfaces';
+import { eBasicBlockType, eScriptType, eGame } from 'common/enums';
 
 const OP_JMP = 0x0002;
 const OP_JT = 0x004c;
@@ -45,7 +45,7 @@ const branchOpcodesMap: any = {
 
 export default class CControlFlowProcessor {
 
-	buildCFG(files: ICompiledFile[]) {
+	buildCFG(files: IScript[]) {
 		// https://github.com/x87/scout.js/issues/3
 		// todo: split by functions
 		files.map(file => {
@@ -54,7 +54,7 @@ export default class CControlFlowProcessor {
 		});
 	}
 
-	findIntervalsInFile(file: ICompiledFile) {
+	findIntervalsInFile(file: IScript) {
 		const opcodes = this.findLeadersForFile(file.opcodes, file.type);
 		const basicBlocks = this.findUnreachableBlocks(
 			this.linkBasicBlocks(
@@ -145,7 +145,7 @@ export default class CControlFlowProcessor {
 				basicBlocks.delete(key);
 				unreachableFound = true;
 
-				Log.warn(AppError.WUNREAC, bb.opcodes[0].offset);
+				Log.warn(AppError.UNREACHABLE_BRANCH, bb.opcodes[0].offset);
 			});
 		} while (unreachableFound);
 
@@ -200,7 +200,7 @@ export default class CControlFlowProcessor {
 			const targetBB = basicBlocks.get(Math.abs(targetOffset));
 
 			if (!targetBB) {
-				Log.warn(AppError.WNOBRAN, targetOffset);
+				Log.warn(AppError.NO_BRANCH, targetOffset);
 				break;
 			}
 			this.setBasicBlockSuccessor(bb, targetBB);
@@ -230,7 +230,7 @@ export default class CControlFlowProcessor {
 		return basicBlocks;
 	}
 
-	private findLeadersForFile(opcodes: TOpcodesMap, fileType: eCompiledFileType) {
+	private findLeadersForFile(opcodes: TOpcodesMap, fileType: eScriptType) {
 		let isThisInstructionFollowBranchOpcode = false;
 		for (const [offset, opcode] of opcodes) {
 
@@ -250,16 +250,16 @@ export default class CControlFlowProcessor {
 
 			const targetOffset = this.getOpcodeTargetOffset(opcode);
 
-			if (targetOffset < 0 && fileType === eCompiledFileType.MAIN) {
-				throw Log.error(AppError.ERRNOFF, offset);
+			if (targetOffset < 0 && fileType === eScriptType.MULTIFILE) {
+				throw Log.error(AppError.INVALID_REL_OFFSET, offset);
 			}
-			if (targetOffset >= 0 && fileType !== eCompiledFileType.MAIN) {
-				// todo: gosubs with positive offsets in missions are allowed
-				throw Log.error(AppError.ERRPOFF, offset);
+			if (targetOffset >= 0 && fileType !== eScriptType.MULTIFILE) {
+				// todo: gosubs with positive offsets in headless files are allowed
+				throw Log.error(AppError.INVALID_ABS_OFFSET, offset);
 			}
 			const targetOpcode: IOpcode = opcodes.get(Math.abs(targetOffset));
 			if (!targetOpcode) {
-				Log.warn(AppError.WNOTARG, offset);
+				Log.warn(AppError.NO_TARGET, offset);
 				continue;
 			}
 			targetOpcode.isLeader = true;

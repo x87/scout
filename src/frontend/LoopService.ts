@@ -19,7 +19,7 @@ export default class LoopService {
 			return eLoopType.ENDLESS;
 		}
 
-		Log.warn(AppError.WUNLOOP, head.type, latchingNode.type);
+		Log.warn(AppError.UNKNOWN_LOOP_TYPE, head.type, latchingNode.type);
 		return eLoopType.NONE;
 	}
 }

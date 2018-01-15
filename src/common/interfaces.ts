@@ -1,10 +1,4 @@
-import { eBasicBlockType, eCompiledFileType, eGame, eParamType } from './enums';
-
-export interface IArguments {
-	game: eGame;
-	inputFile: string;
-	printAssembly: boolean;
-}
+import { eBasicBlockType, eScriptType, eParamType } from './enums';
 
 export interface IOpcodeParamArray {
 	offset: number;
@@ -35,27 +29,12 @@ export interface IOpcodeParam {
 	value: number | string | IOpcodeParamArray;
 }
 
-export interface IScriptFileHeader {
-	modelIds: string[];
-	mainSize: number;
-	largestMission: number;
-	numExclusiveMissions: number;
-	missions: number[];
-	externals: IExternalScriptHeader[];
-}
-
-export interface IExternalScriptHeader {
-	name: string;
-	offset: number;
-	size: number;
-}
-
 export type TOpcodesMap = Map<number, IOpcode>;
 
 export type TBasicBlockMap = Map<number, IBasicBlock>;
 
-export interface ICompiledFile {
-	type: eCompiledFileType;
+export interface IScript {
+	type: eScriptType;
 	opcodes: TOpcodesMap;
 }
 

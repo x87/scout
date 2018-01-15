@@ -1,9 +1,31 @@
 import * as utils from 'utils';
 import Arguments from 'common/arguments';
-import { IExternalScriptHeader, IScriptFileHeader } from 'common/interfaces';
 import { eGame, eScriptFileSegments } from 'common/enums';
 
-const scriptFileSegmentsMap: any = {
+interface IMultifileMetadata {
+	modelIds: string[];
+	mainSize: number;
+	largestMission: number;
+	numExclusiveMissions: number;
+	missions: number[];
+	externals: IExternalScriptMetadata[];
+}
+
+interface IExternalScriptMetadata {
+	name: string;
+	offset: number;
+	size: number;
+}
+
+type SegmentId = number;
+
+interface IMultifileHeader {
+	[key: string]: {
+		[key: string]: SegmentId;
+	};
+}
+
+const MultifileHeaderMap: IMultifileHeader = {
 	[eGame.GTA3]: {
 		[eScriptFileSegments.GLOBAL_VARS]: 0,
 		[eScriptFileSegments.MODELS]: 1,
@@ -27,7 +49,7 @@ const scriptFileSegmentsMap: any = {
 	}
 };
 
-export default class CScriptFileHeader implements IScriptFileHeader {
+export default class MultifileMetadata implements IMultifileMetadata {
 
 	readonly size: number;
 	offset: number;
@@ -39,7 +61,7 @@ export default class CScriptFileHeader implements IScriptFileHeader {
 	highestLocalInMission: number;
 	missions: number[];
 	largestExternalSize: number;
-	externals: IExternalScriptHeader[];
+	externals: IExternalScriptMetadata[];
 
 	constructor(data: Buffer) {
 		this.loadModelSegment(data);
@@ -49,24 +71,27 @@ export default class CScriptFileHeader implements IScriptFileHeader {
 			this.loadExternalSegment(data);
 		}
 
-		this.size = this.getSegmentOffset(data, scriptFileSegmentsMap[Arguments.game][eScriptFileSegments.MAIN], false);
+		const segmentId = MultifileHeaderMap[Arguments.game][eScriptFileSegments.MAIN];
+		this.size = this.getSegmentOffset(data, segmentId, false);
 	}
 
-	private loadModelSegment(data: Buffer) {
-		this.offset = this.getSegmentOffset(data, scriptFileSegmentsMap[Arguments.game][eScriptFileSegments.MODELS]);
+	private loadModelSegment(data: Buffer): void {
+		const segmentId = MultifileHeaderMap[Arguments.game][eScriptFileSegments.MODELS];
+		this.offset = this.getSegmentOffset(data, segmentId);
 
 		const numModels = this.read32Bit(data);
 		this.modelIds = [];
 		this.offset += 24; // skip first model (empty)
 
 		for (let i = 1; i < numModels; i += 1) {
-			this.modelIds[this.modelIds.length] = this.readString(data, 24);
+			this.modelIds.push(this.readString(data, 24));
 		}
 
 	}
 
-	private loadMissionSegment(data: Buffer) {
-		this.offset = this.getSegmentOffset(data, scriptFileSegmentsMap[Arguments.game][eScriptFileSegments.MISSIONS]);
+	private loadMissionSegment(data: Buffer): void {
+		const segmentId = MultifileHeaderMap[Arguments.game][eScriptFileSegments.MISSIONS];
+		this.offset = this.getSegmentOffset(data, segmentId);
 		this.mainSize = this.read32Bit(data);
 		this.largestMission = this.read32Bit(data);
 		const numMissions = this.read16Bit(data);
@@ -79,26 +104,27 @@ export default class CScriptFileHeader implements IScriptFileHeader {
 		this.missions = [];
 
 		for (let i = 0; i < numMissions; i += 1) {
-			this.missions[this.missions.length] = this.read32Bit(data);
+			this.missions.push(this.read32Bit(data));
 		}
 	}
 
-	private loadExternalSegment(data: Buffer) {
-		this.offset = this.getSegmentOffset(data, scriptFileSegmentsMap[Arguments.game][eScriptFileSegments.EXTERNALS]);
+	private loadExternalSegment(data: Buffer): void {
+		const segmentId = MultifileHeaderMap[Arguments.game][eScriptFileSegments.EXTERNALS];
+		this.offset = this.getSegmentOffset(data, segmentId);
 		this.largestExternalSize = this.read32Bit(data);
 		const numExternals = this.read32Bit(data);
 
 		this.externals = [];
 		for (let i = 0; i < numExternals; i += 1) {
-			this.externals[this.externals.length] = {
+			this.externals.push({
 				name: this.readString(data, 20),
 				offset: this.read32Bit(data),
 				size: this.read32Bit(data)
-			} as IExternalScriptHeader;
+			});
 		}
 	}
 
-	private getSegmentOffset(data: Buffer, segmentId: number, skipJumpOpcode: boolean = true): number {
+	private getSegmentOffset(data: Buffer, segmentId: SegmentId, skipJumpOpcode: boolean = true): number {
 		let result = 0;
 		while (segmentId--) {
 			result = data.readInt32LE(result + 3);
@@ -106,7 +132,7 @@ export default class CScriptFileHeader implements IScriptFileHeader {
 		return result + (skipJumpOpcode ? 8 : 0);
 	}
 
-	private readString(data: Buffer, len): string {
+	private readString(data: Buffer, len: number): string {
 		this.offset += len;
 		return data.toString('utf8', this.offset - len, this.offset).split('\0').shift();
 	}

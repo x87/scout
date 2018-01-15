@@ -8,15 +8,15 @@ export default function() {
 	});
 
 	it('should be true for files with .scm extension only', () => {
-		expect(loader.isScriptFileWithHeader('main.scm')).toBe(true);
-		expect(loader.isScriptFileWithHeader('test.cs')).toBe(false);
-		expect(loader.isScriptFileWithHeader('src.txt')).toBe(false);
+		expect(loader.isHeaderPresent('main.scm')).toBe(true);
+		expect(loader.isHeaderPresent('test.cs')).toBe(false);
+		expect(loader.isHeaderPresent('src.txt')).toBe(false);
 	});
 
 	it('should be true for .scm and .cs extensions', () => {
-		expect(loader.isScriptFileValidExtension('test.cs')).toBe(true);
-		expect(loader.isScriptFileValidExtension('main.scm')).toBe(true);
-		expect(loader.isScriptFileValidExtension('src.txt')).toBe(false);
+		expect(loader.isFileTypeSupported('test.cs')).toBe(true);
+		expect(loader.isFileTypeSupported('main.scm')).toBe(true);
+		expect(loader.isFileTypeSupported('src.txt')).toBe(false);
 	});
 
 }
