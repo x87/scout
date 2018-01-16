@@ -1,6 +1,6 @@
 {
   "name": "scout",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Scout Decompiler",
   "main": "scout.js",
   "repository": {
@@ -10,27 +10,27 @@
   "scripts": {
     "lint": "tslint -c tslint.json src/**/*.ts",
     "build": "webpack",
-    "predev": "npm run build",
-    "dev": "cd build && node scout test3.scm -g gta3 -p",
+    "dev": "webpack --watch",
     "pretest": "npm run build -- --entry ./src/spec.ts --output-filename spec.js",
     "test": "jasmine ./build/spec.js",
     "opcodes": "node ./opcodes/parser"
   },
   "keywords": [],
   "author": "Seemann",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
-    "@types/jasmine": "2.8.2",
-    "@types/lodash": "4.14.91",
-    "@types/node": "8.5.1",
-    "awesome-typescript-loader": "3.2.3",
+    "@types/jasmine": "2.8.4",
+    "@types/lodash": "4.14.92",
+    "@types/node": "9.3.0",
+    "awesome-typescript-loader": "3.4.1",
     "jasmine-core": "2.8.0",
     "jasmine": "2.8.0",
-    "lodash": "4.17.4",
-    "source-map-support": "0.4.2",
-    "tslint": "5.8.0",
+    "tslint": "5.9.1",
     "tslint-loader": "3.5.3",
     "typescript": "2.6.2",
-    "webpack": "3.6.0"
+    "webpack": "3.10.0"
+  },
+  "dependencies": {
+    "lodash": "4.17.4"
   }
 }

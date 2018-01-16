@@ -67,11 +67,10 @@ export default class CControlFlowProcessor {
 	private findLoops(interval: IBasicBlock[]) {
 		const head = _.head(interval);
 
-		const latchingNode = _(interval)
-		.chain()
-		.intersection(head.predecessors)
-		.head()
-		.value();
+		const latchingNode = _.chain(interval)
+			.intersection(head.predecessors)
+			.head()
+			.value();
 
 		if (latchingNode) {
 			const loopType = LoopService.findLoopType(head, latchingNode);
