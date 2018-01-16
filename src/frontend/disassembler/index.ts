@@ -1,12 +1,12 @@
 import * as file from 'utils/file';
 import * as utils from 'utils';
-import Log from 'utils/Log';
+import Log from 'utils/log';
 
 import AppError from 'common/errors';
 import Arguments from 'common/arguments';
-import Parser from './Parser';
-import ScriptMultifile from './script/ScriptMultifile';
-import ScriptFile from './script/ScriptFile';
+import Parser from 'frontend/parser';
+import ScriptMultifile from 'frontend/script/ScriptMultifile';
+import ScriptFile from 'frontend/script/ScriptFile';
 
 import { IScript, IOpcode, IOpcodeData, IOpcodeParamArray } from 'common/interfaces';
 import { eScriptType } from 'common/enums';

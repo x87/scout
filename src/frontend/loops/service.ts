@@ -1,4 +1,4 @@
-import Log from 'utils/Log';
+import Log from 'utils/log';
 import AppError from 'common/errors';
 
 import { IBasicBlock } from 'common/interfaces';

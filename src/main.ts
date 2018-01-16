@@ -1,8 +1,8 @@
-import Log from 'utils/Log';
+import Log from 'utils/log';
 import Arguments from 'common/arguments';
 import Disassembler from 'frontend/Disassembler';
-import Loader from 'frontend/Loader';
-import ControlFlowProcessor from 'frontend/ControlFlowProcessor';
+import Loader from 'frontend/loader';
+import CFG from 'frontend/cfg';
 import AppError from 'common/errors';
 
 if (!Arguments.inputFile) {
@@ -15,8 +15,7 @@ const loader = new Loader();
 loader.loadScript(Arguments.inputFile)
 	.then(scriptFile => disasm.disassemble(scriptFile))
 	.then(scripts => {
-		const CFG = new ControlFlowProcessor();
-		CFG.buildCFG(scripts);
+		const graph = new CFG(scripts);
 		return scripts;
 	})
 	.then(scripts => {

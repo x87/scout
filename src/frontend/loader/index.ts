@@ -1,5 +1,5 @@
 import * as file from 'utils/file';
-import Log from 'utils/Log';
+import Log from 'utils/log';
 import ScriptFile from 'frontend/script/ScriptFile';
 import ScriptMultifile from 'frontend/script/ScriptMultifile';
 import AppError from 'common/errors';

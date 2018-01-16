@@ -1,10 +1,10 @@
 import * as _ from 'lodash';
 import * as utils from 'utils';
-import Log from 'utils/Log';
+import Log from 'utils/log';
 
 import Arguments from 'common/arguments';
 import AppError from 'common/errors';
-import LoopService from './LoopService';
+import LoopService from 'frontend/loops/service';
 
 import { IBasicBlock, IScript, IOpcode, TBasicBlockMap, TOpcodesMap } from 'common/interfaces';
 import { eBasicBlockType, eScriptType, eGame } from 'common/enums';
@@ -43,9 +43,9 @@ const branchOpcodesMap: any = {
 	}
 };
 
-export default class CControlFlowProcessor {
+export default class CFG {
 
-	buildCFG(files: IScript[]) {
+	constructor(files: IScript[]) {
 		// https://github.com/x87/scout.js/issues/3
 		// todo: split by functions
 		files.map(file => {

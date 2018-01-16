@@ -1,7 +1,7 @@
 import { eParamType } from 'common/enums';
 import { IOpcode, IOpcodeData, IOpcodeParam, IOpcodeParamArray } from 'common/interfaces';
 import * as utils from 'utils';
-import Log from 'utils/Log';
+import Log from 'utils/log';
 import AppError from 'common/errors';
 
 export const PARAM_ANY = 'any';

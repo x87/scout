@@ -23,3 +23,8 @@ npm run opcodes > build/gta3.json
 cd build
 node scout test.scm -g gta3 -p > out.txt 
 ``` 
+
+### Test
+```bash
+npm test
+```

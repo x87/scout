@@ -2,7 +2,7 @@ import * as utils from 'utils';
 import Arguments from 'common/arguments';
 import { eGame, eParamType } from 'common/enums';
 
-export default function() {
+describe('utils spec' , () => {
 
 	it('should be true if Arguments game is gta3', () => {
 		Arguments.game = eGame.GTA3;
@@ -65,4 +65,4 @@ export default function() {
 		expect(utils.checkArrayIncludeItemFromArray(a1, a4)).toBe(false);
 	});
 
-}
+});

@@ -1,6 +1,6 @@
-import Loader from 'frontend/Loader';
+import Loader from '../';
 
-export default function() {
+describe('loader spec', () => {
 
 	let loader;
 	beforeEach(() => {
@@ -19,4 +19,4 @@ export default function() {
 		expect(loader.isFileTypeSupported('src.txt')).toBe(false);
 	});
 
-}
+});

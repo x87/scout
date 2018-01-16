@@ -7,7 +7,6 @@ module.exports = {
 		path: path.resolve(__dirname, "build"),
 		filename: "scout.js"
 	},
-
 	target: 'node',
 	resolve: {
 		extensions: ['.ts', '.js'],
@@ -16,9 +15,6 @@ module.exports = {
 			path.resolve(__dirname, "./src")
 		]
 	},
-
-	// devtool: 'source-map',
-
 	module: {
 		rules: [
 			{

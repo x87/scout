@@ -1,7 +1,7 @@
 import AppError from 'common/errors';
-import Log from 'utils/Log';
+import Log from '../log';
 
-export default function() {
+describe('log spec', () => {
 
 	it('should return errors object with formatted message', () => {
 		const error = Log.error('TEST %s STRING' as AppError, ['output']);
@@ -9,4 +9,4 @@ export default function() {
 		expect(error.message).toBe('TEST output STRING');
 	});
 
-}
+});
