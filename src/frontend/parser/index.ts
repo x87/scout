@@ -1,5 +1,5 @@
 import { eParamType } from 'common/enums';
-import { IOpcode, IOpcodeParam, IOpcodeParamArray, OpcodeMap } from 'common/interfaces';
+import { IInstruction, IInstructionParam, IInstructionParamArray, DefinitionMap } from 'common/interfaces';
 import * as utils from 'utils';
 import Log from 'utils/log';
 import AppError from 'common/errors';
@@ -12,14 +12,14 @@ export default class Parser {
 
 	data: Buffer;
 	offset: number;
-	opcodes: OpcodeMap;
+	definitionMap: DefinitionMap;
 	private readonly paramTypesHandlers: any;
 	private readonly paramValuesHandlers: any;
 
-	constructor(opcodes: OpcodeMap, data: Buffer, offset: number) {
+	constructor(definitionMap: DefinitionMap, data: Buffer, offset: number) {
 		this.offset = offset;
 		this.data = data;
-		this.opcodes = opcodes;
+		this.definitionMap = definitionMap;
 
 		this.paramValuesHandlers = {
 			[eParamType.NUM8]: () => this.nextInt8(),
@@ -137,7 +137,7 @@ export default class Parser {
 				}
 
 				return {
-					value: self.getOpcode(),
+					value: self.getInstruction(),
 					done: false
 				};
 			}
@@ -240,7 +240,7 @@ export default class Parser {
 		return result;
 	}
 
-	private getArray(): IOpcodeParamArray {
+	private getArray(): IInstructionParamArray {
 		return {
 			offset: this.nextUInt16(),
 			varIndex: this.nextUInt16(),
@@ -249,15 +249,15 @@ export default class Parser {
 		};
 	}
 
-	private getOpcode(): IOpcode {
+	private getInstruction(): IInstruction {
 		const offset = this.offset;
-		const id = this.nextUInt16();
+		const opcode = this.nextUInt16();
 		return {
-			id,
+			opcode,
 			offset,
 			isLeader: false,
 			isHeader: false,
-			params: this.getOpcodeParams(id)
+			params: this.getInstructionParams(opcode)
 		};
 	}
 
@@ -266,15 +266,15 @@ export default class Parser {
 		return this.paramTypesHandlers[dataType]();
 	}
 
-	private getOpcodeParams(opcodeId: number): IOpcodeParam[] {
+	private getInstructionParams(opcode: number): IInstructionParam[] {
 		const params = [];
-		const opcode = this.opcodes.get(opcodeId & 0x7FFF);
+		const definition = this.definitionMap.get(opcode & 0x7FFF);
 
-		if (!opcode || !opcode.params) {
-			throw Log.error(AppError.NO_PARAM, opcodeId, this.offset);
+		if (!definition || !definition.params) {
+			throw Log.error(AppError.NO_PARAM, definition, this.offset);
 		}
 
-		opcode.params.forEach(opcodeParam => {
+		definition.params.forEach(opcodeParam => {
 
 			if (opcodeParam.type === PARAM_ARGUMENTS) {
 				let argType = this.getParamType();
@@ -296,7 +296,7 @@ export default class Parser {
 		return params;
 	}
 
-	private getParam(paramType: eParamType): IOpcodeParam {
+	private getParam(paramType: eParamType): IInstructionParam {
 		return {
 			type: paramType,
 			value: this.paramValuesHandlers[paramType]()

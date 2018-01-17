@@ -1,9 +1,10 @@
 import Log from 'utils/log';
 import Arguments from 'common/arguments';
-import Disassembler from 'frontend/Disassembler';
+import Disassembler from 'frontend/disassembler';
 import Loader from 'frontend/loader';
 import CFG from 'frontend/cfg';
 import AppError from 'common/errors';
+import SimplePrinter from './utils/simple-printer';
 
 if (!Arguments.inputFile) {
 	throw Log.error(AppError.NO_INPUT);
@@ -21,9 +22,13 @@ loader.loadScript(Arguments.inputFile)
 	.then(scripts => {
 		scripts.forEach(script => {
 			if (Arguments.printAssembly === true) {
-				for (const [offset, opcode] of script.opcodes) {
-					disasm.printOpcode(opcode);
-				}
+
+				Disassembler.getDefinitions().then(definitionMap => {
+					const printer = new SimplePrinter(definitionMap);
+					for (const [offset, instruction] of script.instructionMap) {
+						printer.print(instruction);
+					}
+				});
 			}
 		});
 	})

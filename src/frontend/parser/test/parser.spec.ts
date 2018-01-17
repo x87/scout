@@ -1,10 +1,10 @@
 import Parser from '../';
-import { IOpcode, OpcodeMap } from 'common/interfaces';
+import { IInstruction, DefinitionMap } from 'common/interfaces';
 import { eParamType } from 'common/enums';
 
 describe(Parser.name, () => {
 
-	let opcodes: OpcodeMap;
+	let opcodes: DefinitionMap;
 
 	beforeAll(() => {
 		opcodes = new Map();
@@ -18,9 +18,9 @@ describe(Parser.name, () => {
 
 	it('should correctly parse input buffer', () => {
 		const buf = Buffer.from(`0100040002000164000000`, 'hex');
-		const parsed: IOpcode[] = [
+		const parsed: IInstruction[] = [
 			{
-				id: 1,
+				opcode: 1,
 				offset: 0,
 				isHeader: false,
 				isLeader: false,
@@ -30,7 +30,7 @@ describe(Parser.name, () => {
 				}]
 			},
 			{
-				id: 2,
+				opcode: 2,
 				offset: 4,
 				isHeader: false,
 				isLeader: false,

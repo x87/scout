@@ -1,51 +1,47 @@
 import { eBasicBlockType, eScriptType, eParamType } from './enums';
 
-export interface IOpcodeParamArray {
+export interface IInstructionDefinition {
+	name: string;
+	params: Array<{
+		type: string;
+	}>;
+}
+
+export interface IInstruction {
+	opcode: number;
+	offset: number;
+	params: IInstructionParam[];
+	isLeader: boolean;
+	isHeader: boolean;
+}
+
+export interface IInstructionParam {
+	type: eParamType;
+	value: number | string | IInstructionParamArray;
+}
+
+export interface IInstructionParamArray {
 	offset: number;
 	varIndex: number;
 	size: number;
 	props: number;
 }
 
-export interface IOpcodeDataParam {
-	type: string;
-}
-
-export type OpcodeMap = Map<number, IOpcodeData>;
-
-export interface IOpcodeData {
-	name: string;
-	params: IOpcodeDataParam[];
-}
-
-export interface IOpcode {
-	id: number;
-	offset: number;
-	params: IOpcodeParam[];
-	isLeader: boolean;
-	isHeader: boolean;
-}
-
-export interface IOpcodeParam {
-	type: eParamType;
-	value: number | string | IOpcodeParamArray;
-}
-
-export type OpcodeOffsetMap = Map<number, IOpcode>;
-
-export type BasicBlockOffsetMap = Map<number, IBasicBlock>;
-
-export interface IScript {
-	type: eScriptType;
-	opcodes: OpcodeOffsetMap;
-}
-
 export interface IBasicBlock {
 	type: eBasicBlockType;
-	opcodes: IOpcode[];
+	instructions: IInstruction[];
 	successors: IBasicBlock[];
 	predecessors: IBasicBlock[];
 	processed: boolean;
 	inLoop: boolean;
 	isHeaderBlock: boolean;
+}
+
+export type DefinitionMap = Map<number, IInstructionDefinition>;
+export type InstructionMap = Map<number, IInstruction>;
+export type BasicBlockMap = Map<number, IBasicBlock>;
+
+export interface IScript {
+	type: eScriptType;
+	instructionMap: InstructionMap;
 }

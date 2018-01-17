@@ -8,69 +8,22 @@ import Parser from 'frontend/parser';
 import ScriptMultifile from 'frontend/script/ScriptMultifile';
 import ScriptFile from 'frontend/script/ScriptFile';
 
-import { IScript, IOpcode, OpcodeMap, IOpcodeParamArray } from 'common/interfaces';
+import { IScript, DefinitionMap } from 'common/interfaces';
 import { eScriptType } from 'common/enums';
-import { IOpcodeData } from 'common/interfaces';
+import { IInstructionDefinition } from 'common/interfaces';
 
-interface IOpcodeDefinition extends IOpcodeData {
+interface IDefinition extends IInstructionDefinition {
 	id: string;
 }
 
 export default class Disassembler {
-	private parser: Parser;
-	private opcodes: OpcodeMap;
-
-	disassemble(inputFile: ScriptFile): Promise<IScript[]> {
-		return this.getOpcodes().then(opcodes => {
-			this.opcodes = opcodes;
-
-			const files = [
-				this.getScriptFromBuffer(inputFile.baseOffset, inputFile.type, inputFile.buffer)
-			];
-			if (inputFile instanceof ScriptMultifile) {
-				return inputFile.missions.reduce((memo, mission) => {
-					memo.push(this.getScriptFromBuffer(0, eScriptType.HEADLESS, mission));
-					return memo;
-				}, files);
-			}
-			// todo; external scripts
-			return files;
-
-		});
-	}
-
-	printOpcode(opcode: IOpcode): void {
-		const id = opcode.id;
-		const info = this.opcodes.get(id & 0x7FFF);
-		let output = `/* ${this.padOpcodeOffset(opcode.offset)} */ ${this.opcodeIdToHex(id)}: `;
-
-		if (opcode.isLeader) {
-			output = '\n\n' + output;
-		}
-		if (id > 0x7FFF) {
-			output += 'NOT ';
-		}
-		output += info.name;
-		for (const param of opcode.params) {
-			if (utils.isArrayParam(param.type)) {
-				const a = param.value as IOpcodeParamArray;
-				output += ` (${a.varIndex} ${a.offset} ${a.size} ${a.props})`;
-			} else {
-				output += ' ' + param.value;
-			}
-		}
-		Log.msg(output);
-	}
-
-	private getOpcodes(): Promise<OpcodeMap> {
-		if (this.opcodes) return Promise.resolve(this.opcodes);
-
+	static getDefinitions(): Promise<DefinitionMap> {
 		return file.isReadable(Arguments.opcodesFile)
-			.then(() => file.loadJson<IOpcodeDefinition[]>(Arguments.opcodesFile))
+			.then(() => file.loadJson<IDefinition[]>(Arguments.opcodesFile))
 			.then(opcodes => {
-				const map: OpcodeMap = new Map();
+				const map: DefinitionMap = new Map();
 				opcodes.forEach(opcode => {
-					map.set(this.hexToOpcodeId(opcode.id), { name: opcode.name, params: opcode.params });
+					map.set(utils.hexToOpcodeId(opcode.id), { name: opcode.name, params: opcode.params });
 				});
 				return map;
 			})
@@ -79,37 +32,41 @@ export default class Disassembler {
 			});
 	}
 
-	private getScriptFromBuffer(base: number, type: eScriptType, data: Buffer): IScript {
-		const parser = new Parser(this.opcodes, data, 0);
+	disassemble(inputFile: ScriptFile): Promise<IScript[]> {
+		return Disassembler.getDefinitions().then(definitionMap => {
+			const files = [
+				this.parse(inputFile.buffer, inputFile.type, inputFile.baseOffset, definitionMap)
+			];
+			if (inputFile instanceof ScriptMultifile) {
+				return inputFile.missions.reduce((memo, mission) => {
+					memo.push(this.parse(mission, eScriptType.HEADLESS, 0, definitionMap));
+					return memo;
+				}, files);
+			}
+			// todo; external scripts
+			return files;
+		});
+	}
+
+	private parse(data: Buffer, type: eScriptType, base: number, definitionMap: DefinitionMap): IScript {
+		const parser = new Parser(definitionMap, data, 0);
 
 		const script: IScript = {
-			opcodes: new Map(),
+			instructionMap: new Map(),
 			type
 		};
 
 		let firstOpcode = true;
-		for (const opcode of parser) {
-			opcode.offset += base;
+		for (const instruction of parser) {
+			instruction.offset += base;
 			if (firstOpcode) {
-				opcode.isHeader = true;
-				opcode.isLeader = true;
+				instruction.isHeader = true;
+				instruction.isLeader = true;
 				firstOpcode = false;
 			}
-			script.opcodes.set(opcode.offset, opcode);
+			script.instructionMap.set(instruction.offset, instruction);
 		}
 		return script;
-	}
-
-	private opcodeIdToHex(id: number): string {
-		return utils.strPadLeft(id.toString(16).toUpperCase(), 4);
-	}
-
-	private hexToOpcodeId(id: string): number {
-		return parseInt(id, 16);
-	}
-
-	private padOpcodeOffset(offset: number): string {
-		return utils.strPadLeft(offset.toString(), 8);
 	}
 
 }

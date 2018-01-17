@@ -29,3 +29,11 @@ export const checkArrayIncludeItemFromArray = <T>(a1: T[], a2: T[]): boolean => 
 export const strPadLeft = (str: string, length: number, char: string = '0'): string => {
 	return _.padStart(str, length, char);
 };
+
+export const opcodeIdToHex = (id: number): string => {
+	return strPadLeft(id.toString(16).toUpperCase(), 4);
+};
+
+export const hexToOpcodeId = (id: string): number => {
+	return parseInt(id, 16);
+};

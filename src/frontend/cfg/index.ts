@@ -6,7 +6,7 @@ import Arguments from 'common/arguments';
 import AppError from 'common/errors';
 import LoopService from 'frontend/loops/service';
 
-import { IBasicBlock, IScript, IOpcode, BasicBlockOffsetMap, OpcodeOffsetMap } from 'common/interfaces';
+import { IBasicBlock, IScript, IInstruction, BasicBlockMap, InstructionMap } from 'common/interfaces';
 import { eBasicBlockType, eScriptType, eGame } from 'common/enums';
 
 const OP_JMP = 0x0002;
@@ -55,7 +55,7 @@ export default class CFG {
 	}
 
 	findIntervalsInFile(file: IScript) {
-		const opcodes = this.findLeadersForFile(file.opcodes, file.type);
+		const opcodes = this.findLeadersForFile(file.instructionMap, file.type);
 		const basicBlocks = this.findUnreachableBlocks(
 			this.linkBasicBlocks(
 				this.findBasicBlocksForFile(opcodes)
@@ -92,7 +92,7 @@ export default class CFG {
 		});
 	}
 
-	private findIntervals(basicBlocks: BasicBlockOffsetMap) {
+	private findIntervals(basicBlocks: BasicBlockMap) {
 
 		if (!basicBlocks.size) {
 			return;
@@ -124,7 +124,7 @@ export default class CFG {
 		return intervals;
 	}
 
-	private findUnreachableBlocks(basicBlocks: BasicBlockOffsetMap) {
+	private findUnreachableBlocks(basicBlocks: BasicBlockMap) {
 		let unreachableFound;
 		do {
 			unreachableFound = false;
@@ -144,14 +144,14 @@ export default class CFG {
 				basicBlocks.delete(key);
 				unreachableFound = true;
 
-				Log.warn(AppError.UNREACHABLE_BRANCH, bb.opcodes[0].offset);
+				Log.warn(AppError.UNREACHABLE_BRANCH, bb.instructions[0].offset);
 			});
 		} while (unreachableFound);
 
 		return basicBlocks;
 	}
 
-	private linkBasicBlocks(basicBlocks: BasicBlockOffsetMap) {
+	private linkBasicBlocks(basicBlocks: BasicBlockMap) {
 		let prevBBtoLink = null;
 		for (const [offset, bb] of basicBlocks) {
 
@@ -160,8 +160,8 @@ export default class CFG {
 				prevBBtoLink = null;
 			}
 
-			const lastOpcode = bb.opcodes[bb.opcodes.length - 1];
-			const branchType = branchOpcodesMap[Arguments.game][lastOpcode.id];
+			const lastOpcode = _.last(bb.instructions);
+			const branchType = branchOpcodesMap[Arguments.game][lastOpcode.opcode];
 
 			if (!branchType) {
 				bb.type = eBasicBlockType.FALL_THRU;
@@ -180,7 +180,7 @@ export default class CFG {
 			}
 
 			let targetOffset;
-			targetOffset = this.getOpcodeTargetOffset(lastOpcode);
+			targetOffset = this.getInstructionTargetOffset(lastOpcode);
 
 			// eliminate jump-to-jump transitions
 			/*while (true) {
@@ -209,19 +209,19 @@ export default class CFG {
 		return basicBlocks;
 	}
 
-	private findBasicBlocksForFile(opcodes: OpcodeOffsetMap) {
+	private findBasicBlocksForFile(instructionMap: InstructionMap) {
 		let currentLeader = null;
 		let bbOpcodes = [];
 		const basicBlocks = new Map();
-		for (const [offset, opcode] of opcodes) {
-			if (opcode.isLeader) {
+		for (const [offset, instruction] of instructionMap) {
+			if (instruction.isLeader) {
 				if (currentLeader) {
 					basicBlocks.set(currentLeader.offset, this.createBasicBlock(bbOpcodes));
 				}
-				currentLeader = opcode;
+				currentLeader = instruction;
 				bbOpcodes = [];
 			}
-			bbOpcodes[bbOpcodes.length] = opcode;
+			bbOpcodes[bbOpcodes.length] = instruction;
 		}
 		// add last bb in the file
 		basicBlocks.set(currentLeader.offset, this.createBasicBlock(bbOpcodes));
@@ -229,53 +229,53 @@ export default class CFG {
 		return basicBlocks;
 	}
 
-	private findLeadersForFile(opcodes: OpcodeOffsetMap, fileType: eScriptType) {
-		let isThisInstructionFollowBranchOpcode = false;
-		for (const [offset, opcode] of opcodes) {
+	private findLeadersForFile(instructionMap: InstructionMap, fileType: eScriptType) {
+		let isThisFollowBranchInstruction = false;
+		for (const [offset, instruction] of instructionMap) {
 
-			opcode.isLeader = opcode.isLeader || isThisInstructionFollowBranchOpcode;
+			instruction.isLeader = instruction.isLeader || isThisFollowBranchInstruction;
 
-			if (blockEndOpcodes.indexOf(opcode.id) !== -1) {
-				isThisInstructionFollowBranchOpcode = true;
+			if (blockEndOpcodes.indexOf(instruction.opcode) !== -1) {
+				isThisFollowBranchInstruction = true;
 				continue;
 			}
 
-			isThisInstructionFollowBranchOpcode = false;
+			isThisFollowBranchInstruction = false;
 
-			const branchType = branchOpcodesMap[Arguments.game][opcode.id];
+			const branchType = branchOpcodesMap[Arguments.game][instruction.opcode];
 			if (!branchType) {
 				continue;
 			}
 
-			const targetOffset = this.getOpcodeTargetOffset(opcode);
+			const targetOffset = this.getInstructionTargetOffset(instruction);
 
-			if (targetOffset < 0 && fileType === eScriptType.MULTIFILE) {
+			if (targetOffset < 0 && fileType !== eScriptType.HEADLESS) {
 				throw Log.error(AppError.INVALID_REL_OFFSET, offset);
 			}
-			if (targetOffset >= 0 && fileType !== eScriptType.MULTIFILE) {
+			if (targetOffset >= 0 && fileType === eScriptType.HEADLESS) {
 				// todo: gosubs with positive offsets in headless files are allowed
 				throw Log.error(AppError.INVALID_ABS_OFFSET, offset);
 			}
-			const targetOpcode: IOpcode = opcodes.get(Math.abs(targetOffset));
-			if (!targetOpcode) {
+			const target: IInstruction = instructionMap.get(Math.abs(targetOffset));
+			if (!target) {
 				Log.warn(AppError.NO_TARGET, offset);
 				continue;
 			}
-			targetOpcode.isLeader = true;
+			target.isLeader = true;
 
 			// https://github.com/x87/scout.js/issues/3
 			// todo: refactor graphs on per-function and remove this
-			targetOpcode.isHeader = callOpcodes.indexOf(opcode.id) !== -1;
+			target.isHeader = callOpcodes.indexOf(instruction.opcode) !== -1;
 
-			isThisInstructionFollowBranchOpcode = callOpcodes.indexOf(opcode.id) === -1;
+			isThisFollowBranchInstruction = callOpcodes.indexOf(instruction.opcode) === -1;
 		}
-		return opcodes;
+		return instructionMap;
 	}
 
-	private createBasicBlock(opcodes) {
+	private createBasicBlock(instructions: IInstruction[]): IBasicBlock {
 		return {
 			type: eBasicBlockType.UNDEFINED,
-			opcodes,
+			instructions,
 			predecessors: [],
 			successors: [],
 			processed: false,
@@ -283,16 +283,15 @@ export default class CFG {
 
 			// https://github.com/x87/scout.js/issues/3
 			// todo: true for the first bb in subgraph
-			isHeaderBlock: opcodes[0].isHeader
-
-		} as IBasicBlock;
+			isHeaderBlock: instructions[0].isHeader
+		};
 	}
 
-	private getOpcodeTargetOffset(opcode: IOpcode) {
-		return Number(opcode.params[0].value);
+	private getInstructionTargetOffset(instruction: IInstruction): number {
+		return Number(instruction.params[0].value);
 	}
 
-	private setBasicBlockSuccessor(bb, target) {
+	private setBasicBlockSuccessor(bb: IBasicBlock, target: IBasicBlock): void {
 		bb.successors.push(target);
 		target.predecessors.push(bb);
 	}
