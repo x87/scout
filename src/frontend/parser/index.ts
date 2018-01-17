@@ -1,5 +1,5 @@
 import { eParamType } from 'common/enums';
-import { IOpcode, IOpcodeData, IOpcodeParam, IOpcodeParamArray } from 'common/interfaces';
+import { IOpcode, IOpcodeParam, IOpcodeParamArray, OpcodeMap } from 'common/interfaces';
 import * as utils from 'utils';
 import Log from 'utils/log';
 import AppError from 'common/errors';
@@ -12,11 +12,11 @@ export default class Parser {
 
 	data: Buffer;
 	offset: number;
-	opcodes: IOpcodeData[];
+	opcodes: OpcodeMap;
 	private readonly paramTypesHandlers: any;
 	private readonly paramValuesHandlers: any;
 
-	constructor(opcodes: IOpcodeData[], data: Buffer, offset: number) {
+	constructor(opcodes: OpcodeMap, data: Buffer, offset: number) {
 		this.offset = offset;
 		this.data = data;
 		this.opcodes = opcodes;
@@ -249,15 +249,16 @@ export default class Parser {
 		};
 	}
 
-	private getOpcode() {
-		const opcode = {
-			offset: this.offset,
-			id: this.nextUInt16(),
+	private getOpcode(): IOpcode {
+		const offset = this.offset;
+		const id = this.nextUInt16();
+		return {
+			id,
+			offset,
 			isLeader: false,
-			isHeader: false
-		} as IOpcode;
-		opcode.params = this.getOpcodeParams(opcode.id);
-		return opcode;
+			isHeader: false,
+			params: this.getOpcodeParams(id)
+		};
 	}
 
 	private getParamType(): eParamType {
@@ -267,13 +268,13 @@ export default class Parser {
 
 	private getOpcodeParams(opcodeId: number): IOpcodeParam[] {
 		const params = [];
-		const opcodeData = this.opcodes[opcodeId & 0x7FFF];
+		const opcode = this.opcodes.get(opcodeId & 0x7FFF);
 
-		if (!opcodeData || !opcodeData.params) {
+		if (!opcode || !opcode.params) {
 			throw Log.error(AppError.NO_PARAM, opcodeId, this.offset);
 		}
 
-		opcodeData.params.forEach(opcodeParam => {
+		opcode.params.forEach(opcodeParam => {
 
 			if (opcodeParam.type === PARAM_ARGUMENTS) {
 				let argType = this.getParamType();

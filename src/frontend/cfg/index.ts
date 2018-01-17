@@ -6,7 +6,7 @@ import Arguments from 'common/arguments';
 import AppError from 'common/errors';
 import LoopService from 'frontend/loops/service';
 
-import { IBasicBlock, IScript, IOpcode, TBasicBlockMap, TOpcodesMap } from 'common/interfaces';
+import { IBasicBlock, IScript, IOpcode, BasicBlockOffsetMap, OpcodeOffsetMap } from 'common/interfaces';
 import { eBasicBlockType, eScriptType, eGame } from 'common/enums';
 
 const OP_JMP = 0x0002;
@@ -92,7 +92,7 @@ export default class CFG {
 		});
 	}
 
-	private findIntervals(basicBlocks: TBasicBlockMap) {
+	private findIntervals(basicBlocks: BasicBlockOffsetMap) {
 
 		if (!basicBlocks.size) {
 			return;
@@ -124,7 +124,7 @@ export default class CFG {
 		return intervals;
 	}
 
-	private findUnreachableBlocks(basicBlocks: TBasicBlockMap) {
+	private findUnreachableBlocks(basicBlocks: BasicBlockOffsetMap) {
 		let unreachableFound;
 		do {
 			unreachableFound = false;
@@ -151,7 +151,7 @@ export default class CFG {
 		return basicBlocks;
 	}
 
-	private linkBasicBlocks(basicBlocks: TBasicBlockMap) {
+	private linkBasicBlocks(basicBlocks: BasicBlockOffsetMap) {
 		let prevBBtoLink = null;
 		for (const [offset, bb] of basicBlocks) {
 
@@ -209,7 +209,7 @@ export default class CFG {
 		return basicBlocks;
 	}
 
-	private findBasicBlocksForFile(opcodes: TOpcodesMap) {
+	private findBasicBlocksForFile(opcodes: OpcodeOffsetMap) {
 		let currentLeader = null;
 		let bbOpcodes = [];
 		const basicBlocks = new Map();
@@ -229,7 +229,7 @@ export default class CFG {
 		return basicBlocks;
 	}
 
-	private findLeadersForFile(opcodes: TOpcodesMap, fileType: eScriptType) {
+	private findLeadersForFile(opcodes: OpcodeOffsetMap, fileType: eScriptType) {
 		let isThisInstructionFollowBranchOpcode = false;
 		for (const [offset, opcode] of opcodes) {
 

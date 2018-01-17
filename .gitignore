@@ -1,9 +1,12 @@
 !.gitignore
 .idea
 node_modules
-typings
+build
+
+*.log
 *.scm
 *.cs
-build
 opcodes/*.json
-*.log
+
+/* unit test samples */
+!samples/*

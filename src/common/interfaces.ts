@@ -11,6 +11,8 @@ export interface IOpcodeDataParam {
 	type: string;
 }
 
+export type OpcodeMap = Map<number, IOpcodeData>;
+
 export interface IOpcodeData {
 	name: string;
 	params: IOpcodeDataParam[];
@@ -29,13 +31,13 @@ export interface IOpcodeParam {
 	value: number | string | IOpcodeParamArray;
 }
 
-export type TOpcodesMap = Map<number, IOpcode>;
+export type OpcodeOffsetMap = Map<number, IOpcode>;
 
-export type TBasicBlockMap = Map<number, IBasicBlock>;
+export type BasicBlockOffsetMap = Map<number, IBasicBlock>;
 
 export interface IScript {
 	type: eScriptType;
-	opcodes: TOpcodesMap;
+	opcodes: OpcodeOffsetMap;
 }
 
 export interface IBasicBlock {

@@ -16,6 +16,10 @@ export function loadText(fileName: string, encoding = 'utf8'): Promise<string> {
 	});
 }
 
+export function loadJson<T>(fileName: string): Promise<T> {
+	return loadText(fileName).then(JSON.parse);
+}
+
 export function isReadable(fileName: string): Promise<boolean> {
 	const fs = require('fs');
 	return new Promise((resolve, reject) => {

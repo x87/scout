@@ -8,16 +8,21 @@ import Parser from 'frontend/parser';
 import ScriptMultifile from 'frontend/script/ScriptMultifile';
 import ScriptFile from 'frontend/script/ScriptFile';
 
-import { IScript, IOpcode, IOpcodeData, IOpcodeParamArray } from 'common/interfaces';
+import { IScript, IOpcode, OpcodeMap, IOpcodeParamArray } from 'common/interfaces';
 import { eScriptType } from 'common/enums';
+import { IOpcodeData } from 'common/interfaces';
+
+interface IOpcodeDefinition extends IOpcodeData {
+	id: string;
+}
 
 export default class Disassembler {
 	private parser: Parser;
-	private opcodesData: IOpcodeData[];
+	private opcodes: OpcodeMap;
 
 	disassemble(inputFile: ScriptFile): Promise<IScript[]> {
 		return this.getOpcodes().then(opcodes => {
-			this.opcodesData = opcodes;
+			this.opcodes = opcodes;
 
 			const files = [
 				this.getScriptFromBuffer(inputFile.baseOffset, inputFile.type, inputFile.buffer)
@@ -36,7 +41,7 @@ export default class Disassembler {
 
 	printOpcode(opcode: IOpcode): void {
 		const id = opcode.id;
-		const info = this.opcodesData[id & 0x7FFF];
+		const info = this.opcodes.get(id & 0x7FFF);
 		let output = `/* ${this.padOpcodeOffset(opcode.offset)} */ ${this.opcodeIdToHex(id)}: `;
 
 		if (opcode.isLeader) {
@@ -57,19 +62,25 @@ export default class Disassembler {
 		Log.msg(output);
 	}
 
-	private getOpcodes(): Promise<IOpcodeData[]> {
-		if (this.opcodesData) return Promise.resolve(this.opcodesData);
+	private getOpcodes(): Promise<OpcodeMap> {
+		if (this.opcodes) return Promise.resolve(this.opcodes);
 
 		return file.isReadable(Arguments.opcodesFile)
-			.then(() => file.loadText(Arguments.opcodesFile))
-			.then((opcodesData: string) => JSON.parse(opcodesData))
+			.then(() => file.loadJson<IOpcodeDefinition[]>(Arguments.opcodesFile))
+			.then(opcodes => {
+				const map: OpcodeMap = new Map();
+				opcodes.forEach(opcode => {
+					map.set(this.hexToOpcodeId(opcode.id), { name: opcode.name, params: opcode.params });
+				});
+				return map;
+			})
 			.catch(() => {
 				throw Log.error(AppError.NO_OPCODE, Arguments.opcodesFile);
 			});
 	}
 
 	private getScriptFromBuffer(base: number, type: eScriptType, data: Buffer): IScript {
-		const parser = new Parser(this.opcodesData, data, 0);
+		const parser = new Parser(this.opcodes, data, 0);
 
 		const script: IScript = {
 			opcodes: new Map(),
@@ -89,12 +100,16 @@ export default class Disassembler {
 		return script;
 	}
 
-	private opcodeIdToHex(id) {
+	private opcodeIdToHex(id: number): string {
 		return utils.strPadLeft(id.toString(16).toUpperCase(), 4);
 	}
 
-	private padOpcodeOffset(offset) {
-		return utils.strPadLeft(offset, 8);
+	private hexToOpcodeId(id: string): number {
+		return parseInt(id, 16);
+	}
+
+	private padOpcodeOffset(offset: number): string {
+		return utils.strPadLeft(offset.toString(), 8);
 	}
 
 }

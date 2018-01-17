@@ -1,5 +1,7 @@
 import * as utils from 'utils';
 import Arguments from 'common/arguments';
+import AppError from 'common/errors';
+import Log from 'utils/log';
 import { eGame, eScriptFileSegments } from 'common/enums';
 
 interface IMultifileMetadata {
@@ -64,6 +66,9 @@ export default class MultifileMetadata implements IMultifileMetadata {
 	externals: IExternalScriptMetadata[];
 
 	constructor(data: Buffer) {
+		if (data.buffer.byteLength === 0) {
+			throw Log.error(AppError.EMPTY_SCM);
+		}
 		this.loadModelSegment(data);
 		this.loadMissionSegment(data);
 
