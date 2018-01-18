@@ -13,6 +13,7 @@
 		"no-redundant-jsdoc": true,
 		"no-bitwise": false,
 		"no-console": false,
-		"no-var-requires": false
+		"no-var-requires": false,
+		"typedef": [true, "parameter", "call-signature"]
 	}
 }

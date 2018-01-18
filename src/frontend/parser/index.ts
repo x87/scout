@@ -128,10 +128,10 @@ export default class Parser {
 		});
 	}
 
-	[Symbol.iterator]() {
+	[Symbol.iterator](): Iterator<IInstruction> {
 		const self = this;
 		return {
-			next() {
+			next(): IteratorResult<IInstruction> {
 				if (self.offset >= self.data.length) {
 					return { value: undefined, done: true };
 				}

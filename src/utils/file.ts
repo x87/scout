@@ -8,7 +8,7 @@ export async function load(fileName: string): Promise<Buffer> {
 	return await readFile(fileName);
 }
 
-export async function loadText(fileName: string, encoding = 'utf8'): Promise<string> {
+export async function loadText(fileName: string, encoding: string = 'utf8'): Promise<string> {
 	return await readFile(fileName, encoding);
 }
 

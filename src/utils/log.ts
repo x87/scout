@@ -2,15 +2,15 @@ import AppError from 'common/errors';
 import * as util from 'util';
 
 export default class {
-	static error(error: AppError, ...args) {
+	static error(error: AppError, ...args: string[]): Error {
 		return new Error(util.format(error, ...args));
 	}
 
-	static warn(warning: AppError, ...args) {
+	static warn(warning: AppError, ...args: string[]): void {
 		return this.msg(util.format(warning, ...args));
 	}
 
-	static msg(msg: string) {
+	static msg(msg: string): void {
 		console.log(msg);
 	}
 }

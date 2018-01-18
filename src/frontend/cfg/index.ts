@@ -54,7 +54,7 @@ export default class CFG {
 		});
 	}
 
-	findIntervalsInFile(file: IScript) {
+	findIntervalsInFile(file: IScript): IBasicBlock[][] {
 		const opcodes = this.findLeadersForFile(file.instructionMap, file.type);
 		const basicBlocks = this.findUnreachableBlocks(
 			this.linkBasicBlocks(
@@ -64,7 +64,7 @@ export default class CFG {
 		return this.findIntervals(basicBlocks);
 	}
 
-	private findLoops(interval: IBasicBlock[]) {
+	private findLoops(interval: IBasicBlock[]): void {
 		const head = _.head(interval);
 
 		const latchingNode = _.chain(interval)
@@ -78,7 +78,7 @@ export default class CFG {
 		}
 	}
 
-	private findLoopNodes(interval: IBasicBlock[], head: IBasicBlock, latchingNode: IBasicBlock) {
+	private findLoopNodes(interval: IBasicBlock[], head: IBasicBlock, latchingNode: IBasicBlock): void {
 
 		const start = _.findIndex(interval, head);
 		const end = _.findIndex(interval, latchingNode);
@@ -92,7 +92,7 @@ export default class CFG {
 		});
 	}
 
-	private findIntervals(basicBlocks: BasicBlockMap) {
+	private findIntervals(basicBlocks: BasicBlockMap): IBasicBlock[][] {
 
 		if (!basicBlocks.size) {
 			return;
@@ -124,7 +124,7 @@ export default class CFG {
 		return intervals;
 	}
 
-	private findUnreachableBlocks(basicBlocks: BasicBlockMap) {
+	private findUnreachableBlocks(basicBlocks: BasicBlockMap): BasicBlockMap {
 		let unreachableFound;
 		do {
 			unreachableFound = false;
@@ -151,7 +151,7 @@ export default class CFG {
 		return basicBlocks;
 	}
 
-	private linkBasicBlocks(basicBlocks: BasicBlockMap) {
+	private linkBasicBlocks(basicBlocks: BasicBlockMap): BasicBlockMap {
 		let prevBBtoLink = null;
 		for (const [offset, bb] of basicBlocks) {
 
@@ -209,7 +209,7 @@ export default class CFG {
 		return basicBlocks;
 	}
 
-	private findBasicBlocksForFile(instructionMap: InstructionMap) {
+	private findBasicBlocksForFile(instructionMap: InstructionMap): BasicBlockMap {
 		let currentLeader = null;
 		let bbOpcodes = [];
 		const basicBlocks = new Map();
@@ -229,7 +229,7 @@ export default class CFG {
 		return basicBlocks;
 	}
 
-	private findLeadersForFile(instructionMap: InstructionMap, fileType: eScriptType) {
+	private findLeadersForFile(instructionMap: InstructionMap, fileType: eScriptType): InstructionMap {
 		let isThisFollowBranchInstruction = false;
 		for (const [offset, instruction] of instructionMap) {
 
