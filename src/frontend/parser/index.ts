@@ -1,8 +1,13 @@
 import { eParamType } from 'common/enums';
-import { IInstruction, IInstructionParam, IInstructionParamArray, DefinitionMap } from 'common/interfaces';
+import {
+	IInstruction, IInstructionParam, IInstructionParamArray, DefinitionMap, IScript,
+	InstructionMap
+} from 'common/interfaces';
 import * as utils from 'utils';
 import Log from 'utils/log';
 import AppError from 'common/errors';
+import ScriptFile from '../script/ScriptFile';
+import ScriptMultifile from '../script/ScriptMultifile';
 
 export const PARAM_ANY = 'any';
 export const PARAM_ARGUMENTS = 'arguments';
@@ -10,15 +15,13 @@ export const PARAM_LABEL = 'label';
 
 export default class Parser {
 
-	data: Buffer;
-	offset: number;
-	definitionMap: DefinitionMap;
+	private data: Buffer;
+	private offset: number;
+	private readonly definitionMap: DefinitionMap;
 	private readonly paramTypesHandlers: any;
 	private readonly paramValuesHandlers: any;
 
-	constructor(definitionMap: DefinitionMap, data: Buffer, offset: number) {
-		this.offset = offset;
-		this.data = data;
+	constructor(definitionMap: DefinitionMap) {
 		this.definitionMap = definitionMap;
 
 		this.paramValuesHandlers = {
@@ -126,6 +129,39 @@ export default class Parser {
 					}
 			}
 		});
+	}
+
+	parse(scriptFile: ScriptFile): IScript[] {
+		const scripts = [
+			{
+				instructionMap: this.getInstructions(scriptFile),
+				type: scriptFile.type
+			}
+		];
+		if (scriptFile instanceof ScriptMultifile) {
+			return scriptFile.scripts.reduce((collection, script) => {
+				collection.push(...this.parse(script));
+				return collection;
+			}, scripts);
+		}
+		return scripts;
+	}
+
+	getInstructions(scriptFile: ScriptFile): InstructionMap {
+		const map: InstructionMap = new Map();
+		this.offset = 0;
+		this.data = scriptFile.buffer;
+		let firstOpcode = true;
+		for (const instruction of this) {
+			instruction.offset += scriptFile.baseOffset;
+			if (firstOpcode) {
+				instruction.isHeader = true;
+				instruction.isLeader = true;
+				firstOpcode = false;
+			}
+			map.set(instruction.offset, instruction);
+		}
+		return map;
 	}
 
 	[Symbol.iterator](): Iterator<IInstruction> {
