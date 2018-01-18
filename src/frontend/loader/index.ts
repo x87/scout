@@ -10,20 +10,20 @@ const HEADER_EXTENSION_MAP: any = {
 };
 
 export default class Loader {
-	loadScript(fileName: string): Promise<ScriptFile> {
+	async loadScript(fileName: string): Promise<ScriptFile> {
 		if (!this.isFileTypeSupported(fileName)) {
 			throw Log.error(AppError.UNKNOWN_FILE_EXTENSION, file.getFileExtension(fileName));
 		}
-		return file.isReadable(fileName)
-			.then(() => file.load(fileName))
-			.then(buffer => {
-				if (Buffer.isBuffer(buffer)) {
-					return this.isHeaderPresent(fileName)
-						? new ScriptMultifile(buffer)
-						: new ScriptFile(buffer);
-				}
-				throw Log.error(AppError.INVALID_TYPE, 'Buffer');
-			});
+		try {
+			const buffer = await file.load(fileName);
+			if (Buffer.isBuffer(buffer)) {
+				return this.isHeaderPresent(fileName)
+					? new ScriptMultifile(buffer)
+					: new ScriptFile(buffer);
+			}
+		} catch {
+			throw Log.error(AppError.INVALID_TYPE, 'Buffer');
+		}
 	}
 
 	private isHeaderPresent(fileName: string): boolean {

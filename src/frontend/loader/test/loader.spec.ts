@@ -21,26 +21,32 @@ describe(Loader.name, () => {
 		expect((loader as any).isFileTypeSupported('src.txt')).toBe(false);
 	});
 
-	it('should create a ScriptFile from input cs file', (done) => {
-		loader.loadScript('samples/0.cs').then(res => {
-			expect(res instanceof ScriptFile).toBe(true);
+	it('should create a ScriptFile from input cs file', async (done) => {
+		try {
+			const script = await loader.loadScript('samples/0.cs');
+			expect(script instanceof ScriptFile).toBe(true);
 			done();
-		})
-		.catch(done.fail);
+		} catch (e) {
+			done.fail(e);
+		}
 	});
 
-	it('should create a ScriptMultiFile from input scm file', (done) => {
-		loader.loadScript('samples/1_wait.scm').then(res => {
-			expect(res instanceof ScriptMultifile).toBe(true);
+	it('should create a ScriptMultiFile from input scm file', async (done) => {
+		try {
+			const script = await loader.loadScript('samples/1_wait.scm');
+			expect(script instanceof ScriptMultifile).toBe(true);
 			done();
-		})
-		.catch(done.fail);
+		} catch (e) {
+			done.fail(e);
+		}
 	});
 
-	it('should throw an error on empty input scm file', (done) => {
-		loader.loadScript('samples/0.scm').then(res => {
+	it('should throw an error on empty input scm file', async (done) => {
+		try {
+			const script = await loader.loadScript('samples/0.scm');
 			done.fail();
-		})
-		.catch(done);
+		} catch {
+			done();
+		}
 	});
 });

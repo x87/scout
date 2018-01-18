@@ -17,35 +17,32 @@ interface IDefinition extends IInstructionDefinition {
 }
 
 export default class Disassembler {
-	static getDefinitions(): Promise<DefinitionMap> {
-		return file.isReadable(Arguments.opcodesFile)
-			.then(() => file.loadJson<IDefinition[]>(Arguments.opcodesFile))
-			.then(opcodes => {
-				const map: DefinitionMap = new Map();
-				opcodes.forEach(opcode => {
-					map.set(utils.hexToOpcodeId(opcode.id), { name: opcode.name, params: opcode.params });
-				});
-				return map;
-			})
-			.catch(() => {
-				throw Log.error(AppError.NO_OPCODE, Arguments.opcodesFile);
+	static async getDefinitions(): Promise<DefinitionMap> {
+		try {
+			const opcodes = await file.loadJson<IDefinition[]>(Arguments.opcodesFile);
+			const map: DefinitionMap = new Map();
+			opcodes.forEach(opcode => {
+				map.set(utils.hexToOpcodeId(opcode.id), { name: opcode.name, params: opcode.params });
 			});
+			return map;
+		} catch {
+			throw Log.error(AppError.NO_OPCODE, Arguments.opcodesFile);
+		}
 	}
 
-	disassemble(inputFile: ScriptFile): Promise<IScript[]> {
-		return Disassembler.getDefinitions().then(definitionMap => {
-			const files = [
-				this.parse(inputFile.buffer, inputFile.type, inputFile.baseOffset, definitionMap)
-			];
-			if (inputFile instanceof ScriptMultifile) {
-				return inputFile.missions.reduce((memo, mission) => {
-					memo.push(this.parse(mission, eScriptType.HEADLESS, 0, definitionMap));
-					return memo;
-				}, files);
-			}
-			// todo; external scripts
-			return files;
-		});
+	async disassemble(inputFile: ScriptFile): Promise<IScript[]> {
+		const definitionMap = await Disassembler.getDefinitions();
+		const files = [
+			this.parse(inputFile.buffer, inputFile.type, inputFile.baseOffset, definitionMap)
+		];
+		if (inputFile instanceof ScriptMultifile) {
+			return inputFile.missions.reduce((memo, mission) => {
+				memo.push(this.parse(mission, eScriptType.HEADLESS, 0, definitionMap));
+				return memo;
+			}, files);
+		}
+		// todo; external scripts
+		return files;
 	}
 
 	private parse(data: Buffer, type: eScriptType, base: number, definitionMap: DefinitionMap): IScript {

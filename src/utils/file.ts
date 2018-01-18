@@ -1,36 +1,22 @@
-export function load(fileName: string): Promise<Buffer> {
-	const fs = require('fs');
-	return new Promise((resolve, reject) => {
-		fs.readFile(fileName, (err, data) => {
-			err ? reject(err) : resolve(data);
-		});
-	});
+const { promisify } = require('util');
+const fs = require('fs');
+const path = require('path');
+
+const readFile = promisify(fs.readFile);
+
+export async function load(fileName: string): Promise<Buffer> {
+	return await readFile(fileName);
 }
 
-export function loadText(fileName: string, encoding = 'utf8'): Promise<string> {
-	const fs = require('fs');
-	return new Promise((resolve, reject) => {
-		fs.readFile(fileName, encoding, (err, data) => {
-			err ? reject(err) : resolve(data);
-		});
-	});
+export async function loadText(fileName: string, encoding = 'utf8'): Promise<string> {
+	return await readFile(fileName, encoding);
 }
 
-export function loadJson<T>(fileName: string): Promise<T> {
-	return loadText(fileName).then(JSON.parse);
-}
-
-export function isReadable(fileName: string): Promise<boolean> {
-	const fs = require('fs');
-	return new Promise((resolve, reject) => {
-		fs.access(fileName, fs.R_OK, (err) => {
-			err ? reject(err) : resolve();
-		});
-	});
-
+export async function loadJson<T>(fileName: string): Promise<T> {
+	const text = await loadText(fileName);
+	return JSON.parse(text);
 }
 
 export function getFileExtension(fileName: string): string {
-	const path = require('path');
 	return path.extname(fileName).toLowerCase();
 }

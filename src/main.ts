@@ -6,30 +6,28 @@ import CFG from 'frontend/cfg';
 import AppError from 'common/errors';
 import SimplePrinter from './utils/simple-printer';
 
-if (!Arguments.inputFile) {
-	throw Log.error(AppError.NO_INPUT);
-}
+export async function main() {
 
-const disasm = new Disassembler();
-const loader = new Loader();
+	try {
+		if (!Arguments.inputFile) {
+			throw Log.error(AppError.NO_INPUT);
+		}
 
-loader.loadScript(Arguments.inputFile)
-	.then(scriptFile => disasm.disassemble(scriptFile))
-	.then(scripts => {
+		const disasm = new Disassembler();
+		const loader = new Loader();
+		const scriptFile = await loader.loadScript(Arguments.inputFile);
+		const scripts = await disasm.disassemble(scriptFile);
 		const graph = new CFG(scripts);
-		return scripts;
-	})
-	.then(scripts => {
-		scripts.forEach(script => {
+		scripts.forEach(async script => {
 			if (Arguments.printAssembly === true) {
-
-				Disassembler.getDefinitions().then(definitionMap => {
-					const printer = new SimplePrinter(definitionMap);
-					for (const [offset, instruction] of script.instructionMap) {
-						printer.print(instruction);
-					}
-				});
+				const definitionMap = await Disassembler.getDefinitions();
+				const printer = new SimplePrinter(definitionMap);
+				for (const [offset, instruction] of script.instructionMap) {
+					printer.print(instruction);
+				}
 			}
 		});
-	})
-	.catch(e => { console.error(e.stack || `[CUSTOM ERROR]: ${e}`); });
+	} catch (e) {
+		console.error(e.stack || `[CUSTOM ERROR]: ${e}`);
+	}
+}

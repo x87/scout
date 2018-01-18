@@ -2,7 +2,7 @@ const CheckerPlugin = require('awesome-typescript-loader').CheckerPlugin;
 const path = require('path');
 
 module.exports = {
-	entry: "./src/main.ts",
+	entry: "./src/index.ts",
 	output: {
 		path: path.resolve(__dirname, "build"),
 		filename: "scout.js"

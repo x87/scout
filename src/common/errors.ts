@@ -2,7 +2,7 @@ enum AppError {
 	UNKNOWN_FILE_EXTENSION = 'file extension %s is not supported',
 	INVALID_TYPE = 'invalid type, <%s> was expected',
 	EMPTY_SCM = 'SCM file can not be empty',
-	NO_OPCODE = 'Opcodes definitions are not found at <%s>, disassembling is impossible',
+	NO_OPCODE = 'Can\'t read opcode definitions from <%s>, disassembling is impossible',
 	JSON = 'Error occured while trying to parse JSON data: %s',
 	NO_ARG_VALUE = 'Command-line error: value for argument %s not found',
 	UNKNOWN_GAME = 'Command-line error: unknown game alias <%s> passed as argument',
