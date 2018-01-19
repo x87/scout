@@ -39,13 +39,19 @@ export async function main(): Promise<void> {
 	const definitionMap = await getDefinitions();
 	const parser = new Parser(definitionMap);
 	const scripts = await parser.parse(scriptFile);
-	const graph = new CFG(scripts);
+
 	if (Arguments.printAssembly === true) {
 		const printer = new SimplePrinter(definitionMap);
-		scripts.forEach(async script => {
-			for (const [offset, instruction] of script.instructionMap) {
-				printer.print(instruction);
-			}
+		scripts.forEach(script => {
+			const cfg = new CFG();
+			const graphs = cfg.getGraphs(script);
+			graphs.forEach((graph, i) => {
+				printer.printLine(`--- Graph ${i} Start----\n`);
+				graph.nodes.forEach(node => {
+					printer.print(node);
+				});
+				printer.printLine(`--- Graph ${i} End----`);
+			});
 		});
 	}
 }

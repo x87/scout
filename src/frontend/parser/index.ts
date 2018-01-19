@@ -6,8 +6,8 @@ import {
 import * as utils from 'utils';
 import Log from 'utils/log';
 import AppError from 'common/errors';
-import ScriptFile from '../script/ScriptFile';
-import ScriptMultifile from '../script/ScriptMultifile';
+import ScriptFile from 'frontend/script/ScriptFile';
+import ScriptMultifile from 'frontend/script/ScriptMultifile';
 
 export const PARAM_ANY = 'any';
 export const PARAM_ARGUMENTS = 'arguments';
@@ -151,14 +151,8 @@ export default class Parser {
 		const map: InstructionMap = new Map();
 		this.offset = 0;
 		this.data = scriptFile.buffer;
-		let firstOpcode = true;
 		for (const instruction of this) {
 			instruction.offset += scriptFile.baseOffset;
-			if (firstOpcode) {
-				instruction.isHeader = true;
-				instruction.isLeader = true;
-				firstOpcode = false;
-			}
 			map.set(instruction.offset, instruction);
 		}
 		return map;
@@ -291,8 +285,6 @@ export default class Parser {
 		return {
 			opcode,
 			offset,
-			isLeader: false,
-			isHeader: false,
 			params: this.getInstructionParams(opcode)
 		};
 	}

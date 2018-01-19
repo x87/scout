@@ -1,7 +1,8 @@
 import * as utils from 'utils';
 import Log from 'utils/log';
 
-import { DefinitionMap, IInstruction, IInstructionParamArray } from 'common/interfaces';
+import { DefinitionMap, IBasicBlock, IInstructionParamArray } from 'common/interfaces';
+import { eBasicBlockType } from 'common/enums';
 
 export default class SimplePrinter {
 	private definitionMap: DefinitionMap;
@@ -9,27 +10,34 @@ export default class SimplePrinter {
 		this.definitionMap = definitionMap;
 	}
 
-	print(instruction: IInstruction): void {
-		const id = instruction.opcode;
-		let output = `/* ${this.padOpcodeOffset(instruction.offset)} */ ${this.opcodeIdToHex(id)}: `;
+	printLine(line: string): void {
+		Log.msg(line);
+	}
 
-		if (instruction.isLeader) {
-			output = '\n\n' + output;
-		}
-		if (id > 0x7FFF) {
-			output += 'NOT ';
-		}
-		const definition = this.definitionMap.get(instruction.opcode & 0x7FFF);
-		output += definition.name;
-		for (const param of instruction.params) {
-			if (utils.isArrayParam(param.type)) {
-				const a = param.value as IInstructionParamArray;
-				output += ` (${a.varIndex} ${a.offset} ${a.size} ${a.props})`;
-			} else {
-				output += ' ' + param.value;
+	print(bb: IBasicBlock): void {
+		let output = '';
+		bb.instructions.forEach((instruction, i) => {
+			const id = instruction.opcode;
+			output += `/* ${this.padOpcodeOffset(instruction.offset)} */ ${this.opcodeIdToHex(id)}: `;
+
+			if (id > 0x7FFF) {
+				output += 'NOT ';
 			}
-		}
-		Log.msg(output);
+			const definition = this.definitionMap.get(instruction.opcode & 0x7FFF);
+			output += definition.name;
+			for (const param of instruction.params) {
+				if (utils.isArrayParam(param.type)) {
+					const a = param.value as IInstructionParamArray;
+					output += ` (${a.varIndex} ${a.offset} ${a.size} ${a.props})`;
+				} else {
+					output += ' ' + param.value;
+				}
+			}
+			if (i < bb.instructions.length - 1 || bb.type !== eBasicBlockType.FALL_THRU) {
+				output += '\n';
+			}
+		});
+		this.printLine(output);
 	}
 
 	opcodeIdToHex(id: number): string {
@@ -37,7 +45,7 @@ export default class SimplePrinter {
 	}
 
 	padOpcodeOffset(offset: number): string {
-		return utils.strPadLeft(offset.toString(), 8);
+		return utils.strPadLeft(offset.toString(), 6);
 	}
 
 }

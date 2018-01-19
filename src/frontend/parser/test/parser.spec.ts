@@ -39,8 +39,6 @@ describe(Parser.name, () => {
 			{
 				opcode: 1,
 				offset: 0,
-				isHeader: true,
-				isLeader: true,
 				params: [{
 					type: eParamType.NUM8,
 					value: 0
@@ -49,8 +47,6 @@ describe(Parser.name, () => {
 			{
 				opcode: 2,
 				offset: 4,
-				isHeader: false,
-				isLeader: false,
 				params: [{
 					type: eParamType.NUM32,
 					value: 100
