@@ -33,10 +33,9 @@ export default class SimplePrinter {
 					output += ' ' + param.value;
 				}
 			}
-			if (i < bb.instructions.length - 1 || bb.type !== eBasicBlockType.FALL_THRU) {
-				output += '\n';
-			}
+			if (i < bb.instructions.length - 1) output += '\n';
 		});
+		output += '\n';
 		this.printLine(output);
 	}
 

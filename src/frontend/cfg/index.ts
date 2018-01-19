@@ -52,7 +52,7 @@ export default class CFG {
 		const graph = this.buildGraph(basicBlocks);
 
 		while (functions.length) {
-			const offset = functions.pop();
+			const offset = functions.shift();
 			const root = this.findBasicBlockWithOffset(graph.nodes, offset);
 			const subgraph = graph.extractFrom(root);
 			graphs.push(subgraph);
@@ -126,7 +126,6 @@ export default class CFG {
 
 		let prevBBtoLink = null;
 		basicBlocks.forEach(bb => {
-
 			if (prevBBtoLink) {
 				graph.addEdge(prevBBtoLink, bb);
 				prevBBtoLink = null;
@@ -137,8 +136,8 @@ export default class CFG {
 			if (!this.isBranchInstruction(lastInstruction)) {
 				if (!blockEndOpcodes.includes(lastInstruction.opcode)) {
 					bb.type = eBasicBlockType.FALL_THRU;
+					prevBBtoLink = bb;
 				}
-				prevBBtoLink = bb;
 				return;
 			}
 
@@ -181,6 +180,7 @@ export default class CFG {
 				Log.warn(AppError.NO_BRANCH, targetOffset);
 				return;
 			}
+
 			graph.addEdge(bb, targetBB);
 
 		});

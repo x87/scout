@@ -1,6 +1,10 @@
 import { eParamType } from 'common/enums';
 import {
-	IInstruction, IInstructionParam, IInstructionParamArray, DefinitionMap, IScript,
+	IInstruction,
+	IInstructionParam,
+	IInstructionParamArray,
+	DefinitionMap,
+	IScript,
 	InstructionMap
 } from 'common/interfaces';
 import * as utils from 'utils';
