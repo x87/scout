@@ -47,17 +47,14 @@ export default class CFG {
 	getGraphs(script: IScript): Array<Graph<IBasicBlock>> {
 		const entryOffset = script.instructionMap.keys().next().value;
 		const functions = [entryOffset, ...this.findFunctions(script.instructionMap)];
-		const graphs = [];
 		const basicBlocks = this.findBasicBlocks(script.instructionMap, script.type);
 		const graph = this.buildGraph(basicBlocks);
 
-		while (functions.length) {
-			const offset = functions.shift();
+		return functions.map(offset => {
 			const root = this.findBasicBlockWithOffset(graph.nodes, offset);
-			const subgraph = graph.extractFrom(root);
-			graphs.push(subgraph);
-		}
-		return graphs;
+			const subgraph = graph.extractGraph(root);
+			return subgraph;
+		});
 	}
 
 	// private findLoops(interval: IBasicBlock[]): void {
@@ -121,8 +118,7 @@ export default class CFG {
 	// }
 
 	private buildGraph(basicBlocks: IBasicBlock[]): Graph<IBasicBlock> {
-		const graph = new Graph<IBasicBlock>();
-		graph.nodes = basicBlocks;
+		const graph = new Graph<IBasicBlock>(basicBlocks, []);
 
 		let prevBBtoLink = null;
 		basicBlocks.forEach(bb => {

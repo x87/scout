@@ -11,7 +11,6 @@ import CFG from 'frontend/cfg';
 
 import { DefinitionMap } from './common/interfaces';
 import { IInstructionDefinition } from 'common/interfaces';
-import { eBasicBlockType } from './common/enums';
 
 interface IDefinition extends IInstructionDefinition {
 	id: string;
