@@ -6,13 +6,13 @@ export const isGameGTA3 = (): boolean => Arguments.game === eGame.GTA3;
 export const isGameVC = (): boolean => Arguments.game === eGame.GTAVC;
 export const isGameSA = (): boolean => Arguments.game === eGame.GTASA;
 export const isArrayParam = (param): boolean => [
-		eParamType.GARRSTR8,
-		eParamType.LARRSTR8,
-		eParamType.GARRSTR16,
-		eParamType.LARRSTR16,
-		eParamType.GARRNUM32,
-		eParamType.LARRNUM32
-	].indexOf(param) !== -1;
+	eParamType.GARRSTR8,
+	eParamType.LARRSTR8,
+	eParamType.GARRSTR16,
+	eParamType.LARRSTR16,
+	eParamType.GARRNUM32,
+	eParamType.LARRNUM32
+].includes(param);
 
 export const getArrayIntersection = <T>(a1: T[], a2: T[]): T[] => {
 	return _.intersection(a1, a2);

@@ -11,8 +11,10 @@ export interface IInstruction {
 	opcode: number;
 	offset: number;
 	params: IInstructionParam[];
-	isLeader: boolean;
-	isHeader: boolean;
+}
+
+export interface IInstructionBranch extends IInstruction {
+	params: [{ type: eParamType.NUM32, value: number }];
 }
 
 export interface IInstructionParam {
@@ -30,16 +32,10 @@ export interface IInstructionParamArray {
 export interface IBasicBlock {
 	type: eBasicBlockType;
 	instructions: IInstruction[];
-	successors: IBasicBlock[];
-	predecessors: IBasicBlock[];
-	processed: boolean;
-	inLoop: boolean;
-	isHeaderBlock: boolean;
 }
 
 export type DefinitionMap = Map<number, IInstructionDefinition>;
 export type InstructionMap = Map<number, IInstruction>;
-export type BasicBlockMap = Map<number, IBasicBlock>;
 
 export interface IScript {
 	type: eScriptType;
