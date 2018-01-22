@@ -1,6 +1,6 @@
 {
   "name": "scout",
-  "version": "0.3",
+  "version": "0.3.0",
   "description": "Scout Decompiler",
   "main": "scout.js",
   "repository": {
