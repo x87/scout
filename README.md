@@ -13,7 +13,7 @@ npm run build
 
 ### Build opcodes definitions
 ```bash
-npm run opcodes > build/gta3.json
+node opcodes > build/gta3.json
 ```
 
 ## Usage

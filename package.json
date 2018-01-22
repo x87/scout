@@ -11,8 +11,7 @@
     "lint": "tslint -c tslint.json src/**/*.ts",
     "build": "webpack",
     "dev": "webpack --watch",
-    "test": "node run-tests",
-    "opcodes": "node ./opcodes/parser"
+    "test": "node run-tests"
   },
   "keywords": [],
   "author": "Seemann",
