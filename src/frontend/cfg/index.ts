@@ -3,11 +3,12 @@ import Log from 'utils/log';
 
 import Arguments from 'common/arguments';
 import AppError from 'common/errors';
-
-import { IBasicBlock, IScript, IInstruction, InstructionMap } from 'common/interfaces';
-import { eBasicBlockType, eScriptType, eGame, eParamType } from 'common/enums';
-import { IInstructionBranch } from 'common/interfaces';
 import Graph from './graph';
+
+import { IInstruction, InstructionMap } from 'common/instructions';
+import * as Instruction from 'common/instructions';
+import { eBasicBlockType, eScriptType, eGame } from 'common/enums';
+import { IBasicBlock, IScript } from 'common/interfaces';
 
 const OP_JMP = 0x0002;
 const OP_JT = 0x004c;
@@ -46,14 +47,11 @@ export default class CFG {
 
 	getGraphs(script: IScript): Array<Graph<IBasicBlock>> {
 		const entryOffset = script.instructionMap.keys().next().value;
-		const functions = [entryOffset, ...this.findFunctions(script.instructionMap)];
+		const entries = [entryOffset, ...this.findCallOffsets(script.instructionMap)];
 		const basicBlocks = this.findBasicBlocks(script.instructionMap, script.type);
-		const graph = this.buildGraph(basicBlocks);
 
-		return functions.map(offset => {
-			const root = this.findBasicBlockWithOffset(graph.nodes, offset);
-			const subgraph = graph.extractGraph(root);
-			return subgraph;
+		return entries.map(offset => {
+			return this.buildGraph(basicBlocks, offset);
 		});
 	}
 
@@ -117,70 +115,55 @@ export default class CFG {
 	// 	return intervals;
 	// }
 
-	private buildGraph(basicBlocks: IBasicBlock[]): Graph<IBasicBlock> {
-		const graph = new Graph<IBasicBlock>(basicBlocks, []);
+	private buildGraph(basicBlocks: IBasicBlock[], startOffset: number): Graph<IBasicBlock> {
+		const graph = new Graph<IBasicBlock>();
 
-		let prevBBtoLink = null;
-		basicBlocks.forEach(bb => {
-			if (prevBBtoLink) {
-				graph.addEdge(prevBBtoLink, bb);
-				prevBBtoLink = null;
-			}
+		const visited = basicBlocks.map(() => false);
+		const startIndex = this.findBasicBlockIndex(basicBlocks, startOffset);
+
+		const traverse = (index: number): void => {
+			if (visited[index]) return;
+			visited[index] = true;
+
+			const bb = basicBlocks[index];
+			graph.nodes.push(bb);
 
 			const lastInstruction = _.last(bb.instructions);
 
-			if (!this.isBranchInstruction(lastInstruction)) {
-				if (!blockEndOpcodes.includes(lastInstruction.opcode)) {
-					bb.type = eBasicBlockType.FALL_THRU;
-					prevBBtoLink = bb;
-				}
-				return;
-			}
+			bb.type = this.getBasicBlockType(lastInstruction);
 
-			bb.type = this.getBranchType(lastInstruction);
-
-			if (bb.type === eBasicBlockType.FALL_THRU) {
-				prevBBtoLink = bb;
-				// call opcodes does not create an edge to target offset
-				return;
-			}
-
-			if (bb.type === eBasicBlockType.TWO_WAY) {
-				prevBBtoLink = bb;
-			}
-
-			if (bb.type === eBasicBlockType.N_WAY) {
-				// todo; set links to switch cases
-			}
-
-			let targetOffset;
-			targetOffset = this.getTargetOffset(lastInstruction);
-
-			// eliminate jump-to-jump transitions
-			/*while (true) {
-				targetOffset = this.getOpcodeTargetOffset(lastOpcode);
-
-				// check if we got a number, including 0.
-				if (!isFinite(targetOffset)) {
+			switch (bb.type) {
+				case eBasicBlockType.EXIT:
 					break;
-				}
-				lastOpcode = opcodes.get(Math.abs(targetOffset));
-				if (!lastOpcode || lastOpcode.id !== OP_JMP) {
+				case eBasicBlockType.ONE_WAY:
+				case eBasicBlockType.TWO_WAY:
+					const targetOffset = Instruction.getNumericParam(lastInstruction);
+					const targetIndex = this.findBasicBlockIndex(basicBlocks, Math.abs(targetOffset));
+
+					if (!targetIndex) {
+						Log.warn(AppError.NO_BRANCH, targetOffset);
+						return;
+					}
+					graph.addEdge(bb, basicBlocks[targetIndex]);
+					traverse(targetIndex);
+
+					if (bb.type === eBasicBlockType.TWO_WAY) {
+						graph.addEdge(bb, basicBlocks[index + 1]);
+						traverse(index + 1);
+					}
+
 					break;
-				}
-			}*/
-
-			const targetBB = this.findBasicBlockWithOffset(basicBlocks, Math.abs(targetOffset));
-
-			if (!targetBB) {
-				Log.warn(AppError.NO_BRANCH, targetOffset);
-				return;
+				case eBasicBlockType.FALL_THRU:
+					graph.addEdge(bb, basicBlocks[index + 1]);
+					traverse(index + 1);
+					break;
+				default:
+					Log.warn(`${bb.type} is not implemented` as AppError);
 			}
 
-			graph.addEdge(bb, targetBB);
+		};
 
-		});
-
+		traverse(startIndex);
 		return graph;
 	}
 
@@ -188,16 +171,18 @@ export default class CFG {
 		let currentLeader = null;
 		let instructions = [];
 		const result: IBasicBlock[] = [];
-		const leaders = this.findLeaders(instructionMap, scriptType);
-		for (const [offset, instruction] of instructionMap) {
-			if (leaders.includes(instruction)) {
-				if (currentLeader) {
-					result.push(this.createBasicBlock(instructions));
+		const leaderOffsets = this.findLeaderOffsets(instructionMap, scriptType);
+		if (leaderOffsets.length) {
+			for (const [offset, instruction] of instructionMap) {
+				if (leaderOffsets.includes(offset)) {
+					if (currentLeader) {
+						result.push(this.createBasicBlock(instructions));
+					}
+					currentLeader = instruction;
+					instructions = [];
 				}
-				currentLeader = instruction;
-				instructions = [];
+				instructions.push(instruction);
 			}
-			instructions.push(instruction);
 		}
 		// add last bb in the file
 		result.push(this.createBasicBlock(instructions));
@@ -205,13 +190,13 @@ export default class CFG {
 		return result;
 	}
 
-	private findLeaders(instructionMap: InstructionMap, fileType: eScriptType): IInstruction[] {
+	private findLeaderOffsets(instructionMap: InstructionMap, fileType: eScriptType): number[] {
 		let isThisFollowBranchInstruction = false;
-		const leaders: IInstruction[] = [];
+		const offsets: number[] = [];
 		for (const [offset, instruction] of instructionMap) {
 
-			if (isThisFollowBranchInstruction || leaders.length === 0) {
-				leaders.push(instruction);
+			if (isThisFollowBranchInstruction || offsets.length === 0) {
+				offsets.push(offset);
 			}
 
 			if (blockEndOpcodes.includes(instruction.opcode)) {
@@ -221,11 +206,11 @@ export default class CFG {
 
 			isThisFollowBranchInstruction = false;
 
-			if (!this.isBranchInstruction(instruction)) {
+			if (!this.getBranchType(instruction)) {
 				continue;
 			}
 
-			const targetOffset = this.getTargetOffset(instruction);
+			const targetOffset = Instruction.getNumericParam(instruction);
 
 			if (targetOffset < 0 && fileType !== eScriptType.HEADLESS) {
 				throw Log.error(AppError.INVALID_REL_OFFSET, offset);
@@ -239,40 +224,40 @@ export default class CFG {
 				Log.warn(AppError.NO_TARGET, offset);
 				continue;
 			}
-			leaders.push(target);
+			offsets.push(Math.abs(targetOffset));
 			isThisFollowBranchInstruction = true;
 		}
-		return leaders;
+		return offsets;
 	}
 
-	private createBasicBlock(instructions: IInstruction[]): IBasicBlock {
-		return {
-			type: eBasicBlockType.DEAD_END,
-			instructions
-		};
+	private createBasicBlock(
+		instructions: IInstruction[],
+		type: eBasicBlockType = eBasicBlockType.UNDEFINED
+	): IBasicBlock {
+		return { type, instructions };
 	}
 
-	private getTargetOffset(instruction: IInstructionBranch): number {
-		return Number(instruction.params[0].value);
+	private findBasicBlockIndex(basicBlocks: IBasicBlock[], offset: number): number | undefined {
+		return _.findIndex(basicBlocks, ['instructions[0].offset', offset]);
 	}
 
-	private findBasicBlockWithOffset(basicBlocks: IBasicBlock[], offset: number): IBasicBlock | undefined {
-		return _.find(basicBlocks, ['instructions[0].offset', offset]);
-	}
-
-	private isBranchInstruction(instruction: IInstruction): instruction is IInstructionBranch {
-		return this.getBranchType(instruction) && instruction.params[0].type === eParamType.NUM32;
-	}
-
-	private getBranchType(instruction: IInstruction): eBasicBlockType {
+	private getBranchType(instruction: IInstruction): eBasicBlockType | undefined {
 		return branchOpcodesMap[Arguments.game][instruction.opcode];
 	}
 
-	private findFunctions(instructionMap: InstructionMap): number[] {
+	private getBasicBlockType(instruction: IInstruction): eBasicBlockType {
+		const type = this.getBranchType(instruction);
+		if (type) return type;
+		if (blockEndOpcodes.includes(instruction.opcode)) return eBasicBlockType.EXIT;
+		return eBasicBlockType.FALL_THRU;
+	}
+
+	private findCallOffsets(instructionMap: InstructionMap): number[] {
 		const res = [];
 		for (const [offset, instruction] of instructionMap) {
-			if (callOpcodes.includes(instruction.opcode) && this.isBranchInstruction(instruction)) {
-				res.push(this.getTargetOffset(instruction));
+			if (callOpcodes.includes(instruction.opcode)) {
+				const targetOffset = Instruction.getNumericParam(instruction);
+				res.push(Math.abs(targetOffset));
 			}
 		}
 		return res;

@@ -1,7 +1,8 @@
 import Parser from '../';
-import { IInstruction, DefinitionMap } from 'common/interfaces';
-import { eParamType, eScriptType } from 'common/enums';
 import ScriptFile from 'frontend/script/ScriptFile';
+import { DefinitionMap } from 'common/interfaces';
+import { eParamType, eScriptType } from 'common/enums';
+import { IInstruction } from 'common/instructions';
 
 describe(Parser.name, () => {
 

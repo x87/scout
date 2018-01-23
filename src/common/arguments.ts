@@ -5,6 +5,7 @@ import { eGame } from './enums';
 let game = eGame.GTA3;
 let inputFile = '';
 let printAssembly: boolean = false;
+let debugMode: boolean = false;
 
 const args = process.argv.slice(2);
 const argKeys: any = {
@@ -32,6 +33,9 @@ const argKeys: any = {
 const singleArgs: any = {
 	'-p': () => {
 		printAssembly = true;
+	},
+	'-d': () => {
+		debugMode = true;
 	}
 };
 
@@ -65,5 +69,6 @@ export default {
 	game,
 	inputFile,
 	printAssembly,
-	opcodesFile
+	opcodesFile,
+	debugMode
 };

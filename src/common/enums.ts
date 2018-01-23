@@ -50,7 +50,8 @@ export enum eScriptType {
 }
 
 export enum eBasicBlockType {
-	DEAD_END,
+	UNDEFINED,
+	EXIT,
 	ONE_WAY, // jump
 	TWO_WAY, // jf
 	FALL_THRU,

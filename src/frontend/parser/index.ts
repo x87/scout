@@ -1,17 +1,12 @@
-import { eParamType } from 'common/enums';
-import {
-	IInstruction,
-	IInstructionParam,
-	IInstructionParamArray,
-	DefinitionMap,
-	IScript,
-	InstructionMap
-} from 'common/interfaces';
 import * as utils from 'utils';
 import Log from 'utils/log';
 import AppError from 'common/errors';
 import ScriptFile from 'frontend/script/ScriptFile';
 import ScriptMultifile from 'frontend/script/ScriptMultifile';
+
+import { eParamType } from 'common/enums';
+import { DefinitionMap, IScript } from 'common/interfaces';
+import { IInstruction, IInstructionParam, IInstructionParamArray, InstructionMap } from 'common/instructions';
 
 export const PARAM_ANY = 'any';
 export const PARAM_ARGUMENTS = 'arguments';

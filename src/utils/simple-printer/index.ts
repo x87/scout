@@ -1,8 +1,9 @@
 import * as utils from 'utils';
 import Log from 'utils/log';
 
-import { DefinitionMap, IBasicBlock, IInstructionParamArray } from 'common/interfaces';
+import { DefinitionMap, IBasicBlock } from 'common/interfaces';
 import { eBasicBlockType } from 'common/enums';
+import { IInstructionParamArray } from 'common/instructions';
 
 export default class SimplePrinter {
 	private definitionMap: DefinitionMap;
@@ -14,11 +15,11 @@ export default class SimplePrinter {
 		Log.msg(line);
 	}
 
-	print(bb: IBasicBlock): void {
-		let output = '';
+	print(bb: IBasicBlock, printComments: boolean = false): void {
+		let output = printComments ? `// BB type: ${eBasicBlockType[bb.type]}\n` : '';
 		bb.instructions.forEach((instruction, i) => {
 			const id = instruction.opcode;
-			output += `/* ${this.padOpcodeOffset(instruction.offset)} */ ${this.opcodeIdToHex(id)}: `;
+			output += `${printComments ? `/* ${this.padOpcodeOffset(instruction.offset)} */` : ``} ${this.opcodeIdToHex(id)}: `;
 
 			if (id > 0x7FFF) {
 				output += 'NOT ';

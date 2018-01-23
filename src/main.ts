@@ -10,7 +10,7 @@ import Parser from './frontend/parser';
 import CFG from 'frontend/cfg';
 
 import { DefinitionMap } from './common/interfaces';
-import { IInstructionDefinition } from 'common/interfaces';
+import { IInstructionDefinition } from 'common/instructions';
 
 interface IDefinition extends IInstructionDefinition {
 	id: string;
@@ -46,11 +46,15 @@ export async function main(): Promise<void> {
 			const cfg = new CFG();
 			const graphs = cfg.getGraphs(script);
 			graphs.forEach((graph, i) => {
-				printer.printLine(`--- Function ${i} Start----\n`);
+				if (Arguments.debugMode) {
+					printer.printLine(`--- Function ${i} Start----\n`);
+				}
 				graph.nodes.forEach(bb => {
-					printer.print(bb);
+					printer.print(bb, Arguments.debugMode);
 				});
-				printer.printLine(`--- Function ${i} End----`);
+				if (Arguments.debugMode) {
+					printer.printLine(`--- Function ${i} End----`);
+				}
 			});
 		});
 	}
