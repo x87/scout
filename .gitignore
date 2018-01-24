@@ -7,6 +7,3 @@ build
 *.scm
 *.cs
 opcodes/*.json
-
-/* unit test samples */
-!samples/*

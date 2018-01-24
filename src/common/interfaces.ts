@@ -12,3 +12,5 @@ export interface IScript {
 	type: eScriptType;
 	instructionMap: InstructionMap;
 }
+
+export type Opcode = number;

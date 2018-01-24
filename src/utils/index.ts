@@ -1,6 +1,7 @@
+import * as _ from 'lodash';
 import Arguments from 'common/arguments';
 import { eGame, eParamType } from 'common/enums';
-import * as _ from 'lodash';
+import { Opcode } from 'common/interfaces';
 
 export const isGameGTA3 = (): boolean => Arguments.game === eGame.GTA3;
 export const isGameVC = (): boolean => Arguments.game === eGame.GTAVC;
@@ -30,10 +31,10 @@ export const strPadLeft = (str: string, length: number, char: string = '0'): str
 	return _.padStart(str, length, char);
 };
 
-export const opcodeIdToHex = (id: number): string => {
-	return strPadLeft(id.toString(16).toUpperCase(), 4);
+export const opcodeToHex = (opcode: Opcode): string => {
+	return strPadLeft(opcode.toString(16).toUpperCase(), 4);
 };
 
-export const hexToOpcodeId = (id: string): number => {
+export const hexToOpcode = (id: string): Opcode => {
 	return parseInt(id, 16);
 };

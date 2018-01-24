@@ -1,12 +1,7 @@
-const { promisify } = require('util');
-const fs = require('fs');
-const path = require('path');
+import * as fs from 'fs';
+import { promisify } from 'util';
 
 const readFile = promisify(fs.readFile);
-
-export async function load(fileName: string): Promise<Buffer> {
-	return await readFile(fileName);
-}
 
 export async function loadText(fileName: string, encoding: string = 'utf8'): Promise<string> {
 	return await readFile(fileName, encoding);
@@ -17,6 +12,20 @@ export async function loadJson<T>(fileName: string): Promise<T> {
 	return JSON.parse(text);
 }
 
-export function getFileExtension(fileName: string): string {
-	return path.extname(fileName).toLowerCase();
+export async function readBinaryStream(stream: fs.ReadStream): Promise<Buffer> {
+	return new Promise<Buffer>((resolve, reject) => {
+		const chunks: Buffer[] = [];
+		stream.on('readable', () => {
+			const chunk = stream.read();
+			if (chunk !== null) {
+				chunks.push(chunk);
+			}
+		});
+		stream.on('end', () => {
+			resolve(Buffer.concat(chunks));
+		});
+		stream.on('error', (e) => {
+			reject(e);
+		});
+	});
 }

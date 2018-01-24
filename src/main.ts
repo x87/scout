@@ -18,14 +18,15 @@ interface IDefinition extends IInstructionDefinition {
 
 async function getDefinitions(): Promise<DefinitionMap> {
 	try {
-		const opcodes = await file.loadJson<IDefinition[]>(Arguments.opcodesFile);
+		const definitions = await file.loadJson<IDefinition[]>(Arguments.definitionFile);
 		const map: DefinitionMap = new Map();
-		opcodes.forEach(opcode => {
-			map.set(utils.hexToOpcodeId(opcode.id), { name: opcode.name, params: opcode.params });
+		definitions.forEach(definition => {
+			const { name, params } = definition;
+			map.set(utils.hexToOpcode(definition.id), { name, params });
 		});
 		return map;
 	} catch {
-		throw Log.error(AppError.NO_OPCODE, Arguments.opcodesFile);
+		throw Log.error(AppError.NO_OPCODE, Arguments.definitionFile);
 	}
 }
 

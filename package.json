@@ -1,6 +1,6 @@
 {
   "name": "scout",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Scout Decompiler",
   "main": "scout.js",
   "repository": {
@@ -11,7 +11,7 @@
     "lint": "tslint -c tslint.json src/**/*.ts",
     "build": "webpack",
     "dev": "webpack --watch",
-    "test": "node run-tests"
+    "test": "node run-tests IS_TEST=true"
   },
   "keywords": [],
   "author": "Seemann",
@@ -30,6 +30,7 @@
     "webpack": "3.10.0"
   },
   "dependencies": {
+    "commander": "2.13.0",
     "lodash": "4.17.4"
   }
 }

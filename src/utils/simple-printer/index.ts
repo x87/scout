@@ -19,7 +19,8 @@ export default class SimplePrinter {
 		let output = printComments ? `// BB type: ${eBasicBlockType[bb.type]}\n` : '';
 		bb.instructions.forEach((instruction, i) => {
 			const id = instruction.opcode;
-			output += `${printComments ? `/* ${this.padOpcodeOffset(instruction.offset)} */` : ``} ${this.opcodeIdToHex(id)}: `;
+			output += printComments ? `/* ${utils.strPadLeft(instruction.offset.toString(), 6)} */` : ``;
+			output += `${utils.opcodeToHex(id)}: `;
 
 			if (id > 0x7FFF) {
 				output += 'NOT ';
@@ -38,14 +39,6 @@ export default class SimplePrinter {
 		});
 		output += '\n';
 		this.printLine(output);
-	}
-
-	opcodeIdToHex(id: number): string {
-		return utils.strPadLeft(id.toString(16).toUpperCase(), 4);
-	}
-
-	padOpcodeOffset(offset: number): string {
-		return utils.strPadLeft(offset.toString(), 6);
 	}
 
 }

@@ -1,6 +1,7 @@
 import Loader from '../';
 import ScriptFile from 'frontend/script/ScriptFile';
 import ScriptMultifile from 'frontend/script/ScriptMultifile';
+import sample1 from 'samples/1_wait';
 
 describe(Loader.name, () => {
 
@@ -9,21 +10,10 @@ describe(Loader.name, () => {
 		loader = new Loader();
 	});
 
-	it('should be true for files with .scm extension only', () => {
-		expect((loader as any).isHeaderPresent('main.scm')).toBe(true);
-		expect((loader as any).isHeaderPresent('test.cs')).toBe(false);
-		expect((loader as any).isHeaderPresent('src.txt')).toBe(false);
-	});
-
-	it('should be true for .scm and .cs extensions', () => {
-		expect((loader as any).isFileTypeSupported('test.cs')).toBe(true);
-		expect((loader as any).isFileTypeSupported('main.scm')).toBe(true);
-		expect((loader as any).isFileTypeSupported('src.txt')).toBe(false);
-	});
-
-	it('should create a ScriptFile from input cs file', async (done) => {
+	it('should create a ScriptFile from input headless file', async (done) => {
 		try {
-			const script = await loader.loadScript('samples/0.cs');
+			const stream: Promise<Buffer> = Promise.resolve(Buffer.from('4e00', 'hex'));
+			const script = await loader.loadScript(stream);
 			expect(script instanceof ScriptFile).toBe(true);
 			done();
 		} catch (e) {
@@ -31,9 +21,11 @@ describe(Loader.name, () => {
 		}
 	});
 
-	it('should create a ScriptMultiFile from input scm file', async (done) => {
+	it('should create a ScriptMultiFile from input header file', async (done) => {
 		try {
-			const script = await loader.loadScript('samples/1_wait.scm');
+			const buf = Buffer.from(sample1, 'hex');
+			const stream: Promise<Buffer> = Promise.resolve(buf);
+			const script = await loader.loadScript(stream);
 			expect(script instanceof ScriptMultifile).toBe(true);
 			done();
 		} catch (e) {
@@ -41,12 +33,4 @@ describe(Loader.name, () => {
 		}
 	});
 
-	it('should throw an error on empty input scm file', async (done) => {
-		try {
-			const script = await loader.loadScript('samples/0.scm');
-			done.fail();
-		} catch {
-			done();
-		}
-	});
 });

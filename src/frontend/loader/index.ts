@@ -1,38 +1,26 @@
-import * as file from 'utils/file';
 import Log from 'utils/log';
 import ScriptFile from 'frontend/script/ScriptFile';
 import ScriptMultifile from 'frontend/script/ScriptMultifile';
 import AppError from 'common/errors';
 
-const HEADER_EXTENSION_MAP: any = {
-	'.scm': true,
-	'.cs': false
-};
-
 export default class Loader {
-	async loadScript(fileName: string): Promise<ScriptFile> {
-		if (!this.isFileTypeSupported(fileName)) {
-			throw Log.error(AppError.UNKNOWN_FILE_EXTENSION, file.getFileExtension(fileName));
-		}
+	async loadScript(stream: Promise<Buffer>): Promise<ScriptFile> {
 		try {
-			const buffer = await file.load(fileName);
+			const buffer = await stream;
 			if (Buffer.isBuffer(buffer)) {
-				return this.isHeaderPresent(fileName)
+				return this.isHeaderPresent(buffer)
 					? new ScriptMultifile(buffer)
 					: new ScriptFile(buffer);
 			}
 		} catch {
-			throw Log.error(AppError.INVALID_TYPE, 'Buffer');
+			throw Log.error(AppError.INVALID_INPUT_FILE);
 		}
 	}
 
-	private isHeaderPresent(fileName: string): boolean {
-		const extension = file.getFileExtension(fileName);
-		return !!HEADER_EXTENSION_MAP[extension];
+	private isHeaderPresent(buf: Buffer): boolean {
+		// todo: count jumps
+		const firstOp = buf.readInt16LE(0);
+		return firstOp === 2;
 	}
 
-	private isFileTypeSupported(fileName: string): boolean {
-		const extension = file.getFileExtension(fileName);
-		return HEADER_EXTENSION_MAP.hasOwnProperty(extension);
-	}
 }

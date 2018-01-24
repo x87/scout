@@ -15,5 +15,10 @@
 		"no-console": false,
 		"no-var-requires": false,
 		"typedef": [true, "parameter", "call-signature"]
+	},
+	"linterOptions": {
+		"exclude": [
+			"**/samples/*"
+		]
 	}
 }

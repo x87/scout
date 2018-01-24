@@ -1,74 +1,69 @@
+import * as fs from 'fs';
+import * as path from 'path';
+
 import Log from 'utils/log';
-import AppError from 'common/errors';
+import AppError from './errors';
 import { eGame } from './enums';
+import { readBinaryStream } from 'utils/file';
 
-let game = eGame.GTA3;
-let inputFile = '';
-let printAssembly: boolean = false;
-let debugMode: boolean = false;
+const commander = require('commander');
 
-const args = process.argv.slice(2);
-const argKeys: any = {
-	'-g': (arg) => {
-
-		const gameMap: any = {
-			gta3: eGame.GTA3,
-			gtavc: eGame.GTAVC,
-			vc: eGame.GTAVC,
-			gtasa: eGame.GTASA,
-			sa: eGame.GTASA
-		};
-
-		if (!gameMap.hasOwnProperty(arg)) {
-			throw Log.error(AppError.UNKNOWN_GAME, arg);
-		}
-
-		game = gameMap[arg];
-	},
-	'-i': (arg) => {
-		inputFile = arg;
-	}
-};
-
-const singleArgs: any = {
-	'-p': () => {
-		printAssembly = true;
-	},
-	'-d': () => {
-		debugMode = true;
-	}
-};
-
-for (let i = 0; i < args.length; i += 1) {
-	const arg = args[i];
-	if (argKeys.hasOwnProperty(arg)) {
-		if (i + 1 >= args.length) {
-			throw Log.error(AppError.NO_ARG_VALUE, arg);
-		}
-		argKeys[arg](args[i + 1]);
-		i++;
-	}
-	if (singleArgs.hasOwnProperty(arg)) {
-		singleArgs[arg]();
-	} else {
-		if (!inputFile) {
-			inputFile = arg;
-		}
-	}
+interface IGameDictionary {
+	[key: string]: eGame;
 }
 
-const map = {
+const gameMap: IGameDictionary = {
+	gta3: eGame.GTA3,
+	gtavc: eGame.GTAVC,
+	vc: eGame.GTAVC,
+	gtasa: eGame.GTASA,
+	sa: eGame.GTASA
+};
+
+const definitionMap = {
 	[eGame.GTA3]: 'gta3.json',
 	[eGame.GTAVC]: 'gtavc.json',
 	[eGame.GTASA]: 'gtasa.json'
 };
 
-const opcodesFile = map[game];
+commander
+	.usage('<inputfile> [options]')
+	.version(require('../../package.json').version, '-v, --version')
+	.option('-p, --print', 'print the result into stdout')
+	.option('-d, --debug', 'enable the debug mode')
+	.option('-g, --game <game>', 'target game: gta3, vc, sa', (arg) => {
+		if (!gameMap.hasOwnProperty(arg)) {
+			throw Log.error(AppError.UNKNOWN_GAME, arg);
+		}
+		return arg;
+	}, 'gta3')
+	.parse(process.argv);
+
+const game = gameMap[commander.game];
+const definitionFile = definitionMap[game];
+let inputFile: Promise<Buffer>;
+
+if (process.env.IS_TEST) {
+	inputFile = Promise.resolve(Buffer.from([]));
+} else {
+	let stream: fs.ReadStream;
+	if (process.stdin instanceof fs.ReadStream && !process.stdin.isTTY) {
+		stream = process.stdin;
+	} else {
+		const args = process.argv.slice(2);
+		const fileName = args[0];
+		if (!fileName) {
+			commander.help();
+		}
+		stream = fs.createReadStream(path.join('./', fileName));
+	}
+	inputFile = readBinaryStream(stream);
+}
 
 export default {
-	game,
 	inputFile,
-	printAssembly,
-	opcodesFile,
-	debugMode
+	definitionFile,
+	game,
+	printAssembly: commander.print,
+	debugMode: commander.debug
 };
