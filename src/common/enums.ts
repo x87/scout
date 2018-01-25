@@ -51,10 +51,11 @@ export enum eScriptType {
 
 export enum eBasicBlockType {
 	UNDEFINED,
-	EXIT,
+	RETURN,
 	ONE_WAY, // jump
 	TWO_WAY, // jf
-	FALL_THRU,
+	FALL,
+	CALL,
 	N_WAY // switch
 }
 

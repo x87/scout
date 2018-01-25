@@ -26,20 +26,20 @@ const branchOpcodesMap: any = {
 		[OP_JMP]: eBasicBlockType.ONE_WAY,
 		[OP_JF]: eBasicBlockType.TWO_WAY,
 		[OP_JT]: eBasicBlockType.TWO_WAY,
-		[OP_CALL]: eBasicBlockType.FALL_THRU,
-		[OP_GOSUB]: eBasicBlockType.FALL_THRU
+		[OP_CALL]: eBasicBlockType.CALL,
+		[OP_GOSUB]: eBasicBlockType.CALL
 	},
 	[eGame.GTAVC]: {
 		[OP_JMP]: eBasicBlockType.ONE_WAY,
 		[OP_JF]: eBasicBlockType.TWO_WAY,
-		[OP_CALL]: eBasicBlockType.FALL_THRU,
-		[OP_GOSUB]: eBasicBlockType.FALL_THRU
+		[OP_CALL]: eBasicBlockType.CALL,
+		[OP_GOSUB]: eBasicBlockType.CALL
 	},
 	[eGame.GTASA]: {
 		[OP_JMP]: eBasicBlockType.ONE_WAY,
 		[OP_JF]: eBasicBlockType.TWO_WAY,
-		[OP_CALL]: eBasicBlockType.FALL_THRU,
-		[OP_GOSUB]: eBasicBlockType.FALL_THRU
+		[OP_CALL]: eBasicBlockType.CALL,
+		[OP_GOSUB]: eBasicBlockType.CALL
 	}
 };
 
@@ -118,7 +118,7 @@ export default class CFG {
 	private buildGraph(basicBlocks: IBasicBlock[], startOffset: number): Graph<IBasicBlock> {
 		const graph = new Graph<IBasicBlock>();
 
-		const visited = basicBlocks.map(() => false);
+		const visited: boolean[] = [];
 		const startIndex = this.findBasicBlockIndex(basicBlocks, startOffset);
 
 		const traverse = (index: number): void => {
@@ -133,10 +133,12 @@ export default class CFG {
 			bb.type = this.getBasicBlockType(lastInstruction);
 
 			switch (bb.type) {
-				case eBasicBlockType.EXIT:
+				case eBasicBlockType.RETURN:
 					break;
-				case eBasicBlockType.ONE_WAY:
 				case eBasicBlockType.TWO_WAY:
+					graph.addEdge(bb, basicBlocks[index + 1]);
+					traverse(index + 1);
+				case eBasicBlockType.ONE_WAY:
 					const targetOffset = Instruction.getNumericParam(lastInstruction);
 					const targetIndex = this.findBasicBlockIndex(basicBlocks, Math.abs(targetOffset));
 
@@ -146,14 +148,9 @@ export default class CFG {
 					}
 					graph.addEdge(bb, basicBlocks[targetIndex]);
 					traverse(targetIndex);
-
-					if (bb.type === eBasicBlockType.TWO_WAY) {
-						graph.addEdge(bb, basicBlocks[index + 1]);
-						traverse(index + 1);
-					}
-
 					break;
-				case eBasicBlockType.FALL_THRU:
+				case eBasicBlockType.CALL:
+				case eBasicBlockType.FALL:
 					graph.addEdge(bb, basicBlocks[index + 1]);
 					traverse(index + 1);
 					break;
@@ -248,8 +245,8 @@ export default class CFG {
 	private getBasicBlockType(instruction: IInstruction): eBasicBlockType {
 		const type = this.getBranchType(instruction);
 		if (type) return type;
-		if (blockEndOpcodes.includes(instruction.opcode)) return eBasicBlockType.EXIT;
-		return eBasicBlockType.FALL_THRU;
+		if (blockEndOpcodes.includes(instruction.opcode)) return eBasicBlockType.RETURN;
+		return eBasicBlockType.FALL;
 	}
 
 	private findCallOffsets(instructionMap: InstructionMap): number[] {

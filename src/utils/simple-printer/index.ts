@@ -19,7 +19,7 @@ export default class SimplePrinter {
 		let output = printComments ? `// BB type: ${eBasicBlockType[bb.type]}\n` : '';
 		bb.instructions.forEach((instruction, i) => {
 			const id = instruction.opcode;
-			output += printComments ? `/* ${utils.strPadLeft(instruction.offset.toString(), 6)} */` : ``;
+			output += printComments ? `/* ${utils.strPadLeft(instruction.offset.toString(), 6)} */ ` : ``;
 			output += `${utils.opcodeToHex(id)}: `;
 
 			if (id > 0x7FFF) {
