@@ -57,21 +57,23 @@ export async function main(): Promise<void> {
 			});
 		});
 
-		const expressionPrinter = new ExpressionPrinter(definitionMap);
-		scripts.forEach(script => {
-			const cfg = new CFG();
-			const callGraphs = cfg.getCallGraphs(script);
-			const ast = new AST(callGraphs);
+		if (Arguments.debugMode) {
+			const expressionPrinter = new ExpressionPrinter(definitionMap);
+			scripts.forEach(script => {
+				const cfg = new CFG();
+				const callGraphs = cfg.getCallGraphs(script);
+				const ast = new AST(callGraphs);
 
-			ast.program.functions.forEach(fn => {
-				const { name, expressions } = fn;
-				expressionPrinter.printLine(`${name}: `);
-				expressionPrinter.indent++;
-				expressions.forEach(expr => {
-					Log.msg(expr);
+				ast.program.functions.forEach(fn => {
+					const { name, expressions } = fn;
+					expressionPrinter.printLine(`${name}: `);
+					expressionPrinter.indent++;
+					expressions.forEach(expr => {
+						Log.msg(expr);
+					});
+					expressionPrinter.indent--;
 				});
-				expressionPrinter.indent--;
 			});
-		});
+		}
 	}
 }
