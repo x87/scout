@@ -3,11 +3,13 @@ import * as file from './utils/file';
 import Log from 'utils/log';
 import Arguments from 'common/arguments';
 import AppError from 'common/errors';
-import SimplePrinter from './utils/simple-printer';
+import ExpressionPrinter from './utils/printer/ExpressionPrinter';
+import SimplePrinter from './utils/printer/SimplePrinter';
 
 import Loader from 'frontend/loader';
 import Parser from './frontend/parser';
 import CFG from 'frontend/cfg';
+import AST from './ast';
 
 import { DefinitionMap } from './common/interfaces';
 import { IInstructionDefinition } from 'common/instructions';
@@ -31,10 +33,6 @@ async function getDefinitions(): Promise<DefinitionMap> {
 }
 
 export async function main(): Promise<void> {
-	if (!Arguments.inputFile) {
-		throw Log.error(AppError.NO_INPUT);
-	}
-
 	const loader = new Loader();
 	const scriptFile = await loader.loadScript(Arguments.inputFile);
 	const definitionMap = await getDefinitions();
@@ -45,7 +43,7 @@ export async function main(): Promise<void> {
 		const printer = new SimplePrinter(definitionMap);
 		scripts.forEach(script => {
 			const cfg = new CFG();
-			const graphs = cfg.getGraphs(script);
+			const graphs = cfg.getCallGraphs(script);
 			graphs.forEach((graph, i) => {
 				if (Arguments.debugMode) {
 					printer.printLine(`--- Function ${i} Start----\n`);
@@ -58,5 +56,24 @@ export async function main(): Promise<void> {
 				}
 			});
 		});
+
+		if (Arguments.debugMode) {
+			const expressionPrinter = new ExpressionPrinter(definitionMap);
+			scripts.forEach(script => {
+				const cfg = new CFG();
+				const callGraphs = cfg.getCallGraphs(script);
+				const ast = new AST(callGraphs);
+
+				ast.program.functions.forEach(fn => {
+					const { name, expressions } = fn;
+					expressionPrinter.printLine(`${name}: `);
+					expressionPrinter.indent++;
+					expressions.forEach(expr => {
+						Log.msg(expr);
+					});
+					expressionPrinter.indent--;
+				});
+			});
+		}
 	}
 }

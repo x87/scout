@@ -6,7 +6,8 @@ import { eBasicBlockType } from 'common/enums';
 import { IInstructionParamArray } from 'common/instructions';
 
 export default class SimplePrinter {
-	private definitionMap: DefinitionMap;
+	protected definitionMap: DefinitionMap;
+
 	constructor(definitionMap: DefinitionMap) {
 		this.definitionMap = definitionMap;
 	}
@@ -16,28 +17,38 @@ export default class SimplePrinter {
 	}
 
 	print(bb: IBasicBlock, printComments: boolean = false): void {
-		let output = printComments ? `// BB type: ${eBasicBlockType[bb.type]}\n` : '';
+		let output = '';
+
+		const append = (format: string, ...args: any[]) => output += Log.format(format, ...args);
+
+		if (printComments) {
+			append(`// BB type: %s\n`, eBasicBlockType[bb.type]);
+		}
 		bb.instructions.forEach((instruction, i) => {
 			const id = instruction.opcode;
-			output += printComments ? `/* ${utils.strPadLeft(instruction.offset.toString(), 6)} */ ` : ``;
-			output += `${utils.opcodeToHex(id)}: `;
+			if (printComments) {
+				append(`/* %s */ `, utils.strPadLeft(instruction.offset.toString(), 6));
+			}
+			append(`%s: `, utils.opcodeToHex(id));
 
 			if (id > 0x7FFF) {
-				output += 'NOT ';
+				append('NOT ');
 			}
 			const definition = this.definitionMap.get(instruction.opcode & 0x7FFF);
 			output += definition.name;
 			for (const param of instruction.params) {
 				if (utils.isArrayParam(param.type)) {
 					const a = param.value as IInstructionParamArray;
-					output += ` (${a.varIndex} ${a.offset} ${a.size} ${a.props})`;
+					append(`(%s %s %s %s)`, a.varIndex, a.offset, a.size, a.props);
 				} else {
-					output += ' ' + param.value;
+					append(' ' + param.value);
 				}
 			}
-			if (i < bb.instructions.length - 1) output += '\n';
+			if (i < bb.instructions.length - 1) {
+				append('\n');
+			}
 		});
-		output += '\n';
+		append('\n');
 		this.printLine(output);
 	}
 

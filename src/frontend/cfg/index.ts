@@ -45,7 +45,7 @@ const branchOpcodesMap: any = {
 
 export default class CFG {
 
-	getGraphs(script: IScript): Array<Graph<IBasicBlock>> {
+	getCallGraphs(script: IScript): Array<Graph<IBasicBlock>> {
 		const entryOffset = script.instructionMap.keys().next().value;
 		const entries = [entryOffset, ...this.findCallOffsets(script.instructionMap)];
 		const basicBlocks = this.findBasicBlocks(script.instructionMap, script.type);

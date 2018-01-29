@@ -10,7 +10,11 @@ export default class {
 		return this.msg(util.format(warning, ...args));
 	}
 
-	static msg(msg: string): void {
+	static msg(msg: any): void {
 		console.log(msg);
+	}
+
+	static format(format: string, ...args: any[]): string {
+		return util.format(format, ...args);
 	}
 }
