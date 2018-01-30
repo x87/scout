@@ -10,7 +10,8 @@ jasmine.loadConfig({
 	'spec_dir': 'src',
 	'spec_files': [
 		'**/*[sS]pec.ts'
-	]
+	],
+	'helpers': ['../node_modules/jasmine-expect/index.js']
 });
 const command = new Command(path.resolve());
 command.run(jasmine, process.argv.slice(2));

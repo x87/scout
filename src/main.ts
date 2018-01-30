@@ -9,10 +9,10 @@ import SimplePrinter from './utils/printer/SimplePrinter';
 import Loader from 'frontend/loader';
 import Parser from './frontend/parser';
 import CFG from 'frontend/cfg';
-import AST from './ast';
 
 import { DefinitionMap } from './common/interfaces';
 import { IInstructionDefinition } from 'common/instructions';
+import { findIntervals } from './frontend/cfg/interval';
 
 interface IDefinition extends IInstructionDefinition {
 	id: string;
@@ -58,11 +58,13 @@ export async function main(): Promise<void> {
 		});
 
 		if (Arguments.debugMode) {
-			const expressionPrinter = new ExpressionPrinter(definitionMap);
+			// const expressionPrinter = new ExpressionPrinter(definitionMap);
 			scripts.forEach(script => {
 				const cfg = new CFG();
 				const callGraphs = cfg.getCallGraphs(script);
-				const ast = new AST(callGraphs);
+				const intervalMap = callGraphs.map(findIntervals);
+				console.log(intervalMap);
+				/*const ast = new AST(callGraphs);
 
 				ast.program.functions.forEach(fn => {
 					const { name, expressions } = fn;
@@ -72,7 +74,7 @@ export async function main(): Promise<void> {
 						Log.msg(expr);
 					});
 					expressionPrinter.indent--;
-				});
+				});*/
 			});
 		}
 	}

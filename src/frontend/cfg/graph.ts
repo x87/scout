@@ -20,21 +20,40 @@ export default class Graph<Node> implements IGraph<Node> {
 		this.edges = [];
 	}
 
-	addEdge(from: Node, to: Node): void {
-		this.edges.push({ from, to });
+	addNode(...nodes: Node[]): void {
+		nodes.forEach(node => {
+			if (!this.hasNode(node)) this.nodes.push(node);
+		});
 	}
 
-	getNodeSuccessors(from: Node): Node[] {
-		const incidentEdges = _.filter(this.edges, { from });
-		return _.map(incidentEdges, edge => edge.to);
+	hasNode(node: Node): boolean {
+		return this.nodes.includes(node);
+	}
+
+	hasEdge(from: Node, to: Node): boolean {
+		return !!_.find(this.edges, edge => edge.from === from && edge.to === to);
+	}
+
+	addEdge(from: Node, to: Node): void {
+		if (!this.hasEdge(from, to)) this.edges.push({ from, to });
+	}
+
+	getImmPredecessors(to: Node): Node[] {
+		const edges = _.filter(this.edges, edge => edge.to === to);
+		return _.map(edges, edge => edge.from);
+	}
+
+	getImmSuccessors(from: Node): Node[] {
+		const edges = _.filter(this.edges, edge => edge.from === from);
+		return _.map(edges, edge => edge.to);
 	}
 
 	getNodeIndex(node: Node): number {
-		return _.findIndex(this.nodes, node);
+		return _.findIndex(this.nodes, n => n === node );
 	}
 
 	findCommonSuccessor(a: Node, b: Node): Node | undefined {
-		const intersection = utils.getArrayIntersection(this.getNodeSuccessors(a), this.getNodeSuccessors(b));
+		const intersection = utils.getArrayIntersection(this.getImmSuccessors(a), this.getImmSuccessors(b));
 		return _.head(intersection);
 	}
 

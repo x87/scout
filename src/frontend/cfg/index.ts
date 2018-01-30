@@ -5,8 +5,8 @@ import Arguments from 'common/arguments';
 import AppError from 'common/errors';
 import Graph from './graph';
 
-import { IInstruction, InstructionMap } from 'common/instructions';
 import * as Instruction from 'common/instructions';
+import { IInstruction, InstructionMap } from 'common/instructions';
 import { eBasicBlockType, eScriptType, eGame } from 'common/enums';
 import { IBasicBlock, IScript } from 'common/interfaces';
 
@@ -55,66 +55,6 @@ export default class CFG {
 		});
 	}
 
-	// private findLoops(interval: IBasicBlock[]): void {
-	// 	const head = _.head(interval);
-	//
-	// 	const latchingNode = _.chain(interval)
-	// 		.intersection(head.predecessors)
-	// 		.head()
-	// 		.value();
-	//
-	// 	if (latchingNode) {
-	// 		const loopType = LoopService.findLoopType(head, latchingNode);
-	// 		this.findLoopNodes(interval, head, latchingNode);
-	// 	}
-	// }
-
-	// private findLoopNodes(interval: IBasicBlock[], head: IBasicBlock, latchingNode: IBasicBlock): void {
-	//
-	// 	const start = _.findIndex(interval, head);
-	// 	const end = _.findIndex(interval, latchingNode);
-	// 	const nodes = _.slice(interval, start, end - start + 1);
-	//
-	// 	_.each(nodes, node => {
-	// 		if (node.inLoop) {
-	// 			console.log('node already in a loop');
-	// 		}
-	// 		node.inLoop = true;
-	// 	});
-	// }
-
-	// private findIntervals(basicBlocks: BasicBlockMap): IBasicBlock[][] {
-	//
-	// 	if (!basicBlocks.size) {
-	// 		return;
-	// 	}
-	// 	const headers = [basicBlocks.values().next().value];
-	// 	const intervals = [];
-	// 	while (headers.length) {
-	// 		const header: IBasicBlock = headers.shift();
-	// 		header.processed = true;
-	//
-	// 		const interval: IBasicBlock[] = [header];
-	//
-	// 		basicBlocks.forEach((bb: IBasicBlock) => {
-	// 			if (bb.processed) return;
-	// 			if (!interval.includes(bb) && utils.checkArrayIncludesArray(interval, bb.prev)) {
-	// 				interval.push(bb);
-	// 				bb.processed = true;
-	// 			}
-	// 		});
-	// 		basicBlocks.forEach((bb: IBasicBlock) => {
-	// 			if (bb.processed) return;
-	// 			if (!interval.includes(bb) && utils.checkArrayIncludeItemFromArray(interval, bb.prev)) {
-	// 				headers.push(bb);
-	// 			}
-	// 		});
-	// 		intervals.push(interval);
-	// 	}
-	//
-	// 	return intervals;
-	// }
-
 	private buildGraph(basicBlocks: IBasicBlock[], startOffset: number): Graph<IBasicBlock> {
 		const graph = new Graph<IBasicBlock>();
 
@@ -126,7 +66,7 @@ export default class CFG {
 			visited[index] = true;
 
 			const bb = basicBlocks[index];
-			graph.nodes.push(bb);
+			graph.addNode(bb);
 
 			const lastInstruction = _.last(bb.instructions);
 

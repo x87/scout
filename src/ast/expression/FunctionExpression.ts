@@ -34,7 +34,7 @@ export default class FunctionExpression {
 
 			switch (bb.type) {
 				case eBasicBlockType.ONE_WAY: {
-					const [nextNode] = graph.getNodeSuccessors(bb);
+					const [nextNode] = graph.getImmSuccessors(bb);
 					return traverse(nextNode);
 				}
 				case eBasicBlockType.TWO_WAY: {
@@ -46,7 +46,7 @@ export default class FunctionExpression {
 					const ifInstr = ifPart[0];
 					const conditions = ifPart.slice(1).map(exprMap);
 
-					const [thenNode, elseNode] = graph.getNodeSuccessors(bb);
+					const [thenNode, elseNode] = graph.getImmSuccessors(bb);
 
 					exitStack.push(elseNode);
 					const thenExpr = traverse(thenNode);
@@ -69,7 +69,7 @@ export default class FunctionExpression {
 				case eBasicBlockType.CALL:
 				case eBasicBlockType.FALL: {
 					const expressions = bb.instructions.map(exprMap);
-					const [targetBB] = graph.getNodeSuccessors(bb);
+					const [targetBB] = graph.getImmSuccessors(bb);
 					return [...expressions, ...traverse(targetBB)];
 				}
 				case eBasicBlockType.RETURN:
