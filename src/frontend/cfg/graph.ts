@@ -6,12 +6,14 @@ interface IEdge<T> {
 	to: T;
 }
 
-interface IGraph<T> {
-	nodes: T[];
-	edges: Array<IEdge<T>>;
+export type IGraphNode<T> = IGraph<T> | T;
+
+export interface IGraph<T> {
+	nodes: Array<IGraphNode<T>>;
+	edges: Array<IEdge<IGraphNode<T>>>;
 }
 
-export default class Graph<Node> implements IGraph<Node> {
+export default class Graph<T, Node = IGraphNode<T>> implements IGraph<Node> {
 	nodes: Node[];
 	edges: Array<IEdge<Node>>;
 
@@ -57,7 +59,16 @@ export default class Graph<Node> implements IGraph<Node> {
 		return _.head(intersection);
 	}
 
+	isNested(): boolean {
+		return this.root instanceof Graph;
+	}
+
 	get root(): Node {
 		return this.nodes[0];
+	}
+
+	get latchingNodes(): Node[] {
+		const header = this.root;
+		return this.nodes.filter(node => this.getImmSuccessors(node).includes(header));
 	}
 }

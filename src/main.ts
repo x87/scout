@@ -1,18 +1,17 @@
 import * as utils from './utils';
 import * as file from './utils/file';
+import * as graphUtils from './frontend/cfg/graph-utils';
 import Log from 'utils/log';
 import Arguments from 'common/arguments';
 import AppError from 'common/errors';
-import ExpressionPrinter from './utils/printer/ExpressionPrinter';
 import SimplePrinter from './utils/printer/SimplePrinter';
 
 import Loader from 'frontend/loader';
 import Parser from './frontend/parser';
 import CFG from 'frontend/cfg';
 
-import { DefinitionMap } from './common/interfaces';
+import { DefinitionMap, IBasicBlock } from './common/interfaces';
 import { IInstructionDefinition } from 'common/instructions';
-import { findIntervals } from './frontend/cfg/interval';
 
 interface IDefinition extends IInstructionDefinition {
 	id: string;
@@ -49,7 +48,7 @@ export async function main(): Promise<void> {
 					printer.printLine(`--- Function ${i} Start----\n`);
 				}
 				graph.nodes.forEach(bb => {
-					printer.print(bb, Arguments.debugMode);
+					printer.print(bb as IBasicBlock, Arguments.debugMode);
 				});
 				if (Arguments.debugMode) {
 					printer.printLine(`--- Function ${i} End----`);
@@ -58,23 +57,11 @@ export async function main(): Promise<void> {
 		});
 
 		if (Arguments.debugMode) {
-			// const expressionPrinter = new ExpressionPrinter(definitionMap);
 			scripts.forEach(script => {
 				const cfg = new CFG();
 				const callGraphs = cfg.getCallGraphs(script);
-				const intervalMap = callGraphs.map(findIntervals);
-				console.log(intervalMap);
-				/*const ast = new AST(callGraphs);
+				const functions = callGraphs.map(graphUtils.reduce);
 
-				ast.program.functions.forEach(fn => {
-					const { name, expressions } = fn;
-					expressionPrinter.printLine(`${name}: `);
-					expressionPrinter.indent++;
-					expressions.forEach(expr => {
-						Log.msg(expr);
-					});
-					expressionPrinter.indent--;
-				});*/
 			});
 		}
 	}

@@ -68,4 +68,20 @@ describe(Graph.name, () => {
 		expect(graph.findCommonSuccessor(a, b)).toEqual(c);
 	});
 
+	it('has property latchingNodes', () => {
+		const i = new Graph();
+		i.addNode(a, b, c);
+		i.addEdge(a, b);
+		i.addEdge(b, c);
+		i.addEdge(c, a);
+		expect(i.latchingNodes).toEqual([c]);
+	});
+
+	it('has nestedProperty', () => {
+		const nestedGraph = new Graph();
+		const node = new Graph();
+		nestedGraph.addNode(node);
+		expect(nestedGraph.isNested()).toBeTrue();
+	});
+
 });
