@@ -6,6 +6,7 @@ import AppError from 'common/errors';
 import Graph from './graph';
 
 import * as Instruction from 'common/instructions';
+import * as graphUtils from './graph-utils';
 import { IInstruction, InstructionMap } from 'common/instructions';
 import { eBasicBlockType, eScriptType, eGame } from 'common/enums';
 import { IBasicBlock, IScript } from 'common/interfaces';
@@ -51,7 +52,8 @@ export default class CFG {
 		const basicBlocks = this.findBasicBlocks(script.instructionMap, script.type);
 
 		return entries.map(offset => {
-			return this.buildGraph(basicBlocks, offset);
+			const graph = this.buildGraph(basicBlocks, offset);
+			return graphUtils.reversePostOrder(graph);
 		});
 	}
 

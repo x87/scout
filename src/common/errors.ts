@@ -11,7 +11,7 @@ enum AppError {
 	NO_TARGET = 'WARNING: No target instruction found for branch at %s',
 	NO_BRANCH = 'WARNING: Branch at %s not found during linkage',
 	NOT_NUMERIC_INSTRUCTION = 'Expected numeric value for parameter in instruction at %s',
-	UNKNOWN_LOOP_TYPE = 'WARNING: Unknown loop type with header %s and latching node %s',
+	UNKNOWN_LOOP_TYPE = 'WARNING: Unknown loop type with header nodes %s and latching nodes %s',
 	INVALID_BB_TYPE = 'Invalid block type %s'
 }
 export default AppError;

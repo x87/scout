@@ -1,4 +1,4 @@
-import Graph, { IGraphNode } from './graph';
+import Graph, { GraphNode } from './graph';
 import * as utils from 'utils';
 
 export function reduce<Node>(graph: Graph<Node>): Graph<Node> {
@@ -32,7 +32,7 @@ export function split<Node>(graph: Graph<Node>): Array<Graph<Node>> {
 	if (graph.nodes.length < 1) {
 		return [];
 	}
-	const headers = [graph.root];
+	const headers = [graph.root] as Node[];
 	const intervals: Array<Graph<Node>> = [];
 	const visited: boolean[] = [];
 
@@ -40,11 +40,11 @@ export function split<Node>(graph: Graph<Node>): Array<Graph<Node>> {
 		return !visited[graph.getNodeIndex(n)] && !g.nodes.includes(n);
 	};
 
-	const markVisited = (node: IGraphNode<Node>): void => {
+	const markVisited = (node: Node): void => {
 		visited[graph.getNodeIndex(node)] = true;
 	};
 
-	const addNode = (interval: Graph<Node>, node: IGraphNode<Node>): void => {
+	const addNode = (interval: Graph<Node>, node: Node): void => {
 		interval.addNode(node);
 		const succ = graph.getImmSuccessors(node);
 		for (const s of succ) {
@@ -90,4 +90,32 @@ export function split<Node>(graph: Graph<Node>): Array<Graph<Node>> {
 	}
 
 	return intervals;
+}
+
+export function isGraph<T>(node: GraphNode<T>): node is Graph<T> {
+	return node instanceof Graph;
+}
+
+export function reversePostOrder<Node>(graph: Graph<Node>): Graph<Node> {
+	const res = new Graph<Node>();
+	const visited: boolean[] = [];
+	const traverse = (node: GraphNode<Node>): void => {
+		const index = graph.getNodeIndex(node);
+		visited[index] = true;
+
+		const successors = graph.getImmSuccessors(node);
+		successors.reverse().forEach(bb => {
+			const nextIndex = graph.getNodeIndex(bb);
+			res.addEdge(node, bb);
+			if (!visited[nextIndex]) {
+				traverse(bb);
+			}
+		});
+		res.addNode(node);
+	};
+
+	traverse(graph.root);
+	res.nodes = res.nodes.reverse();
+	return res;
+
 }
