@@ -52,8 +52,7 @@ export default class CFG {
 		const basicBlocks = this.findBasicBlocks(script.instructionMap, script.type);
 
 		return entries.map(offset => {
-			const graph = this.buildGraph(basicBlocks, offset);
-			return graphUtils.reversePostOrder(graph);
+			return this.buildGraph(basicBlocks, offset);
 		});
 	}
 

@@ -47,9 +47,9 @@ export async function main(): Promise<void> {
 				if (Arguments.debugMode) {
 					printer.printLine(`--- Function ${i} Start----\n`);
 				}
-				graph.nodes.forEach(bb => {
-					printer.print(bb as IBasicBlock, Arguments.debugMode);
-				});
+				for (const bb of graph) {
+					printer.print(bb, Arguments.debugMode);
+				}
 				if (Arguments.debugMode) {
 					printer.printLine(`--- Function ${i} End----`);
 				}

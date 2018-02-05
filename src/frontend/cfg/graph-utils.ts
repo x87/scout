@@ -62,22 +62,18 @@ export function split<Node>(graph: Graph<Node>): Array<Graph<Node>> {
 
 		markVisited(header);
 		addNode(interval, header);
-		let found;
-		do {
-			found = false;
-			graph.nodes.forEach((node: Node) => {
-				if (isCandidateNode(interval, node)) {
-					const pred = graph.getImmPredecessors(node);
-					if (pred.length && utils.checkArrayIncludesArray(interval.nodes, pred)) {
-						addNode(interval, node);
-						markVisited(node);
-						found = true;
-					}
-				}
-			});
-		} while(found);
 
-		graph.nodes.forEach((node: Node) => {
+		for (const node of graph) {
+			if (isCandidateNode(interval, node)) {
+				const pred = graph.getImmPredecessors(node);
+				if (pred.length && utils.checkArrayIncludesArray(interval.nodes, pred)) {
+					addNode(interval, node);
+					markVisited(node);
+				}
+			}
+		}
+
+		for (const node of graph) {
 			if (isCandidateNode(interval, node)) {
 				const pred = graph.getImmPredecessors(node);
 				if (pred.length && utils.checkArrayIncludeItemFromArray(interval.nodes, pred)) {
@@ -85,7 +81,7 @@ export function split<Node>(graph: Graph<Node>): Array<Graph<Node>> {
 					markVisited(node);
 				}
 			}
-		});
+		}
 		intervals.push(interval);
 	}
 
@@ -106,10 +102,10 @@ export function reversePostOrder<Node>(graph: Graph<Node>): Graph<Node> {
 		const successors = graph.getImmSuccessors(node);
 		successors.reverse().forEach(bb => {
 			const nextIndex = graph.getNodeIndex(bb);
-			res.addEdge(node, bb);
 			if (!visited[nextIndex]) {
 				traverse(bb);
 			}
+			res.addEdge(node, bb);
 		});
 		res.addNode(node);
 	};

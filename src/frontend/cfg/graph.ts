@@ -9,13 +9,31 @@ interface IEdge<T> {
 
 export type GraphNode<T> = T | Graph<T>;
 
-export default class Graph<T> {
+export default class Graph<T> implements Iterable<GraphNode<T>> {
 	nodes: Array<GraphNode<T>>;
 	edges: Array<IEdge<GraphNode<T>>>;
 
 	constructor() {
 		this.nodes = [];
 		this.edges = [];
+	}
+
+	[Symbol.iterator](): Iterator<T> {
+		// TODO: cache RPO tree unless a new node/edge is added
+		const nodes = graphUtils.reversePostOrder(this).nodes;
+		let index = 0;
+		return {
+			next(): IteratorResult<T> {
+				if (index >= nodes.length) {
+					return { value: undefined, done: true };
+				}
+
+				return {
+					value: nodes[index++] as T,
+					done: false
+				};
+			}
+		};
 	}
 
 	addNode(...nodes: Array<GraphNode<T>>): void {

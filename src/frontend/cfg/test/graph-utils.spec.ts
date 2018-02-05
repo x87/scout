@@ -39,7 +39,7 @@ describe('Graph utils', () => {
 		i1.addEdge(e, a);
 
 		const i2 = new Graph<IBasicBlock>();
-		i2.addNode(b, c, e, f, d);
+		i2.addNode(b, c, d, e, f);
 
 		i2.addEdge(b, c);
 		i2.addEdge(b, e);

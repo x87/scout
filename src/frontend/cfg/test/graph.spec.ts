@@ -107,4 +107,13 @@ describe(Graph.name, () => {
 		expect(i6.rootNode).toBe(complex.nodes[0] as any);
 	});
 
+	it('is iterable', () => {
+		const complex = complexGraph();
+		const nodeSpy = jasmine.createSpy('nodeSpy');
+		for(const node of complex) {
+			nodeSpy();
+		}
+		expect(nodeSpy).toHaveBeenCalledTimes(complex.nodes.length);
+	});
+
 });
