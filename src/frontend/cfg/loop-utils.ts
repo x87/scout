@@ -1,49 +1,55 @@
-import Log from 'utils/log';
-import AppError from 'common/errors';
+import * as _ from 'lodash';
+import * as graphUtils from './graph-utils';
 import Graph from './graph';
-
 import { eLoopType } from 'common/enums';
 
-class LoopGraph<Node> extends Graph<Node> {
-	originalGraph: Graph<Node>;
-
-	get type(): eLoopType {
-		const headerSuccessors = this.getImmSuccessors(this.root);
-		const latchingNodeSuccessors = this.getImmSuccessors(this.latchingNodes[0]);
-
-		if (headerSuccessors.length === 2 && latchingNodeSuccessors.length === 1) {
-			return eLoopType.WHILE;
-		}
-
-		if (latchingNodeSuccessors.length === 2) {
-			return eLoopType.REPEAT;
-		}
-
-		if (latchingNodeSuccessors.length === 1) {
-			return eLoopType.ENDLESS;
-		}
-
-		Log.warn(AppError.UNKNOWN_LOOP_TYPE, headerSuccessors.length, latchingNodeSuccessors.length);
-
-		return eLoopType.NONE;
-	}
+export class LoopGraph<Node> extends Graph<Node> {
+	type: eLoopType;
 }
 
-export function findLoop<Node>(interval: Graph<Node>, graph: Graph<Node>): LoopGraph<Node> | null {
+export function getLoopType<Node>(
+	graph: Graph<Node>,
+	loop: Graph<Node>,
+	loopHeader: Node,
+	latchingNode: Node
+): eLoopType {
+	const headerSuccessors = graph.getImmSuccessors(loopHeader);
+	const latchingNodeSuccessors = graph.getImmSuccessors(latchingNode);
 
-	if (!interval.hasLoop) return null;
-	const loop = new LoopGraph<Node>();
-	loop.originalGraph = graph;
-
-	const loopHeadIndex = interval.getNodeIndex(interval.root);
-	const loopEndIndex = interval.getNodeIndex(interval.latchingNodes[0]);
-
-	for (const node of interval.nodes) {
-		const nodeIndex = interval.getNodeIndex(node);
-		if (nodeIndex >= loopHeadIndex && nodeIndex <= loopEndIndex) {
-			loop.addNode(node);
+	if (latchingNodeSuccessors.length === 2) {
+		if (headerSuccessors.length === 2) {
+			if (loop.hasNode(headerSuccessors[0]) && loop.hasNode(headerSuccessors[1])) {
+				return eLoopType.REPEAT;
+			}
+			return eLoopType.WHILE;
 		}
+		return eLoopType.REPEAT;
+	}
+	if (headerSuccessors.length === 2) {
+		return eLoopType.WHILE;
+	}
+	return eLoopType.ENDLESS;
+}
+
+export function structure<Node>(graph: Graph<Node>): Graph<Node> {
+	const intervals = graphUtils.split(graph);
+	const reducibleInterval =_.find(intervals, 'hasLoop');
+
+	if (reducibleInterval) {
+		const latchingNode = reducibleInterval.latchingNodes[0];
+		const loop = new LoopGraph<Node>();
+
+		for (const node of reducibleInterval.nodes) {
+			loop.addNode(node);
+			if (node === latchingNode) {
+				break;
+			}
+		}
+		loop.type = getLoopType(graph, loop, reducibleInterval.root, latchingNode);
+		return structure(
+			graphUtils.replaceNodes(graph, reducibleInterval.root, latchingNode, loop) as Graph<Node>
+		);
 	}
 
-	return loop;
+	return graph;
 }

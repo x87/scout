@@ -24,7 +24,7 @@ describe('Graph utils', () => {
 	});
 
 	it('split shall correctly split a given graph onto a set of disjoint graphs', () => {
-		graph.addNode(a, f, d, c, b, e);
+		graph.addNode(a, b, c, d, e, f);
 		graph.addEdge(a, b);
 		graph.addEdge(b, c);
 		graph.addEdge(c, d);
@@ -54,7 +54,7 @@ describe('Graph utils', () => {
 	});
 
 	it('reduce shall produce a graph with nodes being intervals in the given graph (1)', () => {
-		graph.addNode(a, f, d, c, b, e);
+		graph.addNode(a, b, c, d, e, f);
 		graph.addEdge(a, b);
 		graph.addEdge(b, c);
 		graph.addEdge(c, d);
@@ -94,6 +94,41 @@ describe('Graph utils', () => {
 		irreducible.addEdge(b, c);
 		irreducible.addEdge(c, b);
 		expect(graphUtils.reduce(irreducible).nodes.length).toBe(3);
+	});
+
+	it('from shall create a new graph with same nodes and edges as in the given graph', () => {
+		graph.addNode(a, f, d, c, b, e);
+		graph.addEdge(a, b);
+		graph.addEdge(b, c);
+		graph.addEdge(c, d);
+		graph.addEdge(d, b);
+		graph.addEdge(b, e);
+		graph.addEdge(e, f);
+		graph.addEdge(e, a);
+		const copy = graphUtils.from(graph);
+		expect(copy.nodes).toEqual(graph.nodes);
+		expect(copy.edges).toEqual(graph.edges);
+	});
+
+	it('replaceNodes shall replace given nodes in the given graph with a new given node', () => {
+		graph.addNode(a, b, c, d, e, f);
+		graph.addEdge(a, b);
+		graph.addEdge(b, c);
+		graph.addEdge(c, d);
+		graph.addEdge(d, b);
+		graph.addEdge(b, e);
+		graph.addEdge(e, f);
+		graph.addEdge(e, a);
+
+		const node: IBasicBlock = { type: eBasicBlockType.UNDEFINED, instructions: []	};
+		const newGraph = graphUtils.replaceNodes(graph, b, d, node);
+		expect(graph.nodes.length).toEqual(6);
+		expect(newGraph.nodes.length).toEqual(4);
+		expect(newGraph.hasNode(node)).toBeTrue();
+		const prev = newGraph.getImmPredecessors(node);
+		const next = newGraph.getImmSuccessors(node);
+		expect(prev).toEqual([a]);
+		expect(next).toEqual([e]);
 	});
 
 });

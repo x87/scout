@@ -77,8 +77,6 @@ export default class CFG {
 				case eBasicBlockType.RETURN:
 					break;
 				case eBasicBlockType.TWO_WAY:
-					graph.addEdge(bb, basicBlocks[index + 1]);
-					traverse(index + 1);
 				case eBasicBlockType.ONE_WAY:
 					const targetOffset = Instruction.getNumericParam(lastInstruction);
 					const targetIndex = this.findBasicBlockIndex(basicBlocks, Math.abs(targetOffset));
@@ -89,7 +87,7 @@ export default class CFG {
 					}
 					graph.addEdge(bb, basicBlocks[targetIndex]);
 					traverse(targetIndex);
-					break;
+					if (bb.type === eBasicBlockType.ONE_WAY) break;
 				case eBasicBlockType.CALL:
 				case eBasicBlockType.FALL:
 					graph.addEdge(bb, basicBlocks[index + 1]);
@@ -102,7 +100,7 @@ export default class CFG {
 		};
 
 		traverse(startIndex);
-		return graph;
+		return graphUtils.reversePostOrder(graph);
 	}
 
 	private findBasicBlocks(instructionMap: InstructionMap, scriptType: eScriptType): IBasicBlock[] {
