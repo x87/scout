@@ -100,7 +100,7 @@ export default class CFG {
 		};
 
 		traverse(startIndex);
-		return graphUtils.reversePostOrder(graph);
+		return this.patchSelfLoops(graphUtils.reversePostOrder(graph));
 	}
 
 	private findBasicBlocks(instructionMap: InstructionMap, scriptType: eScriptType): IBasicBlock[] {
@@ -197,5 +197,31 @@ export default class CFG {
 			}
 		}
 		return res;
+	}
+
+	// split self-loop blocks on two blocks to provide better analyze of the CFG
+	private patchSelfLoops(graph: Graph<IBasicBlock>): Graph<IBasicBlock> {
+		const selfLoopNodes = graph.nodes.reduce((memo, node) => {
+			const successors = graph.getImmSuccessors(node);
+			if (successors.includes(node)) {
+				memo.push(node);
+			}
+			return memo;
+		}, []);
+
+		if (!selfLoopNodes.length) return graph;
+		const newGraph = graphUtils.from(graph);
+		selfLoopNodes.forEach((node: IBasicBlock) => {
+			const newNode = this.createBasicBlock(_.drop(node.instructions), node.type);
+			node.type = eBasicBlockType.FALL;
+			node.instructions = [node.instructions[0]];
+			const index = newGraph.getNodeIndex(node);
+			newGraph.nodes.splice(index + 1, 0, newNode);
+			newGraph.edges.forEach(edge => {
+				if (edge.from === node) edge.from = newNode;
+			});
+			newGraph.addEdge(node, newNode);
+		});
+		return newGraph;
 	}
 }

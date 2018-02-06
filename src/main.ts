@@ -1,6 +1,7 @@
 import * as utils from './utils';
 import * as file from './utils/file';
 import * as graphUtils from './frontend/cfg/graph-utils';
+import * as loopUtils from './frontend/cfg/loop-utils';
 import Log from 'utils/log';
 import Arguments from 'common/arguments';
 import AppError from 'common/errors';
@@ -12,6 +13,9 @@ import CFG from 'frontend/cfg';
 
 import { DefinitionMap, IBasicBlock } from './common/interfaces';
 import { IInstructionDefinition } from 'common/instructions';
+import { LoopGraph } from './frontend/cfg/loop-utils';
+import Graph from './frontend/cfg/graph';
+import { eLoopType } from './common/enums';
 
 interface IDefinition extends IInstructionDefinition {
 	id: string;
@@ -57,10 +61,30 @@ export async function main(): Promise<void> {
 		});
 
 		if (Arguments.debugMode) {
+			printer.printLine(`--- Structured print ---\n`);
 			scripts.forEach(script => {
 				const cfg = new CFG();
-				const callGraphs = cfg.getCallGraphs(script);
-				const functions = callGraphs.map(graphUtils.reduce);
+				const functions = cfg.getCallGraphs(script);
+				functions.forEach((func, i) => {
+					if (Arguments.debugMode) {
+						printer.printLine(`--- Function ${i} Start----\n`);
+					}
+					const printGraph = (graph: Graph<IBasicBlock>) => {
+						for (const bb of graph.nodes) {
+							if (bb instanceof LoopGraph) {
+								printer.printLine(`--- Loop ${eLoopType[bb.type]} Start----\n`);
+								printGraph(bb);
+								printer.printLine(`--- Loop ${eLoopType[bb.type]} End----\n`);
+							} else {
+								printer.print(bb as IBasicBlock, Arguments.debugMode);
+							}
+						}
+					};
+					printGraph(loopUtils.structure(func));
+					if (Arguments.debugMode) {
+						printer.printLine(`--- Function ${i} End----`);
+					}
+				});
 
 			});
 		}
