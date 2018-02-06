@@ -60,7 +60,7 @@ export enum eBasicBlockType {
 }
 
 export enum eLoopType {
-	WHILE,
-	REPEAT,
+	PRE_TESTED,
+	POST_TESTED,
 	ENDLESS
 }
