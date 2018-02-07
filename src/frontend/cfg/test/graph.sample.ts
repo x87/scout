@@ -11,13 +11,17 @@ export function complexGraph(): Graph<IBasicBlock> {
 	graph.addNode(...blocks);
 
 	graph.addEdge(b1, b2);
+	graph.addEdge(b1, b5);
+
 	graph.addEdge(b2, b3);
 	graph.addEdge(b2, b4);
 	graph.addEdge(b3, b5);
 	graph.addEdge(b4, b5);
 
 	graph.addEdge(b5, b6);
+
 	graph.addEdge(b6, b7);
+	graph.addEdge(b6, b12);
 
 	graph.addEdge(b7, b8);
 	graph.addEdge(b7, b9);
@@ -26,7 +30,6 @@ export function complexGraph(): Graph<IBasicBlock> {
 	graph.addEdge(b9, b10);
 	graph.addEdge(b10, b11);
 
-	graph.addEdge(b6, b12);
 	graph.addEdge(b12, b13);
 	graph.addEdge(b13, b14);
 	graph.addEdge(b14, b13);

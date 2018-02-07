@@ -131,4 +131,41 @@ describe('Graph utils', () => {
 		expect(next).toEqual([e]);
 	});
 
+	it(`findDom shall return an array of arrays of nodes that
+		dominate each node in the given graph ((including the node itself)`, () => {
+		const rpoGraph = graphUtils.reversePostOrder(complexGraph());
+		const dom = graphUtils.findDom(rpoGraph);
+		expect(dom).toBeArrayOfSize(rpoGraph.nodes.length);
+		expect(dom[0]).toBeArrayOfSize(1);
+		expect(dom[0]).toEqual([rpoGraph.root] as IBasicBlock[]);
+		expect(dom[1]).toBeArrayOfSize(2);
+		expect(dom[1]).toContain(rpoGraph.nodes[0] as IBasicBlock);
+		expect(dom[1]).toContain(rpoGraph.nodes[1] as IBasicBlock);
+		expect(dom[14]).toBeArrayOfSize(6);
+		expect(dom[14]).toContain(rpoGraph.nodes[14] as IBasicBlock);
+	});
+
+	it(`findSDom shall return an array of arrays of nodes that
+		dominate each node in the given graph (excluding the node itself)`, () => {
+		const rpoGraph = graphUtils.reversePostOrder(complexGraph());
+		const sdom = graphUtils.findSDom(rpoGraph);
+		expect(sdom).toBeArrayOfSize(rpoGraph.nodes.length);
+		expect(sdom[0]).toBeArrayOfSize(0);
+		expect(sdom[1]).toBeArrayOfSize(1);
+		expect(sdom[1]).toContain(rpoGraph.nodes[0] as IBasicBlock);
+		expect(sdom[14]).toBeArrayOfSize(5);
+		expect(sdom[14]).not.toContain(rpoGraph.nodes[14] as IBasicBlock);
+	});
+
+	it(`findIDom shall return an array of nodes that
+		immediately dominate each node in the given graph`, () => {
+		const rpoGraph = graphUtils.reversePostOrder(complexGraph());
+		const idom = graphUtils.findIDom(rpoGraph);
+		expect(idom).toBeArrayOfSize(rpoGraph.nodes.length);
+		expect(idom[0]).toBeUndefined();
+		expect(idom[1]).toBe(rpoGraph.nodes[0] as IBasicBlock);
+		expect(idom[4]).toBe(rpoGraph.nodes[0] as IBasicBlock);
+		expect(idom[5]).toBe(rpoGraph.nodes[4] as IBasicBlock);
+	});
+
 });

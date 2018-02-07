@@ -151,3 +151,56 @@ export function replaceNodes<Node>(
 
 	return res;
 }
+
+export function findDom<Node>(graph: Graph<Node>): Node[][] {
+	const dom = [];
+	const rootIndex = graph.getNodeIndex(graph.root);
+	dom[rootIndex] = [graph.root];
+	graph.nodes.forEach((node, index) => {
+		if (node === graph.root) return;
+		dom[index] = graph.nodes;
+	});
+
+	let isDirty = true;
+	while (isDirty) {
+		isDirty = false;
+		_.each(graph.nodes, (node, index) => {
+			if (node === graph.root) return;
+			const pred = graph.getImmPredecessors(node);
+			const newDom = [
+				node,
+				..._.intersection<Node>(...pred.map(p => {
+					const i = graph.getNodeIndex(p);
+					return dom[i];
+				}))];
+			isDirty = !_.isEqual(newDom, dom[index]);
+			dom[index] = newDom;
+			if (isDirty) return false;
+		});
+	}
+	return dom;
+}
+
+export function findSDom<Node>(graph: Graph<Node>): Node[][] {
+	const sdom = findDom(graph);
+	for (let i = 0; i < sdom.length; i++) {
+		sdom[i] = _.drop(sdom[i]);
+	}
+	return sdom;
+}
+
+export function findIDom<Node>(graph: Graph<Node>): Array<Node | undefined> {
+	const sdom = findSDom(graph);
+
+	const dominates = (a: Node, b: Node): boolean => {
+		const indexB = graph.getNodeIndex(b);
+		return sdom[indexB].includes(a);
+	};
+	const res = sdom.map(dominators => {
+		return _.find(dominators, dominator => {
+			const otherDominators = _.without(dominators, dominator);
+			return _.every(otherDominators, d => dominates(d, dominator));
+		});
+	});
+	return res;
+}
