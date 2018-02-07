@@ -34,7 +34,7 @@ node scout <inputfile> [....options]
 
 | Option Name            | Description |
 | --------------------- | --------
-| `-g <game>`           | Target game. Possible options for the <game> are: gta3, vc, sa
+| `-g <game>`           | Target game. Possible options are: gta3, vc, sa
 | `-p`                  | Print the result into stdout
 
 Input/Output redirection is supported

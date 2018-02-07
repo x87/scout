@@ -1,6 +1,6 @@
 import Graph from '../graph';
 import * as graphUtils from '../graph-utils';
-
+import { complexGraph } from './graph.sample';
 import { IBasicBlock } from 'common/interfaces';
 import { eBasicBlockType } from 'common/enums';
 
@@ -24,7 +24,7 @@ describe('Graph utils', () => {
 	});
 
 	it('split shall correctly split a given graph onto a set of disjoint graphs', () => {
-		graph.addNode(a, f, d, c, b, e);
+		graph.addNode(a, b, c, d, e, f);
 		graph.addEdge(a, b);
 		graph.addEdge(b, c);
 		graph.addEdge(c, d);
@@ -39,7 +39,7 @@ describe('Graph utils', () => {
 		i1.addEdge(e, a);
 
 		const i2 = new Graph<IBasicBlock>();
-		i2.addNode(b, c, e, f, d);
+		i2.addNode(b, c, d, e, f);
 
 		i2.addEdge(b, c);
 		i2.addEdge(b, e);
@@ -54,7 +54,7 @@ describe('Graph utils', () => {
 	});
 
 	it('reduce shall produce a graph with nodes being intervals in the given graph (1)', () => {
-		graph.addNode(a, f, d, c, b, e);
+		graph.addNode(a, b, c, d, e, f);
 		graph.addEdge(a, b);
 		graph.addEdge(b, c);
 		graph.addEdge(c, d);
@@ -69,37 +69,7 @@ describe('Graph utils', () => {
 	});
 
 	it('reduce shall produce a graph with nodes being intervals in the given graph (2)', () => {
-		const blocks = [];
-		for (let i = 0; i < 15; i++) {
-			blocks.push({ id: `B${i+1}`});
-		}
-		const [ b1, b2, b3, b4, b5, b6, b7, b8, b9, b10, b11, b12, b13, b14, b15 ] = blocks;
-		graph.addNode(...blocks);
-
-		graph.addEdge(b1, b2);
-		graph.addEdge(b2, b3);
-		graph.addEdge(b2, b4);
-		graph.addEdge(b3, b5);
-		graph.addEdge(b4, b5);
-
-		graph.addEdge(b5, b6);
-		graph.addEdge(b6, b7);
-
-		graph.addEdge(b7, b8);
-		graph.addEdge(b7, b9);
-		graph.addEdge(b8, b9);
-		graph.addEdge(b8, b10);
-		graph.addEdge(b9, b10);
-		graph.addEdge(b10, b11);
-
-		graph.addEdge(b6, b12);
-		graph.addEdge(b12, b13);
-		graph.addEdge(b13, b14);
-		graph.addEdge(b14, b13);
-		graph.addEdge(b14, b15);
-		graph.addEdge(b15, b6);
-
-		const reduced = graphUtils.reduce(graph);
+		const reduced = graphUtils.reduce(complexGraph());
 		const i6 = reduced.nodes[0] as G;
 		const i4: G = i6.nodes[0] as G;
 		const i5: G = i6.nodes[1] as G;
@@ -124,6 +94,78 @@ describe('Graph utils', () => {
 		irreducible.addEdge(b, c);
 		irreducible.addEdge(c, b);
 		expect(graphUtils.reduce(irreducible).nodes.length).toBe(3);
+	});
+
+	it('from shall create a new graph with same nodes and edges as in the given graph', () => {
+		graph.addNode(a, f, d, c, b, e);
+		graph.addEdge(a, b);
+		graph.addEdge(b, c);
+		graph.addEdge(c, d);
+		graph.addEdge(d, b);
+		graph.addEdge(b, e);
+		graph.addEdge(e, f);
+		graph.addEdge(e, a);
+		const copy = graphUtils.from(graph);
+		expect(copy.nodes).toEqual(graph.nodes);
+		expect(copy.edges).toEqual(graph.edges);
+	});
+
+	it('replaceNodes shall replace given nodes in the given graph with a new given node', () => {
+		graph.addNode(a, b, c, d, e, f);
+		graph.addEdge(a, b);
+		graph.addEdge(b, c);
+		graph.addEdge(c, d);
+		graph.addEdge(d, b);
+		graph.addEdge(b, e);
+		graph.addEdge(e, f);
+		graph.addEdge(e, a);
+
+		const node: IBasicBlock = { type: eBasicBlockType.UNDEFINED, instructions: []	};
+		const newGraph = graphUtils.replaceNodes(graph, b, d, node);
+		expect(graph.nodes.length).toEqual(6);
+		expect(newGraph.nodes.length).toEqual(4);
+		expect(newGraph.hasNode(node)).toBeTrue();
+		const prev = newGraph.getImmPredecessors(node);
+		const next = newGraph.getImmSuccessors(node);
+		expect(prev).toEqual([a]);
+		expect(next).toEqual([e]);
+	});
+
+	it(`findDom shall return an array of arrays of nodes that
+		dominate each node in the given graph ((including the node itself)`, () => {
+		const rpoGraph = graphUtils.reversePostOrder(complexGraph());
+		const dom = graphUtils.findDom(rpoGraph);
+		expect(dom).toBeArrayOfSize(rpoGraph.nodes.length);
+		expect(dom[0]).toBeArrayOfSize(1);
+		expect(dom[0]).toEqual([rpoGraph.root] as IBasicBlock[]);
+		expect(dom[1]).toBeArrayOfSize(2);
+		expect(dom[1]).toContain(rpoGraph.nodes[0] as IBasicBlock);
+		expect(dom[1]).toContain(rpoGraph.nodes[1] as IBasicBlock);
+		expect(dom[14]).toBeArrayOfSize(6);
+		expect(dom[14]).toContain(rpoGraph.nodes[14] as IBasicBlock);
+	});
+
+	it(`findSDom shall return an array of arrays of nodes that
+		dominate each node in the given graph (excluding the node itself)`, () => {
+		const rpoGraph = graphUtils.reversePostOrder(complexGraph());
+		const sdom = graphUtils.findSDom(rpoGraph);
+		expect(sdom).toBeArrayOfSize(rpoGraph.nodes.length);
+		expect(sdom[0]).toBeArrayOfSize(0);
+		expect(sdom[1]).toBeArrayOfSize(1);
+		expect(sdom[1]).toContain(rpoGraph.nodes[0] as IBasicBlock);
+		expect(sdom[14]).toBeArrayOfSize(5);
+		expect(sdom[14]).not.toContain(rpoGraph.nodes[14] as IBasicBlock);
+	});
+
+	it(`findIDom shall return an array of nodes that
+		immediately dominate each node in the given graph`, () => {
+		const rpoGraph = graphUtils.reversePostOrder(complexGraph());
+		const idom = graphUtils.findIDom(rpoGraph);
+		expect(idom).toBeArrayOfSize(rpoGraph.nodes.length);
+		expect(idom[0]).toBeUndefined();
+		expect(idom[1]).toBe(rpoGraph.nodes[0] as IBasicBlock);
+		expect(idom[4]).toBe(rpoGraph.nodes[0] as IBasicBlock);
+		expect(idom[5]).toBe(rpoGraph.nodes[4] as IBasicBlock);
 	});
 
 });

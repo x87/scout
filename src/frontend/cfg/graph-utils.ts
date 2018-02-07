@@ -1,5 +1,6 @@
-import Graph, { IGraphNode } from './graph';
 import * as utils from 'utils';
+import * as _ from 'lodash';
+import Graph, { GraphNode } from './graph';
 
 export function reduce<Node>(graph: Graph<Node>): Graph<Node> {
 	const g = new Graph<Node>();
@@ -36,15 +37,15 @@ export function split<Node>(graph: Graph<Node>): Array<Graph<Node>> {
 	const intervals: Array<Graph<Node>> = [];
 	const visited: boolean[] = [];
 
-	const isCandidateNode = (g: Graph<Node>, n: Node): boolean => {
+	const isCandidateNode = (g: Graph<Node>, n: GraphNode<Node>): boolean => {
 		return !visited[graph.getNodeIndex(n)] && !g.nodes.includes(n);
 	};
 
-	const markVisited = (node: IGraphNode<Node>): void => {
+	const markVisited = (node: GraphNode<Node>): void => {
 		visited[graph.getNodeIndex(node)] = true;
 	};
 
-	const addNode = (interval: Graph<Node>, node: IGraphNode<Node>): void => {
+	const addNode = (interval: Graph<Node>, node: GraphNode<Node>): void => {
 		interval.addNode(node);
 		const succ = graph.getImmSuccessors(node);
 		for (const s of succ) {
@@ -62,22 +63,18 @@ export function split<Node>(graph: Graph<Node>): Array<Graph<Node>> {
 
 		markVisited(header);
 		addNode(interval, header);
-		let found;
-		do {
-			found = false;
-			graph.nodes.forEach((node: Node) => {
-				if (isCandidateNode(interval, node)) {
-					const pred = graph.getImmPredecessors(node);
-					if (pred.length && utils.checkArrayIncludesArray(interval.nodes, pred)) {
-						addNode(interval, node);
-						markVisited(node);
-						found = true;
-					}
-				}
-			});
-		} while(found);
 
-		graph.nodes.forEach((node: Node) => {
+		for (const node of graph.nodes) {
+			if (isCandidateNode(interval, node)) {
+				const pred = graph.getImmPredecessors(node);
+				if (pred.length && utils.checkArrayIncludesArray(interval.nodes, pred)) {
+					addNode(interval, node);
+					markVisited(node);
+				}
+			}
+		}
+
+		for (const node of graph.nodes) {
 			if (isCandidateNode(interval, node)) {
 				const pred = graph.getImmPredecessors(node);
 				if (pred.length && utils.checkArrayIncludeItemFromArray(interval.nodes, pred)) {
@@ -85,9 +82,125 @@ export function split<Node>(graph: Graph<Node>): Array<Graph<Node>> {
 					markVisited(node);
 				}
 			}
-		});
+		}
 		intervals.push(interval);
 	}
 
 	return intervals;
+}
+
+export function isGraph<T>(node: GraphNode<T>): node is Graph<T> {
+	return node instanceof Graph;
+}
+
+export function reversePostOrder<Node>(graph: Graph<Node>): Graph<Node> {
+	const res = new Graph<Node>();
+	const visited: boolean[] = [];
+	const traverse = (node: GraphNode<Node>): void => {
+		const index = graph.getNodeIndex(node);
+		visited[index] = true;
+
+		const successors = graph.getImmSuccessors(node);
+		successors.forEach(bb => {
+			const nextIndex = graph.getNodeIndex(bb);
+			if (!visited[nextIndex]) {
+				traverse(bb);
+			}
+			res.addEdge(node, bb);
+		});
+		res.addNode(node);
+	};
+
+	traverse(graph.root);
+	res.nodes = res.nodes.reverse();
+	return res;
+
+}
+
+export function from<Node>(graph: Graph<Node>): Graph<Node> {
+	const res = new Graph<Node>();
+	for (const node of graph.nodes) {
+		res.addNode(node);
+	}
+	for (const edge of graph.edges) {
+		res.addEdge(edge.from, edge.to);
+	}
+	return res;
+}
+
+export function replaceNodes<Node>(
+	rpoGraph: Graph<Node>,
+	startNode: Node,
+	endNode: Node,
+	newNode: Node
+): Graph<Node> {
+	const res = from(rpoGraph);
+
+	const startIndex = res.getNodeIndex(startNode);
+	const endIndex = res.getNodeIndex(endNode);
+
+	const removed = res.nodes.splice(startIndex, endIndex - startIndex + 1, newNode);
+	_.remove(res.edges, (edge) => {
+		return removed.includes(edge.from) && removed.includes(edge.to);
+	});
+
+	for (const edge of res.edges) {
+		if (removed.includes(edge.from)) edge.from = newNode;
+		if (removed.includes(edge.to)) edge.to = newNode;
+	}
+
+	return res;
+}
+
+export function findDom<Node>(graph: Graph<Node>): Node[][] {
+	const dom = [];
+	const rootIndex = graph.getNodeIndex(graph.root);
+	dom[rootIndex] = [graph.root];
+	graph.nodes.forEach((node, index) => {
+		if (node === graph.root) return;
+		dom[index] = graph.nodes;
+	});
+
+	let isDirty = true;
+	while (isDirty) {
+		isDirty = false;
+		_.each(graph.nodes, (node, index) => {
+			if (node === graph.root) return;
+			const pred = graph.getImmPredecessors(node);
+			const newDom = [
+				node,
+				..._.intersection<Node>(...pred.map(p => {
+					const i = graph.getNodeIndex(p);
+					return dom[i];
+				}))];
+			isDirty = !_.isEqual(newDom, dom[index]);
+			dom[index] = newDom;
+			if (isDirty) return false;
+		});
+	}
+	return dom;
+}
+
+export function findSDom<Node>(graph: Graph<Node>): Node[][] {
+	const sdom = findDom(graph);
+	for (let i = 0; i < sdom.length; i++) {
+		sdom[i] = _.drop(sdom[i]);
+	}
+	return sdom;
+}
+
+export function findIDom<Node>(graph: Graph<Node>): Array<Node | undefined> {
+	const sdom = findSDom(graph);
+
+	const dominates = (a: Node, b: Node): boolean => {
+		const indexB = graph.getNodeIndex(b);
+		return sdom[indexB].includes(a);
+	};
+	const res = sdom.map(dominators => {
+		return _.find(dominators, dominator => {
+			const otherDominators = _.without(dominators, dominator);
+			return _.every(otherDominators, d => dominates(d, dominator));
+		});
+	});
+	return res;
 }

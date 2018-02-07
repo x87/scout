@@ -6,6 +6,7 @@ import AppError from 'common/errors';
 import Graph from './graph';
 
 import * as Instruction from 'common/instructions';
+import * as graphUtils from './graph-utils';
 import { IInstruction, InstructionMap } from 'common/instructions';
 import { eBasicBlockType, eScriptType, eGame } from 'common/enums';
 import { IBasicBlock, IScript } from 'common/interfaces';
@@ -76,8 +77,6 @@ export default class CFG {
 				case eBasicBlockType.RETURN:
 					break;
 				case eBasicBlockType.TWO_WAY:
-					graph.addEdge(bb, basicBlocks[index + 1]);
-					traverse(index + 1);
 				case eBasicBlockType.ONE_WAY:
 					const targetOffset = Instruction.getNumericParam(lastInstruction);
 					const targetIndex = this.findBasicBlockIndex(basicBlocks, Math.abs(targetOffset));
@@ -88,7 +87,7 @@ export default class CFG {
 					}
 					graph.addEdge(bb, basicBlocks[targetIndex]);
 					traverse(targetIndex);
-					break;
+					if (bb.type === eBasicBlockType.ONE_WAY) break;
 				case eBasicBlockType.CALL:
 				case eBasicBlockType.FALL:
 					graph.addEdge(bb, basicBlocks[index + 1]);
@@ -101,7 +100,7 @@ export default class CFG {
 		};
 
 		traverse(startIndex);
-		return graph;
+		return this.patchSelfLoops(graphUtils.reversePostOrder(graph));
 	}
 
 	private findBasicBlocks(instructionMap: InstructionMap, scriptType: eScriptType): IBasicBlock[] {
@@ -198,5 +197,31 @@ export default class CFG {
 			}
 		}
 		return res;
+	}
+
+	// split self-loop blocks on two blocks to provide better analyze of the CFG
+	private patchSelfLoops(graph: Graph<IBasicBlock>): Graph<IBasicBlock> {
+		const selfLoopNodes = graph.nodes.reduce((memo, node) => {
+			const successors = graph.getImmSuccessors(node);
+			if (successors.includes(node)) {
+				memo.push(node);
+			}
+			return memo;
+		}, []);
+
+		if (!selfLoopNodes.length) return graph;
+		const newGraph = graphUtils.from(graph);
+		selfLoopNodes.forEach((node: IBasicBlock) => {
+			const newNode = this.createBasicBlock(_.drop(node.instructions), node.type);
+			node.type = eBasicBlockType.FALL;
+			node.instructions = [node.instructions[0]];
+			const index = newGraph.getNodeIndex(node);
+			newGraph.nodes.splice(index + 1, 0, newNode);
+			newGraph.edges.forEach(edge => {
+				if (edge.from === node) edge.from = newNode;
+			});
+			newGraph.addEdge(node, newNode);
+		});
+		return newGraph;
 	}
 }
