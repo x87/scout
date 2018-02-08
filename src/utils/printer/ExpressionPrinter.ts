@@ -19,13 +19,13 @@ export default class ExpressionPrinter extends SimplePrinter  {
 	}
 
 	print(bb: IBasicBlock, printComments: boolean = false): void {
-		let output = this.indentation;
+		let output = '';
 
 		const append = (format: string, ...args: any[]) => output += Log.format(format, ...args);
 
 		if (printComments) {
 			const offset = utils.strPadLeft(bb.instructions[0].offset.toString(), 6);
-			append(`// %s:%s\n`, offset, eBasicBlockType[bb.type]);
+			// append(`// %s:%s\n`, offset, eBasicBlockType[bb.type]);
 		}
 		bb.instructions.forEach((instruction, i) => {
 			const id = instruction.opcode;

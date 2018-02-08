@@ -120,7 +120,7 @@ describe('Graph utils', () => {
 		graph.addEdge(e, f);
 		graph.addEdge(e, a);
 
-		const node: IBasicBlock = { type: eBasicBlockType.UNDEFINED, instructions: []	};
+		const node = new Graph();
 		const newGraph = graphUtils.replaceNodes(graph, b, d, node);
 		expect(graph.nodes.length).toEqual(6);
 		expect(newGraph.nodes.length).toEqual(4);

@@ -132,21 +132,23 @@ export function replaceNodes<Node>(
 	rpoGraph: Graph<Node>,
 	startNode: Node,
 	endNode: Node,
-	newNode: Node
+	newGraphNode: Graph<Node>,
+	options: { rightEdge: boolean } = { rightEdge: true }
 ): Graph<Node> {
 	const res = from(rpoGraph);
 
 	const startIndex = res.getNodeIndex(startNode);
 	const endIndex = res.getNodeIndex(endNode);
-
-	const removed = res.nodes.splice(startIndex, endIndex - startIndex + 1, newNode);
+	const count = endIndex - startIndex + (options.rightEdge ? 1 : 0);
+	const removed = res.nodes.splice(startIndex, count, newGraphNode);
+	newGraphNode.nodes = removed;
 	_.remove(res.edges, (edge) => {
 		return removed.includes(edge.from) && removed.includes(edge.to);
 	});
 
 	for (const edge of res.edges) {
-		if (removed.includes(edge.from)) edge.from = newNode;
-		if (removed.includes(edge.to)) edge.to = newNode;
+		if (removed.includes(edge.from)) edge.from = newGraphNode;
+		if (removed.includes(edge.to)) edge.to = newGraphNode;
 	}
 
 	return res;

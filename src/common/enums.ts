@@ -64,3 +64,8 @@ export enum eLoopType {
 	POST_TESTED,
 	ENDLESS
 }
+
+export enum eIfType {
+	IF_THEN,
+	IF_THEN_ELSE
+}

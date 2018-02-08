@@ -1,7 +1,7 @@
 import * as utils from './utils';
 import * as file from './utils/file';
-import * as graphUtils from './frontend/cfg/graph-utils';
 import * as loopUtils from './frontend/cfg/loop-utils';
+import * as conditionUtils from './frontend/cfg/conditions-utils';
 import Log from 'utils/log';
 import Arguments from 'common/arguments';
 import AppError from 'common/errors';
@@ -16,6 +16,8 @@ import { IInstructionDefinition } from 'common/instructions';
 import { LoopGraph } from './frontend/cfg/loop-utils';
 import Graph from './frontend/cfg/graph';
 import { eLoopType } from './common/enums';
+import { IfGraph } from './frontend/cfg/conditions-utils';
+import ExpressionPrinter from './utils/printer/ExpressionPrinter';
 
 interface IDefinition extends IInstructionDefinition {
 	id: string;
@@ -43,7 +45,7 @@ export async function main(): Promise<void> {
 	const scripts = await parser.parse(scriptFile);
 
 	if (Arguments.printAssembly === true) {
-		const printer = new SimplePrinter(definitionMap);
+		const printer = new ExpressionPrinter(definitionMap);
 		scripts.forEach(script => {
 			const cfg = new CFG();
 			const graphs = cfg.getCallGraphs(script);
@@ -61,28 +63,52 @@ export async function main(): Promise<void> {
 		});
 
 		if (Arguments.debugMode) {
-			printer.printLine(`--- Structured print ---\n`);
 			scripts.forEach(script => {
 				const cfg = new CFG();
 				const functions = cfg.getCallGraphs(script);
 				functions.forEach((func, i) => {
 					if (Arguments.debugMode) {
-						printer.printLine(`--- Function ${i} Start----\n`);
+						printer.printLine('\n');
+						printer.printLine(`function () {`);
+						printer.indent++;
 					}
 					const printGraph = (graph: Graph<IBasicBlock>) => {
 						for (const bb of graph.nodes) {
 							if (bb instanceof LoopGraph) {
-								printer.printLine(`--- Loop ${eLoopType[bb.type]} Start----\n`);
+								printer.printLine(`${printer.indentation}${bb.type === eLoopType.POST_TESTED ? 'repeat' : 'while'} {`);
+								printer.indent++;
 								printGraph(bb);
-								printer.printLine(`--- Loop ${eLoopType[bb.type]} End----\n`);
+								printer.indent--;
+								printer.printLine(`${printer.indentation}}${bb.type === eLoopType.POST_TESTED ? 'until' : ''}`);
+							} else if (bb instanceof IfGraph) {
+								printer.printLine(`${printer.indentation}if`);
+								printer.indent++;
+								printer.print(bb.nodes[0]);
+								printer.printLine(`${printer.indentation}then {`);
+								printer.indent++;
+								printGraph(bb.thenNode);
+								printer.indent--;
+								printer.printLine(`${printer.indentation}}`);
+								if (bb.elseNode) {
+									printer.printLine(`${printer.indentation}else {`);
+									printer.indent++;
+									printGraph(bb.elseNode);
+									printer.indent--;
+									printer.printLine(`${printer.indentation}}`);
+								}
+								printer.indent--;
+								printer.printLine(`${printer.indentation}}`);
 							} else {
 								printer.print(bb as IBasicBlock, Arguments.debugMode);
 							}
 						}
 					};
-					printGraph(loopUtils.structure(func));
+					const loopGraph = loopUtils.structure(func);
+					const ifGraph = conditionUtils.structure(loopGraph);
+					printGraph(ifGraph);
 					if (Arguments.debugMode) {
-						printer.printLine(`--- Function ${i} End----`);
+						printer.indent--;
+						printer.printLine(`}`);
 					}
 				});
 

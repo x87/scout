@@ -78,15 +78,13 @@ export function structure<Node>(graph: Graph<Node>): Graph<Node> {
 	if (reducibleInterval) {
 		const latchingNode = reducibleInterval.latchingNodes[0];
 		const loop = new LoopGraph<Node>();
-
-		for (const node of reducibleInterval.nodes) {
-			loop.addNode(node);
-			if (node === latchingNode) {
-				break;
-			}
-		}
 		loop.type = getLoopType(graph, loop, reducibleInterval.root, latchingNode);
-		loop.followNode = findFollowNode<Node>(graph, loop, reducibleInterval.root as Node, latchingNode as Node);
+		loop.followNode = findFollowNode<Node>(
+			graph,
+			loop,
+			reducibleInterval.root as Node,
+			latchingNode as Node
+		);
 		return structure(
 			graphUtils.replaceNodes(graph, reducibleInterval.root, latchingNode, loop) as Graph<Node>
 		);
