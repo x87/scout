@@ -53,49 +53,6 @@ describe('Graph utils', () => {
 		expect(graphUtils.split(graph)).toEqual(intervals);
 	});
 
-	it('reduce shall produce a graph with nodes being intervals in the given graph (1)', () => {
-		graph.addNode(a, b, c, d, e, f);
-		graph.addEdge(a, b);
-		graph.addEdge(b, c);
-		graph.addEdge(c, d);
-		graph.addEdge(d, b);
-		graph.addEdge(b, e);
-		graph.addEdge(e, f);
-		graph.addEdge(e, a);
-
-		const reduced = graphUtils.reduce(graph);
-		expect(reduced.nodes.length).toBe(1);
-		expect(((reduced.root as G).root as G).root).toBe(a);
-	});
-
-	it('reduce shall produce a graph with nodes being intervals in the given graph (2)', () => {
-		const reduced = graphUtils.reduce(complexGraph());
-		const i6 = reduced.nodes[0] as G;
-		const i4: G = i6.nodes[0] as G;
-		const i5: G = i6.nodes[1] as G;
-		const i2: G = i5.nodes[0] as G;
-		const i3: G = i5.nodes[1] as G;
-		const i1: G = i4.nodes[0] as G;
-
-		expect(reduced.nodes.length).toBe(1);
-		expect(i6.nodes.length).toBe(2);
-		expect(i5.nodes.length).toBe(2);
-		expect(i4.nodes.length).toBe(1);
-		expect(i3.nodes.length).toBe(3);
-		expect(i2.nodes.length).toBe(7);
-		expect(i1.nodes.length).toBe(5);
-	});
-
-	it('reduce shall stop when graph is not reducible anymore', () => {
-		const irreducible: Graph<IBasicBlock> = new Graph<IBasicBlock>();
-		irreducible.addNode(a, b, c);
-		irreducible.addEdge(a, b);
-		irreducible.addEdge(a, c);
-		irreducible.addEdge(b, c);
-		irreducible.addEdge(c, b);
-		expect(graphUtils.reduce(irreducible).nodes.length).toBe(3);
-	});
-
 	it('from shall create a new graph with same nodes and edges as in the given graph', () => {
 		graph.addNode(a, f, d, c, b, e);
 		graph.addEdge(a, b);

@@ -1,8 +1,6 @@
 import Graph from '../graph';
 import { IBasicBlock } from 'common/interfaces';
 import { eBasicBlockType } from 'common/enums';
-import { complexGraph } from './graph.sample';
-import * as graphUtils from '../graph-utils';
 
 type G = Graph<IBasicBlock>;
 
@@ -70,41 +68,6 @@ describe(Graph.name, () => {
 		i.addEdge(b, c);
 		i.addEdge(c, a);
 		expect(i.latchingNodes).toEqual([c]);
-	});
-
-	it('has hasLoop property', () => {
-		const reduced = graphUtils.reduce(complexGraph());
-		const i6 = reduced.nodes[0] as G;
-		const i4: G = i6.nodes[0] as G;
-		const i5: G = i6.nodes[1] as G;
-		const i2: G = i5.nodes[0] as G;
-		const i3: G = i5.nodes[1] as G;
-		const i1: G = i4.nodes[0] as G;
-
-		expect(i1.hasLoop).toBeFalse();
-		expect(i2.hasLoop).toBeFalse();
-		expect(i3.hasLoop).toBeTrue();
-		expect(i4.hasLoop).toBeFalse();
-		expect(i5.hasLoop).toBeTrue();
-		expect(i6.hasLoop).toBeFalse();
-	});
-
-	it('has rootNode property', () => {
-		const complex = complexGraph();
-		const reduced = graphUtils.reduce(complex);
-		const i6 = reduced.nodes[0] as G;
-		const i4: G = i6.nodes[0] as G;
-		const i5: G = i6.nodes[1] as G;
-		const i2: G = i5.nodes[0] as G;
-		const i3: G = i5.nodes[1] as G;
-		const i1: G = i4.nodes[0] as G;
-
-		expect(i1.rootNode).toBe(complex.nodes[0] as any);
-		expect(i2.rootNode).toBe(complex.nodes[5] as any);
-		expect(i3.rootNode).toBe(complex.nodes[12] as any);
-		expect(i4.rootNode).toBe(complex.nodes[0] as any);
-		expect(i5.rootNode).toBe(complex.nodes[5] as any);
-		expect(i6.rootNode).toBe(complex.nodes[0] as any);
 	});
 
 });

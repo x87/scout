@@ -2,33 +2,6 @@ import * as utils from 'utils';
 import * as _ from 'lodash';
 import Graph, { GraphNode } from './graph';
 
-export function reduce<Node>(graph: Graph<Node>): Graph<Node> {
-	const g = new Graph<Node>();
-	const intervals: Array<Graph<Node>> = split(graph);
-
-	for (const interval of intervals) {
-		g.addNode(interval);
-
-		const header = interval.root;
-		const pred = interval.getImmPredecessors(header);
-
-		for (const p of pred) {
-			if (interval.hasNode(p)) continue;
-
-			for (const i of intervals) {
-				if (i.hasNode(p)) {
-					g.addEdge(i, interval);
-					break;
-				}
-			}
-		}
-	}
-	const nodesLen = g.nodes.length;
-	return nodesLen > 1 && nodesLen < graph.nodes.length
-		? reduce(g)
-		: g;
-}
-
 export function split<Node>(graph: Graph<Node>): Array<Graph<Node>> {
 	if (graph.nodes.length < 1) {
 		return [];
