@@ -1,6 +1,6 @@
 const path = require('path');
-require('ts-node/register')
-require('tsconfig-paths/register')
+require('ts-node/register');
+require('tsconfig-paths/register');
 
 const Jasmine = require('jasmine');
 const Command = require('jasmine/lib/command');
@@ -11,7 +11,7 @@ jasmine.loadConfig({
 	'spec_files': [
 		'**/*[sS]pec.ts'
 	],
-	'helpers': ['../node_modules/jasmine-expect/index.js']
+	'helpers': ['../node_modules/jasmine-expect']
 });
 const command = new Command(path.resolve());
 command.run(jasmine, process.argv.slice(2));

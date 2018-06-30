@@ -17,21 +17,22 @@
   "author": "Seemann",
   "license": "MIT",
   "devDependencies": {
-    "@types/jasmine": "2.8.4",
-    "@types/lodash": "4.14.92",
-    "@types/node": "9.3.0",
-    "awesome-typescript-loader": "3.4.1",
-    "jasmine": "2.8.0",
+    "@types/jasmine": "2.8.8",
+    "@types/lodash": "4.14.110",
+    "@types/node": "10.5.1",
+    "awesome-typescript-loader": "5.2.0",
+    "jasmine": "3.1.0",
     "jasmine-expect": "3.8.3",
-    "ts-node": "4.1.0",
-    "tsconfig-paths": "3.1.1",
-    "tslint": "5.9.1",
-    "tslint-loader": "3.5.3",
-    "typescript": "2.6.2",
-    "webpack": "3.10.0"
+    "ts-node": "6.2.0",
+    "tsconfig-paths": "3.4.2",
+    "tslint": "5.10.0",
+    "tslint-loader": "3.6.0",
+    "typescript": "2.9.2",
+    "webpack": "4.14.0",
+    "webpack-cli": "3.0.8"
   },
   "dependencies": {
-    "commander": "2.13.0",
-    "lodash": "4.17.4"
+    "commander": "2.16.0",
+    "lodash": "4.17.10"
   }
 }
