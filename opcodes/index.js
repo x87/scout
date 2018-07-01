@@ -1,12 +1,13 @@
 'use strict';
-
-const args = process.argv.slice(2);
-const inputFile = args[0] || 'gta3.ini';
-let bufToLines = buf => buf.toString().split(require('os').EOL);
-let opcodeNames = {};
-let opcodeNumParams = {};
 const fs = require('fs');
 const path = require('path');
+const eol = require('eol');
+const args = process.argv.slice(2);
+const inputFile = args[0] || 'gta3.ini';
+
+const bufToLines = buf => eol.split(buf.toString());
+const opcodeNames = {};
+const opcodeNumParams = {};
 
 new Promise(function (resolve) {
     fs.readFile(path.join(__dirname, 'opcodes.txt'), function (err, buf) {
@@ -14,7 +15,7 @@ new Promise(function (resolve) {
             .filter(line => line)
             .forEach(line => {
                 line = line.trim();
-                if (line.charAt(0) == ';') return;
+                if (line.charAt(0) === ';') return;
                 let parts = line.split('=');
                 opcodeNames[parts[0].toUpperCase()] = parts[1];
             }));
