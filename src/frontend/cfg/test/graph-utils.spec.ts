@@ -13,7 +13,7 @@ describe('Graph utils', () => {
 	const c: IBasicBlock = { type: eBasicBlockType.ONE_WAY, instructions: [] };
 	const d: IBasicBlock = { type: eBasicBlockType.TWO_WAY, instructions: [] };
 	const e: IBasicBlock = { type: eBasicBlockType.FALL, instructions: [] };
-	const f: IBasicBlock = { type: eBasicBlockType.CALL, instructions: []	};
+	const f: IBasicBlock = { type: eBasicBlockType.FALL, instructions: []	};
 
 	beforeEach(() => {
 		graph = new Graph<IBasicBlock>();
