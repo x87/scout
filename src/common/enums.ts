@@ -55,7 +55,6 @@ export enum eBasicBlockType {
 	ONE_WAY, // jump
 	TWO_WAY, // jf
 	FALL,
-	CALL,
 	N_WAY // switch
 }
 

@@ -131,19 +131,18 @@ export default class Parser {
 	}
 
 	parse(scriptFile: ScriptFile): IScript[] {
-		const scripts = [
-			{
-				instructionMap: this.getInstructions(scriptFile),
-				type: scriptFile.type
-			}
-		];
+		const main: IScript = {
+			instructionMap: this.getInstructions(scriptFile),
+			type: scriptFile.type
+		};
+		const scripts = [];
 		if (scriptFile instanceof ScriptMultifile) {
-			return scriptFile.scripts.reduce((collection, script) => {
-				collection.push(...this.parse(script));
-				return collection;
-			}, scripts);
+			main.innerScripts = scripts;
+			for (const script of scriptFile.scripts) {
+				scripts.push(this.parse(script)[0]);
+			}
 		}
-		return scripts;
+		return [main, ...scripts];
 	}
 
 	getInstructions(scriptFile: ScriptFile): InstructionMap {
