@@ -1,5 +1,5 @@
 # Scout Decompiler
-[![Build Status](https://travis-ci.org/x87/scout.js.svg?branch=master)](https://travis-ci.org/x87/scout.js)
+[![Build Status](https://travis-ci.org/x87/scout.svg?branch=master)](https://travis-ci.org/x87/scout.js)
 
 Scout Decompiler is a CLI tool to decompile binary scripts of Grand Theft Auto 3D series into a human-readable high-level format. 
 
