@@ -12,6 +12,7 @@ enum AppError {
 	NO_BRANCH = 'WARNING: No branch found at offset %s during linkage',
 	NOT_NUMERIC_INSTRUCTION = 'Expected numeric value for parameter in instruction at %s',
 	UNKNOWN_LOOP_TYPE = 'WARNING: Unknown loop type with header nodes %s and latching nodes %s',
-	INVALID_BB_TYPE = 'Invalid block type %s'
+	INVALID_BB_TYPE = 'Invalid block type %s',
+	NO_REPLACE_NODE = 'Internal error: node not found'
 }
 export default AppError;

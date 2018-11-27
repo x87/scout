@@ -13,7 +13,7 @@ import CFG from 'frontend/cfg';
 import { DefinitionMap, IBasicBlock } from './common/interfaces';
 import { IInstructionDefinition } from 'common/instructions';
 import { LoopGraph } from './frontend/cfg/loop-utils';
-import Graph from './frontend/cfg/graph';
+import Graph, {GraphNode} from './frontend/cfg/graph';
 import { eLoopType } from './common/enums';
 import { IfGraph } from './frontend/cfg/conditions-utils';
 import ExpressionPrinter from './utils/printer/ExpressionPrinter';
@@ -71,7 +71,7 @@ export async function main(): Promise<void> {
 						printer.printLine(`function () {`);
 						printer.indent++;
 					}
-					const printGraph = (graph: Graph<IBasicBlock>) => {
+					const printGraph = (graph: Graph<GraphNode<IBasicBlock>>) => {
 						for (const bb of graph.nodes) {
 							if (bb instanceof LoopGraph) {
 								printer.printLine(`${printer.indentation}${bb.type === eLoopType.POST_TESTED ? 'repeat' : 'while'} {`);
