@@ -1,6 +1,8 @@
 import * as utils from 'utils';
 import * as _ from 'lodash';
+import Log from 'utils/log';
 import Graph, { GraphNode } from './graph';
+import AppError from '../../common/errors';
 
 export function split<Node>(graph: Graph<Node>): Array<Graph<Node>> {
 	if (graph.nodes.length < 1) {
@@ -103,8 +105,8 @@ export function from<Node>(graph: Graph<Node>): Graph<Node> {
 
 export function replaceNodes<Node>(
 	rpoGraph: Graph<Node>,
-	startNode: Node,
-	endNode: Node,
+	startNode: GraphNode<Node>,
+	endNode: GraphNode<Node>,
 	newGraphNode: Graph<Node>,
 	options: { rightEdge: boolean } = { rightEdge: true }
 ): Graph<Node> {
@@ -112,6 +114,10 @@ export function replaceNodes<Node>(
 
 	const startIndex = res.getNodeIndex(startNode);
 	const endIndex = res.getNodeIndex(endNode);
+
+	if (startIndex === -1 || endIndex === -1) {
+		throw Log.error(AppError.NO_REPLACE_NODE);
+	}
 	const count = endIndex - startIndex + (options.rightEdge ? 1 : 0);
 	const removed = res.nodes.splice(startIndex, count, newGraphNode);
 	newGraphNode.nodes = removed;
@@ -127,13 +133,11 @@ export function replaceNodes<Node>(
 	return res;
 }
 
-export function findDom<Node>(graph: Graph<Node>): Node[][] {
-	const dom = [];
-	const rootIndex = graph.getNodeIndex(graph.root);
-	dom[rootIndex] = [graph.root];
-	graph.nodes.forEach((node, index) => {
-		if (node === graph.root) return;
-		dom[index] = graph.nodes;
+export function findDom<Node>(graph: Graph<Node>): Array<Array<GraphNode<Node>>> {
+	const dom = graph.nodes.map(node => {
+		return node === graph.root
+			? [graph.root]
+			: graph.nodes;
 	});
 
 	let isDirty = true;
@@ -144,7 +148,7 @@ export function findDom<Node>(graph: Graph<Node>): Node[][] {
 			const pred = graph.getImmPredecessors(node);
 			const newDom = [
 				node,
-				..._.intersection<Node>(...pred.map(p => {
+				..._.intersection<GraphNode<Node>>(...pred.map(p => {
 					const i = graph.getNodeIndex(p);
 					return dom[i];
 				}))];
@@ -156,7 +160,7 @@ export function findDom<Node>(graph: Graph<Node>): Node[][] {
 	return dom;
 }
 
-export function findSDom<Node>(graph: Graph<Node>): Node[][] {
+export function findSDom<Node>(graph: Graph<Node>): Array<Array<GraphNode<Node>>> {
 	const sdom = findDom(graph);
 	for (let i = 0; i < sdom.length; i++) {
 		sdom[i] = _.drop(sdom[i]);
@@ -164,18 +168,17 @@ export function findSDom<Node>(graph: Graph<Node>): Node[][] {
 	return sdom;
 }
 
-export function findIDom<Node>(graph: Graph<Node>): Array<Node | undefined> {
+export function findIDom<Node>(graph: Graph<Node>): Array<GraphNode<Node> | undefined> {
 	const sdom = findSDom(graph);
 
-	const dominates = (a: Node, b: Node): boolean => {
+	const dominates = (a: GraphNode<Node>, b: GraphNode<Node>): boolean => {
 		const indexB = graph.getNodeIndex(b);
 		return sdom[indexB].includes(a);
 	};
-	const res = sdom.map(dominators => {
+	return sdom.map(dominators => {
 		return _.find(dominators, dominator => {
 			const otherDominators = _.without(dominators, dominator);
 			return _.every(otherDominators, d => dominates(d, dominator));
 		});
 	});
-	return res;
 }

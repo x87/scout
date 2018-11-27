@@ -89,7 +89,7 @@ describe('Graph utils', () => {
 	});
 
 	it(`findDom shall return an array of arrays of nodes that
-		dominate each node in the given graph ((including the node itself)`, () => {
+		dominate each node in the given graph (including the node itself)`, () => {
 		const rpoGraph = graphUtils.reversePostOrder(complexGraph());
 		const dom = graphUtils.findDom(rpoGraph);
 		expect(dom).toBeArrayOfSize(rpoGraph.nodes.length);

@@ -1,37 +1,38 @@
 import * as _ from 'lodash';
 import * as graphUtils from './graph-utils';
-import Graph from './graph';
+import Graph, { GraphNode } from './graph';
 import { eIfType } from 'common/enums';
 
 export class IfGraph<Node> extends Graph<Node> {
 	thenNode: Graph<Node>;
 	elseNode?: Graph<Node>;
-	followNode: Node;
+	followNode: GraphNode<Node>;
 }
 
-export function getIfType<Node>(graph: Graph<Node>, ifHeader: Node, followNode: Node): eIfType {
+export function getIfType<Node>(graph: Graph<Node>, ifHeader: Node, followNode: GraphNode<Node>): eIfType {
 	const headerSuccessors = graph.getImmSuccessors(ifHeader);
 	return headerSuccessors.includes(followNode)
 		? eIfType.IF_THEN
 		: eIfType.IF_THEN_ELSE;
 }
 
-export function structure<Node>(graph: Graph<Node>): Graph<Node> {
-	const twoWayNodes = graph.nodes.reduce((memo, node) => {
+export function structure<Node>(graph: Graph<GraphNode<Node>>): Graph<GraphNode<Node>> {
+	const twoWayNodes = graph.nodes.filter((node) => {
+		if (node instanceof IfGraph) return false;
 		const successors = graph.getImmSuccessors(node);
-		if (successors.length === 2) memo.push(node);
-		return memo;
-	}, []);
+		return successors.length === 2;
+	}) as Node[];
 
 	if (twoWayNodes.length === 0) return graph;
 
-	const idom = graphUtils.findIDom(graph);
+	let res = graphUtils.from(graph);
+	const findFollowNode = (header: Node): Node | undefined => {
 
-	const findFollowNode = (ifHeader: Node): Node | undefined => {
+		const idom = graphUtils.findIDom(res);
 		const candidates = _.reduce(idom, (memo, dom, index) => {
-			if (dom === ifHeader) {
-				const candidate = graph.nodes[index];
-				const pred = graph.getImmPredecessors(candidate);
+			if (dom === header) {
+				const candidate = res.nodes[index];
+				const pred = res.getImmPredecessors(candidate);
 				if (pred.length >= 2) {
 					memo.push(candidate);
 				}
@@ -40,16 +41,12 @@ export function structure<Node>(graph: Graph<Node>): Graph<Node> {
 		}, []);
 		return _.last(candidates);
 	};
+	const replaceIf = (header: Node, followNode: GraphNode<Node>): void => {
 
-	let res = graphUtils.from(graph);
-	const unresolved = [];
-
-	const replaceIf = (ifHeader: Node, followNode: Node): void => {
 		const ifGraph = new IfGraph<Node>();
 		ifGraph.followNode = followNode;
-		const ifType = getIfType(res, ifHeader, followNode);
-		const ifHeaderSuccessors = res.getImmSuccessors(ifHeader);
-
+		const ifType = getIfType(res, header, followNode);
+		const ifHeaderSuccessors = res.getImmSuccessors(header);
 		if (ifType === eIfType.IF_THEN) {
 			const thenHeader = ifHeaderSuccessors[1];
 			ifGraph.thenNode = new Graph<Node>();
@@ -79,9 +76,10 @@ export function structure<Node>(graph: Graph<Node>): Graph<Node> {
 				{ rightEdge: false }
 			) as Graph<Node>;
 		}
+		res = graphUtils.replaceNodes(res, header, followNode, ifGraph, { rightEdge: false });
 
-		res = graphUtils.replaceNodes(res, ifHeader, followNode, ifGraph, { rightEdge: false });
 	};
+	const unresolved = [];
 
 	_.eachRight(twoWayNodes, ifHeader => {
 		const followNode = findFollowNode(ifHeader);
@@ -91,8 +89,9 @@ export function structure<Node>(graph: Graph<Node>): Graph<Node> {
 		} else {
 			unresolved.forEach(unresHeader => replaceIf(unresHeader, followNode));
 			replaceIf(ifHeader, followNode);
+			return false;
 		}
 	});
 
-	return res;
+	return twoWayNodes.length > 1 ? structure(res) : res;
 }

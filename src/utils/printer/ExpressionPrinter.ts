@@ -1,7 +1,6 @@
 import SimplePrinter from './SimplePrinter';
 import * as utils from 'utils';
 import { DefinitionMap, IBasicBlock } from 'common/interfaces';
-import { eBasicBlockType } from 'common/enums';
 import { IInstructionParamArray } from 'common/instructions';
 import Log from '../log';
 
