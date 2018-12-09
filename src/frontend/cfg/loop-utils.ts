@@ -73,7 +73,7 @@ export function findFollowNode<Node>(
 
 export function structure<Node>(graph: Graph<Node>): Graph<Node> {
 	const intervals = graphUtils.split(graph);
-	const reducibleInterval =_.find(intervals, 'hasLoop');
+	const reducibleInterval = _.find(intervals, 'hasLoop');
 
 	if (!reducibleInterval) return graph;
 

@@ -34,7 +34,7 @@ export interface IInstructionParamArray {
 export type InstructionMap = Map<number, IInstruction>;
 
 export const isNumeric = (instruction: IInstruction): instruction is IInstructionInt32 => {
-	return instruction.params[0].type === eParamType.NUM32;
+	return [eParamType.NUM32, eParamType.NUM16, eParamType.NUM8].includes(instruction.params[0].type);
 };
 
 export const getNumericParam = (instruction: IInstruction): number => {
