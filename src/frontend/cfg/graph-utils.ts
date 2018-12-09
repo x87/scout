@@ -182,3 +182,55 @@ export function findIDom<Node>(graph: Graph<Node>): Array<GraphNode<Node> | unde
 		});
 	});
 }
+
+// todo: refactor following functions (duplicates of above)
+
+export function findPDom<Node>(graph: Graph<Node>): Array<Array<GraphNode<Node>>> {
+	const dom = graph.nodes.map(node => {
+		return node === graph.root
+			? [graph.root]
+			: graph.nodes;
+	});
+
+	let isDirty = true;
+	while (isDirty) {
+		isDirty = false;
+		_.each(graph.nodes, (node, index) => {
+			if (node === graph.root) return;
+			const pred = graph.getImmSuccessors(node);
+			const newDom = [
+				node,
+				..._.intersection<GraphNode<Node>>(...pred.map(p => {
+					const i = graph.getNodeIndex(p);
+					return dom[i];
+				}))];
+			isDirty = !_.isEqual(newDom, dom[index]);
+			dom[index] = newDom;
+			if (isDirty) return false;
+		});
+	}
+	return dom;
+}
+
+export function findSPDom<Node>(graph: Graph<Node>): Array<Array<GraphNode<Node>>> {
+	const sdom = findPDom(graph);
+	for (let i = 0; i < sdom.length; i++) {
+		sdom[i] = _.drop(sdom[i]);
+	}
+	return sdom;
+}
+
+export function findIPDom<Node>(graph: Graph<Node>): Array<GraphNode<Node> | undefined> {
+	const sdom = findSPDom(graph);
+
+	const dominates = (a: GraphNode<Node>, b: GraphNode<Node>): boolean => {
+		const indexB = graph.getNodeIndex(b);
+		return sdom[indexB].includes(a);
+	};
+	return sdom.map(dominators => {
+		return _.find(dominators, dominator => {
+			const otherDominators = _.without(dominators, dominator);
+			return _.every(otherDominators, d => dominates(d, dominator));
+		});
+	});
+}

@@ -6,9 +6,9 @@ import AppError from 'common/errors';
 import Graph from './graph';
 
 import * as Instruction from 'common/instructions';
+import { IInstruction } from 'common/instructions';
 import * as graphUtils from './graph-utils';
-import { IInstruction, InstructionMap } from 'common/instructions';
-import { eBasicBlockType, eScriptType, eGame } from 'common/enums';
+import { eBasicBlockType, eGame, eScriptType } from 'common/enums';
 import { IBasicBlock, IScript } from 'common/interfaces';
 
 const OP_JMP = 0x0002;
@@ -18,6 +18,7 @@ const OP_END = 0x004e;
 const OP_CALL = 0x004f;
 const OP_GOSUB = 0x0050;
 const OP_RETURN = 0x0051;
+const OP_IF = 0x00d6;
 const blockEndOpcodes = [OP_END, OP_RETURN];
 
 const callOpcodes = [OP_GOSUB, OP_CALL];
@@ -25,15 +26,18 @@ const callOpcodes = [OP_GOSUB, OP_CALL];
 const branchOpcodesMap: any = {
 	[eGame.GTA3]: {
 		[OP_JMP]: eBasicBlockType.ONE_WAY,
+		[OP_IF]: eBasicBlockType.FALL,
 		[OP_JF]: eBasicBlockType.TWO_WAY,
 		[OP_JT]: eBasicBlockType.TWO_WAY
 	},
 	[eGame.GTAVC]: {
 		[OP_JMP]: eBasicBlockType.ONE_WAY,
+		[OP_IF]: eBasicBlockType.FALL,
 		[OP_JF]: eBasicBlockType.TWO_WAY
 	},
 	[eGame.GTASA]: {
 		[OP_JMP]: eBasicBlockType.ONE_WAY,
+		[OP_IF]: eBasicBlockType.FALL,
 		[OP_JF]: eBasicBlockType.TWO_WAY
 	}
 };
@@ -197,7 +201,14 @@ export default class CFG {
 
 			isThisFollowBranchInstruction = false;
 
-			if (!this.getBranchType(instruction)) {
+			const branchType = this.getBranchType(instruction);
+			if (!branchType) {
+				continue;
+			}
+
+			if (branchType === eBasicBlockType.FALL) {
+				offsets.push(offset);
+				isThisFollowBranchInstruction = true;
 				continue;
 			}
 
@@ -246,13 +257,10 @@ export default class CFG {
 
 	// split self-loop blocks on two blocks to provide better analyze of the CFG
 	private patchSelfLoops(graph: Graph<IBasicBlock>): Graph<IBasicBlock> {
-		const selfLoopNodes = graph.nodes.reduce((memo, node) => {
+		const selfLoopNodes = graph.nodes.filter((node) => {
 			const successors = graph.getImmSuccessors(node);
-			if (successors.includes(node)) {
-				memo.push(node);
-			}
-			return memo;
-		}, []);
+			return successors.includes(node);
+		});
 
 		if (!selfLoopNodes.length) return graph;
 		const newGraph = graphUtils.from(graph);

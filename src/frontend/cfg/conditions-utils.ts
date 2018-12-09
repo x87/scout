@@ -26,20 +26,25 @@ export function structure<Node>(graph: Graph<GraphNode<Node>>): Graph<GraphNode<
 	if (twoWayNodes.length === 0) return graph;
 
 	let res = graphUtils.from(graph);
-	const findFollowNode = (header: Node): Node | undefined => {
+	const findFollowNode = (header: Node): GraphNode<Node> | undefined => {
 
-		const idom = graphUtils.findIDom(res);
-		const candidates = _.reduce(idom, (memo, dom, index) => {
-			if (dom === header) {
-				const candidate = res.nodes[index];
-				const pred = res.getImmPredecessors(candidate);
-				if (pred.length >= 2) {
-					memo.push(candidate);
-				}
-			}
-			return memo;
-		}, []);
-		return _.last(candidates);
+		// const idom = graphUtils.findIDom(res);
+		// const candidates = _.reduce(idom, (memo, dom, index) => {
+		// 	if (dom === header) {
+		// 		const candidate = res.nodes[index];
+		// 		const pred = res.getImmPredecessors(candidate);
+		// 		if (pred.length >= 2) {
+		// 			memo.push(candidate);
+		// 		}
+		// 	}
+		// 	return memo;
+		// }, []);
+		// return _.last(candidates);
+
+		const pdom = graphUtils.findIPDom(res);
+
+		const index = graph.getNodeIndex(header);
+		return pdom[index] as any;
 	};
 	const replaceIf = (header: Node, followNode: GraphNode<Node>): void => {
 
