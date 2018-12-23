@@ -1,6 +1,6 @@
 import Graph from '../graph';
 import * as graphUtils from '../graph-utils';
-import { complexGraph } from './graph.sample';
+import { complexGraph, endlessLoop } from './graph.sample';
 import { IBasicBlock } from 'common/interfaces';
 import { eBasicBlockType } from 'common/enums';
 
@@ -123,6 +123,47 @@ describe('Graph utils', () => {
 		expect(idom[1]).toBe(rpoGraph.nodes[0] as IBasicBlock);
 		expect(idom[4]).toBe(rpoGraph.nodes[0] as IBasicBlock);
 		expect(idom[5]).toBe(rpoGraph.nodes[4] as IBasicBlock);
+	});
+
+	it('should produce the post-dominator matrix for a given graph', () => {
+		const rpoGraph = graphUtils.reversePostOrder(complexGraph());
+		const pdom = graphUtils.findPDom(rpoGraph);
+
+		expect(pdom).toBeArrayOfSize(rpoGraph.nodes.length);
+
+		expect(pdom[0]).toEqual([
+			rpoGraph.nodes[0], // B1
+			rpoGraph.nodes[4], // B5
+			rpoGraph.nodes[5], // B6
+			rpoGraph.nodes[10], // B7
+			rpoGraph.nodes[13], // B10
+			rpoGraph.nodes[14] // B11
+		]);
+		expect(pdom[14]).toEqual([rpoGraph.nodes[14]]); // B11
+
+		const pd = graphUtils.findPDom(endlessLoop());
+
+		expect(pd).toEqual([
+			[1, 2, 4, 5],
+			[2, 4, 5],
+			[3, 4, 5],
+			[4, 5],
+			[5]
+		]);
+
+	});
+
+	it('should transpose a given graph', () => {
+		const transposed = graphUtils.transpose(endlessLoop());
+		expect(transposed.nodes).toEqual([5, 4, 3, 2, 1]);
+		expect(transposed.edges).toEqual([
+			{from: 1, to: 5},
+			{from: 5, to: 4},
+			{from: 4, to: 3},
+			{from: 3, to: 2},
+			{from: 4, to: 2},
+			{from: 2, to: 1}
+		]);
 	});
 
 });

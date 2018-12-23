@@ -55,12 +55,6 @@ describe(Graph.name, () => {
 		expect(graph.getNodeIndex(b)).toEqual(1);
 	});
 
-	it('has findCommonSuccessor method', () => {
-		graph.addEdge(a, c);
-		graph.addEdge(b, c);
-		expect(graph.findCommonSuccessor(a, b)).toEqual(c);
-	});
-
 	it('has property latchingNodes', () => {
 		const i = new Graph();
 		i.addNode(a, b, c);

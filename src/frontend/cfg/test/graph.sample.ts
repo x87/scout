@@ -38,3 +38,22 @@ export function complexGraph(): Graph<IBasicBlock> {
 
 	return graph;
 }
+
+export function endlessLoop(): Graph<number> {
+	const graph = new Graph<number>();
+	const n1 = 1;
+	const n2 = 2;
+	const n3 = 3;
+	const n4 = 4;
+	const n5 = 5;
+
+	graph.addNode(n1, n2, n3, n4, n5);
+	graph.addEdge(n1, n2);
+	graph.addEdge(n2, n3);
+	graph.addEdge(n2, n4);
+	graph.addEdge(n3, n4);
+	graph.addEdge(n4, n5);
+	graph.addEdge(n5, n1);
+
+	return graph;
+}
