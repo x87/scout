@@ -2,6 +2,9 @@ import * as _ from 'lodash';
 import * as graphUtils from './graph-utils';
 import Graph, { GraphNode } from './graph';
 import { eIfType } from 'common/enums';
+import Log from '../../utils/log';
+import AppError from '../../common/errors';
+import { LoopGraph } from './loop-utils';
 
 export class IfGraph<Node> extends Graph<Node> {
 	thenNode: Graph<Node>;
@@ -18,7 +21,7 @@ export function getIfType<Node>(graph: Graph<Node>, ifHeader: Node, followNode: 
 
 export function structure<Node>(graph: Graph<GraphNode<Node>>): Graph<GraphNode<Node>> {
 	const twoWayNodes = graph.nodes.filter((node) => {
-		if (node instanceof IfGraph) return false;
+		if (node instanceof IfGraph || node instanceof LoopGraph) return false;
 		const successors = graph.getImmSuccessors(node);
 		return successors.length === 2;
 	}) as Node[];
@@ -26,25 +29,34 @@ export function structure<Node>(graph: Graph<GraphNode<Node>>): Graph<GraphNode<
 	if (twoWayNodes.length === 0) return graph;
 
 	let res = graphUtils.from(graph);
-	const findFollowNode = (header: Node): GraphNode<Node> | undefined => {
-
-		// const idom = graphUtils.findIDom(res);
-		// const candidates = _.reduce(idom, (memo, dom, index) => {
-		// 	if (dom === header) {
-		// 		const candidate = res.nodes[index];
-		// 		const pred = res.getImmPredecessors(candidate);
-		// 		if (pred.length >= 2) {
-		// 			memo.push(candidate);
-		// 		}
-		// 	}
-		// 	return memo;
-		// }, []);
-		// return _.last(candidates);
-
+	const findFollowNode = (header: Node): GraphNode<Node> => {
 		const pdom = graphUtils.findIPDom(res);
+		const index = res.getNodeIndex(header);
 
-		const index = graph.getNodeIndex(header);
-		return pdom[index] as any;
+		if (pdom[index]) return pdom[index];
+
+		/*
+			once we reach this point we must have found a IF..THEN construct
+			and the flow graph has an exit node in its THEN clause
+
+			if (cond) {
+				exit
+			}
+
+			the follow node must be determined as the target of the JF instruction
+
+			IF..THEN..ELSE.. construct could not be there as
+			the compiler must put a JMP instruction between THEN and ELSE clauses
+			meaning the flow won't interrupt here
+
+			it could be possible a follow node is not found
+			when IF is the last instruction of a script
+			but this is a malformed script and not covered by the decompiler yet
+
+		*/
+
+		const succ = res.getImmSuccessors(header);
+		return succ[0];
 	};
 	const replaceIf = (header: Node, followNode: GraphNode<Node>): void => {
 
@@ -84,19 +96,13 @@ export function structure<Node>(graph: Graph<GraphNode<Node>>): Graph<GraphNode<
 		res = graphUtils.replaceNodes(res, header, followNode, ifGraph, { rightEdge: false });
 
 	};
-	const unresolved = [];
 
-	_.eachRight(twoWayNodes, ifHeader => {
-		const followNode = findFollowNode(ifHeader);
-
-		if (!followNode) {
-			unresolved.push(ifHeader);
-		} else {
-			unresolved.forEach(unresHeader => replaceIf(unresHeader, followNode));
-			replaceIf(ifHeader, followNode);
-			return false;
-		}
-	});
+	const head = _.last(twoWayNodes);
+	const tail = findFollowNode(head);
+	if (!tail) {
+		throw Log.error(AppError.NODE_NOT_FOUND);
+	}
+	replaceIf(head, tail);
 
 	return twoWayNodes.length > 1 ? structure(res) : res;
 }

@@ -1,6 +1,4 @@
 import * as _ from 'lodash';
-import * as utils from 'utils';
-import * as graphUtils from './graph-utils';
 
 interface IEdge<T> {
 	from: T;
@@ -50,28 +48,15 @@ export default class Graph<T> {
 		return _.findIndex(this.nodes, n => n === node );
 	}
 
-	findCommonSuccessor(a: GraphNode<T>, b: GraphNode<T>): GraphNode<T> | undefined {
-		const intersection = utils.getArrayIntersection(this.getImmSuccessors(a), this.getImmSuccessors(b));
-		return _.head(intersection);
-	}
-
 	get hasLoop(): boolean {
 		return this.latchingNodes.length > 0;
 	}
 
 	get root(): GraphNode<T> {
+		// todo: think of a definition of the root node
+		// given graph G(N), root(G) = n in N && getImmPredecessors(n) = []
+		// or given graph G(N), root(G) = n in N && n.offset = 0
 		return this.nodes[0];
-	}
-
-	get rootNode(): T {
-		if (!graphUtils.isGraph(this.root)) {
-			return this.root;
-		}
-		let graph = this.root;
-		while (graphUtils.isGraph(graph.root)) {
-			graph = graph.root;
-		}
-		return graph.root;
 	}
 
 	get latchingNodes(): Array<GraphNode<T>> {

@@ -64,10 +64,6 @@ export function split<Node>(graph: Graph<Node>): Array<Graph<Node>> {
 	return intervals;
 }
 
-export function isGraph<T>(node: GraphNode<T>): node is Graph<T> {
-	return node instanceof Graph;
-}
-
 export function reversePostOrder<Node>(graph: Graph<Node>): Graph<Node> {
 	const res = new Graph<Node>();
 	const visited: boolean[] = [];
@@ -116,7 +112,7 @@ export function replaceNodes<Node>(
 	const endIndex = res.getNodeIndex(endNode);
 
 	if (startIndex === -1 || endIndex === -1) {
-		throw Log.error(AppError.NO_REPLACE_NODE);
+		throw Log.error(AppError.NODE_NOT_FOUND);
 	}
 	const count = endIndex - startIndex + (options.rightEdge ? 1 : 0);
 	const removed = res.nodes.splice(startIndex, count, newGraphNode);
@@ -141,6 +137,7 @@ export function findDom<Node>(graph: Graph<Node>): Array<Array<GraphNode<Node>>>
 	});
 
 	let isDirty = true;
+	// todo: do {...} while (isDirty)
 	while (isDirty) {
 		isDirty = false;
 		_.each(graph.nodes, (node, index) => {
@@ -152,9 +149,9 @@ export function findDom<Node>(graph: Graph<Node>): Array<Array<GraphNode<Node>>>
 					const i = graph.getNodeIndex(p);
 					return dom[i];
 				}))];
-			isDirty = !_.isEqual(newDom, dom[index]);
+
+			isDirty = isDirty || !_.isEqual(newDom, dom[index]);
 			dom[index] = newDom;
-			if (isDirty) return false;
 		});
 	}
 	return dom;
@@ -183,33 +180,9 @@ export function findIDom<Node>(graph: Graph<Node>): Array<GraphNode<Node> | unde
 	});
 }
 
-// todo: refactor following functions (duplicates of above)
-
 export function findPDom<Node>(graph: Graph<Node>): Array<Array<GraphNode<Node>>> {
-	const dom = graph.nodes.map(node => {
-		return node === graph.root
-			? [graph.root]
-			: graph.nodes;
-	});
-
-	let isDirty = true;
-	while (isDirty) {
-		isDirty = false;
-		_.each(graph.nodes, (node, index) => {
-			if (node === graph.root) return;
-			const pred = graph.getImmSuccessors(node);
-			const newDom = [
-				node,
-				..._.intersection<GraphNode<Node>>(...pred.map(p => {
-					const i = graph.getNodeIndex(p);
-					return dom[i];
-				}))];
-			isDirty = !_.isEqual(newDom, dom[index]);
-			dom[index] = newDom;
-			if (isDirty) return false;
-		});
-	}
-	return dom;
+	const transposed = transpose(graph);
+	return findDom(transposed).reverse();
 }
 
 export function findSPDom<Node>(graph: Graph<Node>): Array<Array<GraphNode<Node>>> {
@@ -233,4 +206,32 @@ export function findIPDom<Node>(graph: Graph<Node>): Array<GraphNode<Node> | und
 			return _.every(otherDominators, d => dominates(d, dominator));
 		});
 	});
+}
+
+// todo: duplicate of reversePostOrder function
+// todo: implement a common traverse method on graph level
+// todo: caching? _.memoize?
+export function transpose<Node>(graph: Graph<Node>): Graph<Node> {
+
+	const res = new Graph<Node>();
+	const visited: boolean[] = [];
+	const traverse = (node: GraphNode<Node>): void => {
+		const index = graph.getNodeIndex(node);
+		visited[index] = true;
+
+		const successors = graph.getImmSuccessors(node);
+		successors.forEach(bb => {
+			const nextIndex = graph.getNodeIndex(bb);
+			if (!visited[nextIndex]) {
+				traverse(bb);
+			}
+			// res.addEdge(node, bb);
+			res.addEdge(bb, node);
+		});
+		res.addNode(node);
+	};
+
+	traverse(graph.root);
+	// res.nodes = res.nodes.reverse();
+	return res;
 }
