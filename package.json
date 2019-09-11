@@ -5,35 +5,36 @@
   "main": "scout.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/x87/scout.js"
+    "url": "https://github.com/x87/scout.git"
   },
   "scripts": {
     "lint": "tslint -c tslint.json src/**/*.ts",
     "build": "webpack",
     "dev": "webpack --watch",
-    "test": "node run-tests IS_TEST=true"
+    "test": "jest"
   },
   "keywords": [],
   "author": "Seemann",
   "license": "MIT",
   "devDependencies": {
-    "@types/jasmine": "2.8.8",
-    "@types/lodash": "4.14.110",
-    "@types/node": "10.5.1",
-    "awesome-typescript-loader": "5.2.0",
-    "jasmine": "3.1.0",
-    "jasmine-expect": "3.8.3",
-    "ts-node": "6.2.0",
-    "tsconfig-paths": "3.4.2",
-    "tslint": "5.10.0",
-    "tslint-loader": "3.6.0",
-    "typescript": "2.9.2",
-    "webpack": "4.14.0",
-    "webpack-cli": "3.0.8"
+    "@types/jest": "24.0.18",
+    "@types/lodash": "4.14.141",
+    "@types/node": "11.13.0",
+    "awesome-typescript-loader": "5.2.1",
+    "jest": "24.9.0",
+    "jest-extended": "0.11.2",
+    "ts-jest": "24.1.0",
+    "ts-node": "8.4.1",
+    "tsconfig-paths": "3.9.0",
+    "tslint": "5.20.0",
+    "tslint-loader": "3.5.4",
+    "typescript": "3.6.3",
+    "webpack": "4.41.0",
+    "webpack-cli": "3.3.9"
   },
   "dependencies": {
-    "commander": "2.16.0",
+    "commander": "3.0.2",
     "eol": "0.9.1",
-    "lodash": "4.17.10"
+    "lodash": "4.17.15"
   }
 }

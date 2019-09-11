@@ -9,49 +9,59 @@ const bufToLines = buf => eol.split(buf.toString());
 const opcodeNames = {};
 const opcodeNumParams = {};
 
-new Promise(function (resolve) {
-    fs.readFile(path.join(__dirname, 'opcodes.txt'), function (err, buf) {
-        resolve(bufToLines(buf)
+new Promise(function(resolve) {
+  fs.readFile(path.join(__dirname, 'opcodes.txt'), function(err, buf) {
+    resolve(
+      bufToLines(buf)
+        .filter(line => line)
+        .forEach(line => {
+          line = line.trim();
+          if (line.charAt(0) === ';') return;
+          let parts = line.split('=');
+          opcodeNames[parts[0].toUpperCase()] = parts[1];
+        })
+    );
+  });
+})
+  .then(function() {
+    return new Promise(function(resolve) {
+      fs.readFile(path.join(__dirname, inputFile), function(err, buf) {
+        resolve(
+          bufToLines(buf)
             .filter(line => line)
             .forEach(line => {
-                line = line.trim();
-                if (line.charAt(0) === ';') return;
-                let parts = line.split('=');
-                opcodeNames[parts[0].toUpperCase()] = parts[1];
-            }));
+              let data = line.split(',');
+              let parts = data[0].split('=');
+              let opcode = parts[0].toUpperCase();
+              opcodeNumParams[opcode] = parts[1];
+            })
+        );
+      });
     });
-}).then(function () {
-    return new Promise(function (resolve) {
-        fs.readFile(path.join(__dirname, inputFile), function (err, buf) {
-            resolve(bufToLines(buf)
-                .filter(line => line)
-                .forEach(line=> {
-                    let data = line.split(',');
-                    let parts = data[0].split('=');
-                    let opcode = parts[0].toUpperCase();
-                    opcodeNumParams[opcode] = parts[1];
-                }));
-        });
-    });
-}).then(function () {
+  })
+  .then(function() {
     let result = [];
     for (let opcode in opcodeNames) {
-        if (opcodeNames.hasOwnProperty(opcode)) {
-            try {
-                let np = parseInt(opcodeNumParams[opcode], 10) || 0;
-                result[result.length] = {
-                    id: opcode,
-                    name: opcodeNames[opcode] || 'NOP',
-                    params: np === -1 ? [{ type: 'arguments'}] : new Array(np).fill({
-                        type: 'any'
-                    })
-                };
-            } catch (e) {
-                console.log(e);
-            }
+      if (opcodeNames.hasOwnProperty(opcode)) {
+        try {
+          let np = parseInt(opcodeNumParams[opcode], 10) || 0;
+          result[result.length] = {
+            id: opcode,
+            name: opcodeNames[opcode] || 'NOP',
+            params:
+              np === -1
+                ? [{ type: 'arguments' }]
+                : new Array(np).fill({
+                    type: 'any'
+                  })
+          };
+        } catch (e) {
+          console.log(e);
         }
+      }
     }
     return result;
-}).then(function (result) {
+  })
+  .then(function(result) {
     console.log(JSON.stringify(result, undefined, 4));
-});
+  });
