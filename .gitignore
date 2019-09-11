@@ -1,7 +1,9 @@
 !.gitignore
 .idea
+.vscode
 node_modules
 build
+jest-cache
 
 *.log
 *.scm

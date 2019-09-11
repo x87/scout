@@ -2,16 +2,16 @@ import * as utils from './utils';
 import * as file from './utils/file';
 import * as loopUtils from './frontend/cfg/loop-utils';
 import * as conditionUtils from './frontend/cfg/conditions-utils';
-import Log from 'utils/log';
-import Arguments from 'common/arguments';
-import AppError from 'common/errors';
+import Log from './utils/log';
+import Arguments from './common/arguments';
+import AppError from './common/errors';
 
-import Loader from 'frontend/loader';
+import Loader from './frontend/loader';
 import Parser from './frontend/parser';
-import CFG from 'frontend/cfg';
+import CFG from './frontend/cfg';
 
 import { DefinitionMap, IBasicBlock } from './common/interfaces';
-import { IInstructionDefinition } from 'common/instructions';
+import { IInstructionDefinition } from './common/instructions';
 import { LoopGraph } from './frontend/cfg/loop-utils';
 import Graph, { GraphNode } from './frontend/cfg/graph';
 import { eLoopType } from './common/enums';
@@ -19,99 +19,108 @@ import { IfGraph } from './frontend/cfg/conditions-utils';
 import ExpressionPrinter from './utils/printer/ExpressionPrinter';
 
 interface IDefinition extends IInstructionDefinition {
-	id: string;
+  id: string;
 }
 
 async function getDefinitions(): Promise<DefinitionMap> {
-	try {
-		const definitions = await file.loadJson<IDefinition[]>(Arguments.definitionFile);
-		const map: DefinitionMap = new Map();
-		definitions.forEach(definition => {
-			const { name, params } = definition;
-			map.set(utils.hexToOpcode(definition.id), { name, params });
-		});
-		return map;
-	} catch {
-		throw Log.error(AppError.NO_OPCODE, Arguments.definitionFile);
-	}
+  try {
+    const definitions = await file.loadJson<IDefinition[]>(
+      Arguments.definitionFile
+    );
+    const map: DefinitionMap = new Map();
+    definitions.forEach(definition => {
+      const { name, params } = definition;
+      map.set(utils.hexToOpcode(definition.id), { name, params });
+    });
+    return map;
+  } catch {
+    throw Log.error(AppError.NO_OPCODE, Arguments.definitionFile);
+  }
 }
 
 export async function main(): Promise<void> {
-	const loader = new Loader();
-	const scriptFile = await loader.loadScript(Arguments.inputFile);
-	const definitionMap = await getDefinitions();
-	const parser = new Parser(definitionMap);
-	const scripts = await parser.parse(scriptFile);
+  const loader = new Loader();
+  const scriptFile = await loader.loadScript(Arguments.inputFile);
+  const definitionMap = await getDefinitions();
+  const parser = new Parser(definitionMap);
+  const scripts = await parser.parse(scriptFile);
 
-	if (Arguments.printAssembly === true) {
-		const printer = new ExpressionPrinter(definitionMap);
-		scripts.forEach(script => {
-			const cfg = new CFG();
-			const graphs = cfg.getCallGraphs(script);
-			graphs.forEach((graph, i) => {
-				if (Arguments.debugMode) {
-					printer.printLine(`--- Function ${i} Start----\n`);
-				}
-				for (const bb of graph.nodes) {
-					printer.print(bb as IBasicBlock, Arguments.debugMode);
-				}
-				if (Arguments.debugMode) {
-					printer.printLine(`--- Function ${i} End----`);
-				}
-			});
-		});
+  if (Arguments.printAssembly === true) {
+    const printer = new ExpressionPrinter(definitionMap);
+    scripts.forEach(script => {
+      const cfg = new CFG();
+      const graphs = cfg.getCallGraphs(script);
+      graphs.forEach((graph, i) => {
+        if (Arguments.debugMode) {
+          printer.printLine(`--- Function ${i} Start----\n`);
+        }
+        for (const bb of graph.nodes) {
+          printer.print(bb as IBasicBlock, Arguments.debugMode);
+        }
+        if (Arguments.debugMode) {
+          printer.printLine(`--- Function ${i} End----`);
+        }
+      });
+    });
 
-		if (Arguments.debugMode) {
-			scripts.forEach(script => {
-				const cfg = new CFG();
-				const functions = cfg.getCallGraphs(script);
-				functions.forEach((func, i) => {
-					if (Arguments.debugMode) {
-						printer.printLine('\n');
-						printer.printLine(`function () {`);
-						printer.indent++;
-					}
-					const printGraph = (graph: Graph<GraphNode<IBasicBlock>>) => {
-						for (const bb of graph.nodes) {
-							if (bb instanceof LoopGraph) {
-								printer.printLine(`${printer.indentation}${bb.type === eLoopType.POST_TESTED ? 'repeat' : 'while'} {`);
-								printer.indent++;
-								printGraph(bb);
-								printer.indent--;
-								printer.printLine(`${printer.indentation}}${bb.type === eLoopType.POST_TESTED ? 'until' : ''}`);
-							} else if (bb instanceof IfGraph) {
-								printer.printLine(`${printer.indentation}if`);
-								printer.indent++;
-								printer.print(bb.nodes[0]);
-								printer.printLine(`${printer.indentation}then {`);
-								printer.indent++;
-								printGraph(bb.thenNode);
-								printer.indent--;
-								printer.printLine(`${printer.indentation}}`);
-								if (bb.elseNode) {
-									printer.printLine(`${printer.indentation}else {`);
-									printer.indent++;
-									printGraph(bb.elseNode);
-									printer.indent--;
-									printer.printLine(`${printer.indentation}}`);
-								}
-								printer.indent--;
-								printer.printLine(`${printer.indentation}}`);
-							} else {
-								printer.print(bb as IBasicBlock, Arguments.debugMode);
-							}
-						}
-					};
-					const loopGraph = loopUtils.structure(func);
-					const ifGraph = conditionUtils.structure(loopGraph);
-					printGraph(ifGraph);
-					if (Arguments.debugMode) {
-						printer.indent--;
-						printer.printLine(`}`);
-					}
-				});
-
-			});
-		}
-	}
+    if (Arguments.debugMode) {
+      scripts.forEach(script => {
+        const cfg = new CFG();
+        const functions = cfg.getCallGraphs(script);
+        functions.forEach((func, i) => {
+          if (Arguments.debugMode) {
+            printer.printLine('\n');
+            printer.printLine(`function () {`);
+            printer.indent++;
+          }
+          const printGraph = (graph: Graph<GraphNode<IBasicBlock>>) => {
+            for (const bb of graph.nodes) {
+              if (bb instanceof LoopGraph) {
+                printer.printLine(
+                  `${printer.indentation}${
+                    bb.type === eLoopType.POST_TESTED ? 'repeat' : 'while'
+                  } {`
+                );
+                printer.indent++;
+                printGraph(bb);
+                printer.indent--;
+                printer.printLine(
+                  `${printer.indentation}}${
+                    bb.type === eLoopType.POST_TESTED ? 'until' : ''
+                  }`
+                );
+              } else if (bb instanceof IfGraph) {
+                printer.printLine(`${printer.indentation}if`);
+                printer.indent++;
+                printer.print(bb.nodes[0]);
+                printer.printLine(`${printer.indentation}then {`);
+                printer.indent++;
+                printGraph(bb.thenNode);
+                printer.indent--;
+                printer.printLine(`${printer.indentation}}`);
+                if (bb.elseNode) {
+                  printer.printLine(`${printer.indentation}else {`);
+                  printer.indent++;
+                  printGraph(bb.elseNode);
+                  printer.indent--;
+                  printer.printLine(`${printer.indentation}}`);
+                }
+                printer.indent--;
+                printer.printLine(`${printer.indentation}}`);
+              } else {
+                printer.print(bb as IBasicBlock, Arguments.debugMode);
+              }
+            }
+          };
+          const loopGraph = loopUtils.structure(func);
+          const ifGraph = conditionUtils.structure(loopGraph);
+          printGraph(ifGraph);
+          if (Arguments.debugMode) {
+            printer.indent--;
+            printer.printLine(`}`);
+          }
+        });
+      });
+    }
+  }
 }

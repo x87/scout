@@ -2,14 +2,8 @@
   "extends": "tslint:recommended",
   "rules": {
     "object-literal-sort-keys": false,
-    "indent": [
-      true,
-      "tabs"
-    ],
-    "quotemark": [
-      true,
-      "single"
-    ],
+    "indent": [true, "spaces"],
+    "quotemark": [true, "single"],
     "whitespace": [
       true,
       "check-branch",
@@ -32,27 +26,15 @@
     ],
     "ordered-imports": false,
     "arrow-parens": false,
-    "member-access": [
-      true,
-      "no-public"
-    ],
-    "curly": [
-      true,
-      "ignore-same-line"
-    ],
+    "member-access": [true, "no-public"],
+    "curly": [true, "ignore-same-line"],
     "no-redundant-jsdoc": true,
     "no-bitwise": false,
     "no-console": false,
     "no-var-requires": false,
-    "typedef": [
-      true,
-      "parameter",
-      "call-signature"
-    ]
+    "typedef": [true, "parameter", "call-signature"]
   },
   "linterOptions": {
-    "exclude": [
-      "**/samples/*"
-    ]
+    "exclude": ["**/samples/*"]
   }
 }

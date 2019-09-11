@@ -2,13 +2,11 @@ import Graph from 'frontend/cfg/graph';
 import FunctionExpression from './expression/FunctionExpression';
 
 interface IAST {
-	functions: FunctionExpression[];
+  functions: FunctionExpression[];
 }
 
 export default class AST {
-	program: IAST;
+  program: IAST;
 
-	constructor(private programGraph: Graph<any>) {
-
-	}
+  constructor(private programGraph: Graph<any>) {}
 }
