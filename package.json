@@ -17,23 +17,22 @@
   "author": "Seemann",
   "license": "MIT",
   "devDependencies": {
-    "@types/jest": "24.0.18",
-    "@types/lodash": "4.14.141",
-    "@types/node": "11.13.0",
-    "awesome-typescript-loader": "5.2.1",
-    "jest": "24.9.0",
-    "jest-extended": "0.11.2",
-    "ts-jest": "24.1.0",
-    "ts-node": "8.4.1",
-    "tsconfig-paths": "3.9.0",
-    "tslint": "5.20.0",
+    "@types/jest": "25.2.3",
+    "@types/lodash": "4.14.152",
+    "@types/node": "14.0.5",
+    "jest": "26.0.1",
+    "jest-extended": "0.11.5",
+    "ts-jest": "26.0.0",
+    "ts-loader": "7.0.4",
+    "ts-node": "8.10.1",
+    "tslint": "6.1.2",
     "tslint-loader": "3.5.4",
-    "typescript": "3.6.3",
-    "webpack": "4.41.0",
-    "webpack-cli": "3.3.9"
+    "typescript": "3.9.3",
+    "webpack": "4.43.0",
+    "webpack-cli": "3.3.11"
   },
   "dependencies": {
-    "commander": "3.0.2",
+    "commander": "5.1.0",
     "eol": "0.9.1",
     "lodash": "4.17.15"
   }

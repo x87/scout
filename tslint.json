@@ -1,6 +1,7 @@
 {
   "extends": "tslint:recommended",
   "rules": {
+    "array-type": [true, "array-simple"],
     "object-literal-sort-keys": false,
     "indent": [true, "spaces"],
     "quotemark": [true, "single"],

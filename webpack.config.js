@@ -1,23 +1,22 @@
-const CheckerPlugin = require('awesome-typescript-loader').CheckerPlugin;
 const path = require('path');
 
 module.exports = {
   entry: './src/index.ts',
   output: {
     path: path.resolve(__dirname, 'build'),
-    filename: 'scout.js'
+    filename: 'scout.js',
   },
   target: 'node',
   resolve: {
     extensions: ['.ts', '.js'],
-    modules: ['node_modules', path.resolve(__dirname, './src')]
+    modules: ['node_modules', path.resolve(__dirname, './src')],
   },
   mode: 'none',
   module: {
     rules: [
       {
         test: /\.ts$/,
-        loader: 'awesome-typescript-loader'
+        loader: 'ts-loader',
       },
       {
         test: /\.ts$/,
@@ -26,10 +25,9 @@ module.exports = {
         exclude: /node_modules/,
         options: {
           configFile: 'tslint.json',
-          emitErrors: true
-        }
-      }
-    ]
+          emitErrors: true,
+        },
+      },
+    ],
   },
-  plugins: [new CheckerPlugin()]
 };
