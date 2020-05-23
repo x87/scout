@@ -21,8 +21,10 @@
     "trailing-comma": [
       true,
       {
-        "multiline": "never",
-        "singleline": "never"
+        "objects": "always",
+        "arrays": "always",
+        "functions": "never",
+        "typeLiterals": "ignore"
       }
     ],
     "ordered-imports": false,
