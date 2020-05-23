@@ -10,7 +10,7 @@ import {
   IInstruction,
   IInstructionParam,
   IInstructionParamArray,
-  InstructionMap
+  InstructionMap,
 } from 'common/instructions';
 
 export const PARAM_ANY = 'any';
@@ -47,7 +47,7 @@ export default class Parser {
       [eParamType.GARRSTR8]: () => this.getArray(),
       [eParamType.LARRSTR8]: () => this.getArray(),
       [eParamType.GARRSTR16]: () => this.getArray(),
-      [eParamType.LARRSTR16]: () => this.getArray()
+      [eParamType.LARRSTR16]: () => this.getArray(),
     };
 
     this.paramTypesHandlers = [...Array(256)].map((v, i) => {
@@ -137,7 +137,7 @@ export default class Parser {
   parse(scriptFile: ScriptFile): IScript[] {
     const main: IScript = {
       instructionMap: this.getInstructions(scriptFile),
-      type: scriptFile.type
+      type: scriptFile.type,
     };
     const scripts = [];
     if (scriptFile instanceof ScriptMultifile) {
@@ -170,9 +170,9 @@ export default class Parser {
 
         return {
           value: self.getInstruction(),
-          done: false
+          done: false,
         };
-      }
+      },
     };
   }
 
@@ -280,7 +280,7 @@ export default class Parser {
       offset: this.nextUInt16(),
       varIndex: this.nextUInt16(),
       size: this.nextUInt8(),
-      props: this.nextUInt8()
+      props: this.nextUInt8(),
     };
   }
 
@@ -290,7 +290,7 @@ export default class Parser {
     return {
       opcode,
       offset,
-      params: this.getInstructionParams(opcode)
+      params: this.getInstructionParams(opcode),
     };
   }
 
@@ -307,22 +307,21 @@ export default class Parser {
       throw Log.error(AppError.NO_PARAM, definition, this.offset);
     }
 
-    definition.params.forEach(opcodeParam => {
-      if (opcodeParam.type === PARAM_ARGUMENTS) {
-        let argType = this.getParamType();
+    definition.params.forEach((opcodeParam) => {
+      while (true) {
+        const paramType = this.getParamType();
 
-        while (argType !== eParamType.EOL) {
-          params[params.length] = this.getParam(argType);
-          argType = this.getParamType();
+        if (paramType === eParamType.EOL) {
+          if (opcodeParam.type !== PARAM_ARGUMENTS) {
+            throw Log.error(AppError.UNKNOWN_PARAM, paramType, this.offset);
+          }
+          return params;
         }
-        return params;
+        params.push(this.getParam(paramType));
+        if (opcodeParam.type !== PARAM_ARGUMENTS) {
+          break;
+        }
       }
-
-      const paramType = this.getParamType();
-      if (paramType === eParamType.EOL) {
-        throw Log.error(AppError.UNKNOWN_PARAM, paramType, this.offset);
-      }
-      params[params.length] = this.getParam(paramType);
     });
 
     return params;
@@ -331,7 +330,7 @@ export default class Parser {
   private getParam(paramType: eParamType): IInstructionParam {
     return {
       type: paramType,
-      value: this.paramValuesHandlers[paramType]()
+      value: this.paramValuesHandlers[paramType](),
     };
   }
 }

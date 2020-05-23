@@ -5,16 +5,16 @@ const eol = require('eol');
 const args = process.argv.slice(2);
 const inputFile = args[0] || 'gta3.ini';
 
-const bufToLines = buf => eol.split(buf.toString());
+const bufToLines = (buf) => eol.split(buf.toString());
 const opcodeNames = {};
 const opcodeNumParams = {};
 
-new Promise(function(resolve) {
-  fs.readFile(path.join(__dirname, 'opcodes.txt'), function(err, buf) {
+new Promise(function (resolve) {
+  fs.readFile(path.join(__dirname, 'opcodes.txt'), function (err, buf) {
     resolve(
       bufToLines(buf)
-        .filter(line => line)
-        .forEach(line => {
+        .filter((line) => line)
+        .forEach((line) => {
           line = line.trim();
           if (line.charAt(0) === ';') return;
           let parts = line.split('=');
@@ -23,13 +23,13 @@ new Promise(function(resolve) {
     );
   });
 })
-  .then(function() {
-    return new Promise(function(resolve) {
-      fs.readFile(path.join(__dirname, inputFile), function(err, buf) {
+  .then(function () {
+    return new Promise(function (resolve) {
+      fs.readFile(path.join(__dirname, inputFile), function (err, buf) {
         resolve(
           bufToLines(buf)
-            .filter(line => line)
-            .forEach(line => {
+            .filter((line) => line)
+            .forEach((line) => {
               let data = line.split(',');
               let parts = data[0].split('=');
               let opcode = parts[0].toUpperCase();
@@ -39,22 +39,22 @@ new Promise(function(resolve) {
       });
     });
   })
-  .then(function() {
+  .then(function () {
     let result = [];
     for (let opcode in opcodeNames) {
       if (opcodeNames.hasOwnProperty(opcode)) {
         try {
           let np = parseInt(opcodeNumParams[opcode], 10) || 0;
-          result[result.length] = {
+          result.push({
             id: opcode,
             name: opcodeNames[opcode] || 'NOP',
             params:
               np === -1
-                ? [{ type: 'arguments' }]
+                ? [{ type: 'any' }, { type: 'arguments' }] // temp fix, should read actual number of parameters
                 : new Array(np).fill({
-                    type: 'any'
-                  })
-          };
+                    type: 'any',
+                  }),
+          });
         } catch (e) {
           console.log(e);
         }
@@ -62,6 +62,6 @@ new Promise(function(resolve) {
     }
     return result;
   })
-  .then(function(result) {
+  .then(function (result) {
     console.log(JSON.stringify(result, undefined, 4));
   });
