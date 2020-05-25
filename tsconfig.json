@@ -16,5 +16,5 @@
     "emitDecoratorMetadata": true,
     "outDir": "dist/tsc"
   },
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "build"]
 }
