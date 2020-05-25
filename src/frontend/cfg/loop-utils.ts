@@ -1,7 +1,8 @@
 import * as _ from 'lodash';
 import * as graphUtils from './graph-utils';
-import Graph from './graph';
+import Graph, { GraphNode } from './graph';
 import { eLoopType } from 'common/enums';
+import { structure as ifStructure } from './conditions-utils';
 
 export class LoopGraph<Node> extends Graph<Node> {
   type: eLoopType;
@@ -82,19 +83,31 @@ export function structure<Node>(graph: Graph<Node>): Graph<Node> {
 
   if (!reducibleInterval) return graph;
 
-  const latchingNode = reducibleInterval.latchingNodes[0];
+  // there could be multiple Continue statements referencing loop root
+  // therefore picking up the last node in the interval
+  const lastNode = _.last(reducibleInterval.latchingNodes);
   const loop = new LoopGraph<Node>();
-  loop.type = getLoopType(graph, loop, reducibleInterval.root, latchingNode);
+
+  // populating loop with inner nodes and
+  // replacing nodes in the original graph with a single node
+  // producing a new graph for the next iteration
+  const reduced = graphUtils.replaceNodes(
+    graph,
+    reducibleInterval.root,
+    lastNode,
+    loop
+  );
+
+  loop.type = getLoopType(graph, loop, reducibleInterval.root, lastNode);
   loop.followNode = findFollowNode<Node>(
     graph,
     loop,
     reducibleInterval.root as Node,
-    latchingNode as Node
+    lastNode as Node
   );
-  return structure(graphUtils.replaceNodes(
-    graph,
-    reducibleInterval.root,
-    latchingNode,
-    loop
-  ) as Graph<Node>);
+
+  const loopBody = ifStructure(loop);
+  loop.nodes = loopBody.nodes as Array<GraphNode<Node>>;
+
+  return structure(reduced);
 }

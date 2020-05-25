@@ -78,7 +78,7 @@ export function reversePostOrder<Node>(graph: Graph<Node>): Graph<Node> {
     visited[index] = true;
 
     const successors = graph.getImmSuccessors(node);
-    successors.forEach(bb => {
+    successors.forEach((bb) => {
       const nextIndex = graph.getNodeIndex(bb);
       if (!visited[nextIndex]) {
         traverse(bb);
@@ -122,7 +122,9 @@ export function replaceNodes<Node>(
   const count = endIndex - startIndex + (options.rightEdge ? 1 : 0);
   const removed = res.nodes.splice(startIndex, count, newGraphNode);
   newGraphNode.nodes = removed;
-  _.remove(res.edges, edge => {
+
+  // need to preserve edges for the further structuring, e.g condition in a loop
+  newGraphNode.edges = _.remove(res.edges, (edge) => {
     return removed.includes(edge.from) && removed.includes(edge.to);
   });
 
@@ -134,16 +136,18 @@ export function replaceNodes<Node>(
   return res;
 }
 
+/**
+ * find dominators for each node in the given graph
+ */
 export function findDom<Node>(
   graph: Graph<Node>
 ): Array<Array<GraphNode<Node>>> {
-  const dom = graph.nodes.map(node => {
+  const dom = graph.nodes.map((node) => {
     return node === graph.root ? [graph.root] : graph.nodes;
   });
 
-  let isDirty = true;
-  // todo: do {...} while (isDirty)
-  while (isDirty) {
+  let isDirty: boolean;
+  do {
     isDirty = false;
     _.each(graph.nodes, (node, index) => {
       if (node === graph.root) return;
@@ -151,20 +155,23 @@ export function findDom<Node>(
       const newDom = [
         node,
         ..._.intersection<GraphNode<Node>>(
-          ...pred.map(p => {
+          ...pred.map((p) => {
             const i = graph.getNodeIndex(p);
             return dom[i];
           })
-        )
+        ),
       ];
 
       isDirty = isDirty || !_.isEqual(newDom, dom[index]);
       dom[index] = newDom;
     });
-  }
+  } while (isDirty);
   return dom;
 }
 
+/**
+ * find strict dominators for each node in the given graph
+ */
 export function findSDom<Node>(
   graph: Graph<Node>
 ): Array<Array<GraphNode<Node>>> {
@@ -174,7 +181,9 @@ export function findSDom<Node>(
   }
   return sdom;
 }
-
+/**
+ * find immediate dominators for each node in the given graph
+ */
 export function findIDom<Node>(
   graph: Graph<Node>
 ): Array<GraphNode<Node> | undefined> {
@@ -184,14 +193,17 @@ export function findIDom<Node>(
     const indexB = graph.getNodeIndex(b);
     return sdom[indexB].includes(a);
   };
-  return sdom.map(dominators => {
-    return _.find(dominators, dominator => {
+  return sdom.map((dominators) => {
+    return _.find(dominators, (dominator) => {
       const otherDominators = _.without(dominators, dominator);
-      return _.every(otherDominators, d => dominates(d, dominator));
+      return _.every(otherDominators, (d) => dominates(d, dominator));
     });
   });
 }
 
+/**
+ * find post-dominators for each node in the given graph
+ */
 export function findPDom<Node>(
   graph: Graph<Node>
 ): Array<Array<GraphNode<Node>>> {
@@ -199,6 +211,9 @@ export function findPDom<Node>(
   return findDom(transposed).reverse();
 }
 
+/**
+ * find strict post-dominators for each node in the given graph
+ */
 export function findSPDom<Node>(
   graph: Graph<Node>
 ): Array<Array<GraphNode<Node>>> {
@@ -218,10 +233,10 @@ export function findIPDom<Node>(
     const indexB = graph.getNodeIndex(b);
     return sdom[indexB].includes(a);
   };
-  return sdom.map(dominators => {
-    return _.find(dominators, dominator => {
+  return sdom.map((dominators) => {
+    return _.find(dominators, (dominator) => {
       const otherDominators = _.without(dominators, dominator);
-      return _.every(otherDominators, d => dominates(d, dominator));
+      return _.every(otherDominators, (d) => dominates(d, dominator));
     });
   });
 }
@@ -237,7 +252,7 @@ export function transpose<Node>(graph: Graph<Node>): Graph<Node> {
     visited[index] = true;
 
     const successors = graph.getImmSuccessors(node);
-    successors.forEach(bb => {
+    successors.forEach((bb) => {
       const nextIndex = graph.getNodeIndex(bb);
       if (!visited[nextIndex]) {
         traverse(bb);
