@@ -94,12 +94,12 @@ describe('Graph utils', () => {
     const dom = graphUtils.findDom(rpoGraph);
     expect(dom).toBeArrayOfSize(rpoGraph.nodes.length);
     expect(dom[0]).toBeArrayOfSize(1);
-    expect(dom[0]).toEqual([rpoGraph.root] as IBasicBlock[]);
+    expect(dom[0]).toEqual([rpoGraph.root] as number[]);
     expect(dom[1]).toBeArrayOfSize(2);
-    expect(dom[1]).toContain(rpoGraph.nodes[0] as IBasicBlock);
-    expect(dom[1]).toContain(rpoGraph.nodes[1] as IBasicBlock);
+    expect(dom[1]).toContain(rpoGraph.nodes[0] as number);
+    expect(dom[1]).toContain(rpoGraph.nodes[1] as number);
     expect(dom[14]).toBeArrayOfSize(6);
-    expect(dom[14]).toContain(rpoGraph.nodes[14] as IBasicBlock);
+    expect(dom[14]).toContain(rpoGraph.nodes[14] as number);
   });
 
   it(`findSDom shall return an array of arrays of nodes that
@@ -109,9 +109,9 @@ describe('Graph utils', () => {
     expect(sdom).toBeArrayOfSize(rpoGraph.nodes.length);
     expect(sdom[0]).toBeArrayOfSize(0);
     expect(sdom[1]).toBeArrayOfSize(1);
-    expect(sdom[1]).toContain(rpoGraph.nodes[0] as IBasicBlock);
+    expect(sdom[1]).toContain(rpoGraph.nodes[0] as number);
     expect(sdom[14]).toBeArrayOfSize(5);
-    expect(sdom[14]).not.toContain(rpoGraph.nodes[14] as IBasicBlock);
+    expect(sdom[14]).not.toContain(rpoGraph.nodes[14] as number);
   });
 
   it(`findIDom shall return an array of nodes that
@@ -120,9 +120,9 @@ describe('Graph utils', () => {
     const idom = graphUtils.findIDom(rpoGraph);
     expect(idom).toBeArrayOfSize(rpoGraph.nodes.length);
     expect(idom[0]).toBeUndefined();
-    expect(idom[1]).toBe(rpoGraph.nodes[0] as IBasicBlock);
-    expect(idom[4]).toBe(rpoGraph.nodes[0] as IBasicBlock);
-    expect(idom[5]).toBe(rpoGraph.nodes[4] as IBasicBlock);
+    expect(idom[1]).toBe(rpoGraph.nodes[0] as number);
+    expect(idom[4]).toBe(rpoGraph.nodes[0] as number);
+    expect(idom[5]).toBe(rpoGraph.nodes[4] as number);
   });
 
   it('should produce the post-dominator matrix for a given graph', () => {
@@ -137,7 +137,7 @@ describe('Graph utils', () => {
       rpoGraph.nodes[5], // B6
       rpoGraph.nodes[10], // B7
       rpoGraph.nodes[13], // B10
-      rpoGraph.nodes[14] // B11
+      rpoGraph.nodes[14], // B11
     ]);
     expect(pdom[14]).toEqual([rpoGraph.nodes[14]]); // B11
 
@@ -155,7 +155,7 @@ describe('Graph utils', () => {
       { from: 4, to: 3 },
       { from: 3, to: 2 },
       { from: 4, to: 2 },
-      { from: 2, to: 1 }
+      { from: 2, to: 1 },
     ]);
   });
 });
