@@ -28,7 +28,7 @@ async function getDefinitions(): Promise<DefinitionMap> {
       Arguments.definitionFile
     );
     const map: DefinitionMap = new Map();
-    definitions.forEach(definition => {
+    definitions.forEach((definition) => {
       const { name, params } = definition;
       map.set(utils.hexToOpcode(definition.id), { name, params });
     });
@@ -47,7 +47,7 @@ export async function main(): Promise<void> {
 
   if (Arguments.printAssembly === true) {
     const printer = new ExpressionPrinter(definitionMap);
-    scripts.forEach(script => {
+    scripts.forEach((script) => {
       const cfg = new CFG();
       const graphs = cfg.getCallGraphs(script);
       graphs.forEach((graph, i) => {
@@ -64,7 +64,7 @@ export async function main(): Promise<void> {
     });
 
     if (Arguments.debugMode) {
-      scripts.forEach(script => {
+      scripts.forEach((script) => {
         const cfg = new CFG();
         const functions = cfg.getCallGraphs(script);
         functions.forEach((func, i) => {

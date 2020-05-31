@@ -1,4 +1,3 @@
-import * as _ from 'lodash';
 import Log from 'utils/log';
 
 import Arguments from 'common/arguments';
@@ -28,26 +27,25 @@ const branchOpcodesMap: any = {
     [OP_JMP]: eBasicBlockType.ONE_WAY,
     [OP_IF]: eBasicBlockType.FALL,
     [OP_JF]: eBasicBlockType.TWO_WAY,
-    [OP_JT]: eBasicBlockType.TWO_WAY
+    [OP_JT]: eBasicBlockType.TWO_WAY,
   },
   [eGame.GTAVC]: {
     [OP_JMP]: eBasicBlockType.ONE_WAY,
     [OP_IF]: eBasicBlockType.FALL,
-    [OP_JF]: eBasicBlockType.TWO_WAY
+    [OP_JF]: eBasicBlockType.TWO_WAY,
   },
   [eGame.GTASA]: {
     [OP_JMP]: eBasicBlockType.ONE_WAY,
     [OP_IF]: eBasicBlockType.FALL,
-    [OP_JF]: eBasicBlockType.TWO_WAY
-  }
+    [OP_JF]: eBasicBlockType.TWO_WAY,
+  },
 };
 
 export default class CFG {
   getCallGraphs(script: IScript): Array<Graph<IBasicBlock>> {
-    const entryOffset = script.instructionMap.keys().next().value;
+    const functions: number[] = [script.instructionMap.keys().next().value];
 
     // extract external calls from child scripts (for ScriptMultifile)
-    const functions: number[] = [];
     if (script.innerScripts) {
       for (const innerScript of script.innerScripts) {
         functions.push(...this.findGlobalFunctions(innerScript, script));
@@ -56,14 +54,10 @@ export default class CFG {
     } else {
       functions.push(...this.findLocalFunctions(script));
     }
-    const entries = _.chain<number>([])
-      .concat(entryOffset, functions)
-      .uniq()
-      .sortBy()
-      .value();
+    const entries = [...new Set(functions)].sort();
     const basicBlocks = this.findBasicBlocks(script, entries);
 
-    return entries.map(offset => {
+    return entries.map((offset) => {
       return this.buildGraph(basicBlocks, offset);
     });
   }
@@ -89,7 +83,7 @@ export default class CFG {
       const bb = basicBlocks[index];
       graph.addNode(bb);
 
-      const lastInstruction = _.last(bb.instructions);
+      const lastInstruction = bb.instructions[bb.instructions.length - 1];
 
       bb.type = this.getBasicBlockType(lastInstruction);
 
@@ -128,11 +122,9 @@ export default class CFG {
     let currentLeader = null;
     let instructions = [];
     const result: IBasicBlock[] = [];
-    const leaderOffsets = _.chain([])
-      .concat(entries, this.findLeaderOffsets(script))
-      .uniq()
-      .sortBy()
-      .value();
+    const leaderOffsets = [
+      ...new Set(entries.concat(this.findLeaderOffsets(script))),
+    ].sort();
 
     if (leaderOffsets.length) {
       for (const [offset, instruction] of script.instructionMap) {
@@ -250,7 +242,7 @@ export default class CFG {
     basicBlocks: IBasicBlock[],
     offset: number
   ): number | undefined {
-    return _.findIndex(basicBlocks, ['instructions[0].offset', offset]);
+    return basicBlocks.findIndex((bb) => bb.instructions[0].offset === offset);
   }
 
   private getBranchType(
@@ -270,9 +262,9 @@ export default class CFG {
     return eBasicBlockType.FALL;
   }
 
-  // split self-loop blocks on two blocks to provide better analyze of the CFG
+  // split self-loop blocks on two blocks to provide better analysis of the CFG
   private patchSelfLoops(graph: Graph<IBasicBlock>): Graph<IBasicBlock> {
-    const selfLoopNodes = graph.nodes.filter(node => {
+    const selfLoopNodes = graph.nodes.filter((node) => {
       const successors = graph.getImmSuccessors(node);
       return successors.includes(node);
     });
@@ -281,14 +273,14 @@ export default class CFG {
     const newGraph = graphUtils.from(graph);
     selfLoopNodes.forEach((node: IBasicBlock) => {
       const newNode = this.createBasicBlock(
-        _.drop(node.instructions),
+        node.instructions.slice(1),
         node.type
       );
       node.type = eBasicBlockType.FALL;
       node.instructions = [node.instructions[0]];
       const index = newGraph.getNodeIndex(node);
       newGraph.nodes.splice(index + 1, 0, newNode);
-      newGraph.edges.forEach(edge => {
+      newGraph.edges.forEach((edge) => {
         if (edge.from === node) edge.from = newNode;
       });
       newGraph.addEdge(node, newNode);

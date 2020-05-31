@@ -1,4 +1,3 @@
-import * as _ from 'lodash';
 import * as graphUtils from './graph-utils';
 import Graph, { GraphNode } from './graph';
 import { eLoopType } from 'common/enums';
@@ -79,13 +78,13 @@ export function findFollowNode<Node>(
 
 export function structure<Node>(graph: Graph<Node>): Graph<Node> {
   const intervals = graphUtils.split(graph);
-  const reducibleInterval = _.find(intervals, 'hasLoop');
+  const reducible = intervals.find((i) => i.hasLoop);
 
-  if (!reducibleInterval) return graph;
+  if (!reducible) return graph;
 
   // there could be multiple Continue statements referencing loop root
   // therefore picking up the last node in the interval
-  const lastNode = _.last(reducibleInterval.latchingNodes);
+  const lastNode = reducible.latchingNodes[reducible.latchingNodes.length - 1];
   const loop = new LoopGraph<Node>();
 
   // populating loop with inner nodes and
@@ -93,16 +92,16 @@ export function structure<Node>(graph: Graph<Node>): Graph<Node> {
   // producing a new graph for the next iteration
   const reduced = graphUtils.replaceNodes(
     graph,
-    reducibleInterval.root,
+    reducible.root,
     lastNode,
     loop
   );
 
-  loop.type = getLoopType(graph, loop, reducibleInterval.root, lastNode);
+  loop.type = getLoopType(graph, loop, reducible.root, lastNode);
   loop.followNode = findFollowNode<Node>(
     graph,
     loop,
-    reducibleInterval.root as Node,
+    reducible.root as Node,
     lastNode as Node
   );
 

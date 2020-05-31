@@ -1,5 +1,4 @@
 import * as utils from 'utils';
-import * as _ from 'lodash';
 import Log from 'utils/log';
 import Graph, { GraphNode } from './graph';
 import AppError from '../../common/errors';
@@ -124,7 +123,7 @@ export function replaceNodes<Node>(
   newGraphNode.nodes = removed;
 
   // need to preserve edges for the further structuring, e.g condition in a loop
-  newGraphNode.edges = _.remove(res.edges, (edge) => {
+  newGraphNode.edges = utils.removeFromArray(res.edges, (edge) => {
     return removed.includes(edge.from) && removed.includes(edge.to);
   });
 
@@ -149,20 +148,17 @@ export function findDom<Node>(
   let isDirty: boolean;
   do {
     isDirty = false;
-    _.each(graph.nodes, (node, index) => {
+    graph.nodes.forEach((node, index) => {
       if (node === graph.root) return;
       const pred = graph.getImmPredecessors(node);
       const newDom = [
         node,
-        ..._.intersection<GraphNode<Node>>(
-          ...pred.map((p) => {
-            const i = graph.getNodeIndex(p);
-            return dom[i];
-          })
+        ...utils.getArrayIntersection<GraphNode<Node>>(
+          ...pred.map((p) => dom[graph.getNodeIndex(p)])
         ),
       ];
 
-      isDirty = isDirty || !_.isEqual(newDom, dom[index]);
+      isDirty = isDirty || !utils.isEqual(newDom, dom[index]);
       dom[index] = newDom;
     });
   } while (isDirty);
@@ -176,10 +172,7 @@ export function findSDom<Node>(
   graph: Graph<Node>
 ): Array<Array<GraphNode<Node>>> {
   const sdom = findDom(graph);
-  for (let i = 0; i < sdom.length; i++) {
-    sdom[i] = _.drop(sdom[i]);
-  }
-  return sdom;
+  return sdom.map((s) => s.slice(1));
 }
 /**
  * find immediate dominators for each node in the given graph
@@ -194,9 +187,9 @@ export function findIDom<Node>(
     return sdom[indexB].includes(a);
   };
   return sdom.map((dominators) => {
-    return _.find(dominators, (dominator) => {
-      const otherDominators = _.without(dominators, dominator);
-      return _.every(otherDominators, (d) => dominates(d, dominator));
+    return dominators.find((dominator) => {
+      const otherDominators = dominators.filter((d) => d !== dominator);
+      return otherDominators.every((d) => dominates(d, dominator));
     });
   });
 }
@@ -218,10 +211,7 @@ export function findSPDom<Node>(
   graph: Graph<Node>
 ): Array<Array<GraphNode<Node>>> {
   const sdom = findPDom(graph);
-  for (let i = 0; i < sdom.length; i++) {
-    sdom[i] = _.drop(sdom[i]);
-  }
-  return sdom;
+  return sdom.map((s) => s.slice(1));
 }
 
 export function findIPDom<Node>(
@@ -234,9 +224,9 @@ export function findIPDom<Node>(
     return sdom[indexB].includes(a);
   };
   return sdom.map((dominators) => {
-    return _.find(dominators, (dominator) => {
-      const otherDominators = _.without(dominators, dominator);
-      return _.every(otherDominators, (d) => dominates(d, dominator));
+    return dominators.find((dominator) => {
+      const otherDominators = dominators.filter((d) => d !== dominator);
+      return otherDominators.every((d) => dominates(d, dominator));
     });
   });
 }

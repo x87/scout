@@ -1,4 +1,3 @@
-import * as _ from 'lodash';
 import * as graphUtils from './graph-utils';
 import Graph, { GraphNode } from './graph';
 import { eIfType } from 'common/enums';
@@ -24,7 +23,7 @@ export function getIfType<Node>(
 }
 
 export function structure<Node>(graph: Graph<Node>): Graph<GraphNode<Node>> {
-  const twoWayNodes = graph.nodes.filter(node => {
+  const twoWayNodes = graph.nodes.filter((node) => {
     if (node instanceof IfGraph || node instanceof LoopGraph) return false;
     const successors = graph.getImmSuccessors(node);
     return successors.length === 2;
@@ -97,11 +96,11 @@ export function structure<Node>(graph: Graph<Node>): Graph<GraphNode<Node>> {
       ) as Graph<Node>;
     }
     res = graphUtils.replaceNodes(res, header, followNode, ifGraph, {
-      rightEdge: false
+      rightEdge: false,
     });
   };
 
-  const head = _.last(twoWayNodes);
+  const head = twoWayNodes[twoWayNodes.length - 1];
   const tail = findFollowNode(head);
   if (!tail) {
     throw Log.error(AppError.NODE_NOT_FOUND);
