@@ -1,5 +1,3 @@
-import * as _ from 'lodash';
-
 interface IEdge<T> {
   from: T;
   to: T;
@@ -17,7 +15,7 @@ export default class Graph<T> {
   }
 
   addNode(...nodes: Array<GraphNode<T>>): void {
-    nodes.forEach(node => {
+    nodes.forEach((node) => {
       if (!this.hasNode(node)) this.nodes.push(node);
     });
   }
@@ -27,7 +25,7 @@ export default class Graph<T> {
   }
 
   hasEdge(from: GraphNode<T>, to: GraphNode<T>): boolean {
-    return !!_.find(this.edges, edge => edge.from === from && edge.to === to);
+    return this.edges.some((edge) => edge.from === from && edge.to === to);
   }
 
   addEdge(from: GraphNode<T>, to: GraphNode<T>): void {
@@ -35,17 +33,17 @@ export default class Graph<T> {
   }
 
   getImmPredecessors(to: GraphNode<T>): Array<GraphNode<T>> {
-    const edges = _.filter(this.edges, edge => edge.to === to);
-    return _.map(edges, edge => edge.from);
+    const edges = this.edges.filter((edge) => edge.to === to);
+    return edges.map((edge) => edge.from);
   }
 
   getImmSuccessors(from: GraphNode<T>): Array<GraphNode<T>> {
-    const edges = _.filter(this.edges, edge => edge.from === from);
-    return _.map(edges, edge => edge.to);
+    const edges = this.edges.filter((edge) => edge.from === from);
+    return edges.map((edge) => edge.to);
   }
 
   getNodeIndex(node: GraphNode<T>): number {
-    return _.findIndex(this.nodes, n => n === node);
+    return this.nodes.findIndex((n) => n === node);
   }
 
   get hasLoop(): boolean {
@@ -61,7 +59,7 @@ export default class Graph<T> {
 
   get latchingNodes(): Array<GraphNode<T>> {
     const header = this.root;
-    return this.nodes.filter(node =>
+    return this.nodes.filter((node) =>
       this.getImmSuccessors(node).includes(header)
     );
   }

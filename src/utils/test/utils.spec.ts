@@ -63,4 +63,24 @@ describe('utils spec', () => {
     expect(utils.checkArrayIncludeItemFromArray(a1, a3)).toBe(false);
     expect(utils.checkArrayIncludeItemFromArray(a1, a4)).toBe(false);
   });
+
+  it('should remove items from array and return deleted items', () => {
+    const arr = [1, 2, 3, 4, 5];
+    expect(utils.removeFromArray(arr, (n) => n % 2 === 0)).toEqual([2, 4]);
+    expect(arr).toEqual([1, 3, 5]);
+  });
+
+  describe('isEqual', () => {
+    it('should return true for arrays with same elements', () => {
+      expect(utils.isEqual([1, 2, 3], [2, 1, 3])).toBe(true);
+    });
+
+    it('should return true if arrays are of different length', () => {
+      expect(utils.isEqual([1, 2, 3, undefined], [2, 1, 3])).toBe(false);
+    });
+
+    it('should return true for empty arrays', () => {
+      expect(utils.isEqual([], [])).toBe(true);
+    });
+  });
 });
