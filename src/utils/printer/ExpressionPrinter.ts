@@ -22,7 +22,7 @@ export default class ExpressionPrinter extends SimplePrinter {
     const append = (format: string, ...args: any[]) =>
       (output += Log.format(format, ...args));
 
-    if (printComments) {
+    if (printComments && bb.instructions.length) {
       const offset = utils.strPadLeft(bb.instructions[0].offset.toString(), 6);
       // append(`// %s:%s\n`, offset, eBasicBlockType[bb.type]);
     }
