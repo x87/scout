@@ -153,9 +153,11 @@ export function findDom<Node>(
       const pred = graph.getImmPredecessors(node);
       const newDom = [
         node,
-        ...utils.getArrayIntersection<GraphNode<Node>>(
-          ...pred.map((p) => dom[graph.getNodeIndex(p)])
-        ),
+        ...utils
+          .getArrayIntersection<GraphNode<Node>>(
+            ...pred.map((p) => dom[graph.getNodeIndex(p)])
+          )
+          .filter((n) => n === node),
       ];
 
       isDirty = isDirty || !utils.isEqual(newDom, dom[index]);
