@@ -157,7 +157,7 @@ export function findDom<Node>(
           .getArrayIntersection<GraphNode<Node>>(
             ...pred.map((p) => dom[graph.getNodeIndex(p)])
           )
-          .filter((n) => n === node),
+          .filter((n) => n !== node),
       ];
 
       isDirty = isDirty || !utils.isEqual(newDom, dom[index]);
