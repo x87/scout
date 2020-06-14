@@ -139,17 +139,18 @@ export function replaceNodes<Node>(
  * find dominators for each node in the given graph
  */
 export function findDom<Node>(
-  graph: Graph<Node>
+  graph: Graph<Node>,
+  root: GraphNode<Node> = graph.root
 ): Array<Array<GraphNode<Node>>> {
   const dom = graph.nodes.map((node) => {
-    return node === graph.root ? [graph.root] : graph.nodes;
+    return node === root ? [root] : graph.nodes;
   });
 
   let isDirty: boolean;
   do {
     isDirty = false;
     graph.nodes.forEach((node, index) => {
-      if (node === graph.root) return;
+      if (node === root) return;
       const pred = graph.getImmPredecessors(node);
       const newDom = [
         node,
@@ -198,12 +199,17 @@ export function findIDom<Node>(
 
 /**
  * find post-dominators for each node in the given graph
+ * by finding dominators in a graph with reversed edges
+ * fallback root node should be the last one, not the first
  */
 export function findPDom<Node>(
   graph: Graph<Node>
 ): Array<Array<GraphNode<Node>>> {
-  const transposed = transpose(graph);
-  return findDom(transposed).reverse();
+  const reversed = reverse(graph);
+  const root =
+    reversed.nodes.find((n) => reversed.getImmPredecessors(n).length === 0) ||
+    reversed.nodes[reversed.nodes.length - 1];
+  return findDom(reversed, root);
 }
 
 /**
@@ -233,29 +239,13 @@ export function findIPDom<Node>(
   });
 }
 
-// todo: duplicate of reversePostOrder function
-// todo: implement a common traverse method on graph level
-// todo: caching? _.memoize?
-export function transpose<Node>(graph: Graph<Node>): Graph<Node> {
+export function reverse<Node>(graph: Graph<Node>): Graph<Node> {
   const res = new Graph<Node>();
-  const visited: boolean[] = [];
-  const traverse = (node: GraphNode<Node>): void => {
-    const index = graph.getNodeIndex(node);
-    visited[index] = true;
-
-    const successors = graph.getImmSuccessors(node);
-    successors.forEach((bb) => {
-      const nextIndex = graph.getNodeIndex(bb);
-      if (!visited[nextIndex]) {
-        traverse(bb);
-      }
-      // res.addEdge(node, bb);
-      res.addEdge(bb, node);
-    });
+  for (const node of graph.nodes) {
     res.addNode(node);
-  };
-
-  traverse(graph.root);
-  // res.nodes = res.nodes.reverse();
+  }
+  for (const edge of graph.edges) {
+    res.addEdge(edge.to, edge.from);
+  }
   return res;
 }

@@ -112,3 +112,123 @@ export function ifNestedInLoop(): Graph<number> {
       [7]<---
   */
 }
+
+export function graph1(): Graph<number> {
+  const graph = new Graph<number>();
+
+  const n1 = 1;
+  const n2 = 2;
+  const n3 = 3;
+  const n4 = 4;
+  const n5 = 5;
+
+  graph.addNode(n1, n2, n3, n4, n5);
+
+  graph.addEdge(n1, n2);
+  graph.addEdge(n1, n3);
+  graph.addEdge(n2, n5);
+  graph.addEdge(n2, n3);
+  graph.addEdge(n3, n4);
+  graph.addEdge(n4, n1);
+
+  return graph;
+}
+
+export function graph2(): Graph<number> {
+  const graph = new Graph<number>();
+
+  const n1 = 1;
+  const n2 = 2;
+  const n3 = 3;
+
+  graph.addNode(n1, n2, n3);
+
+  graph.addEdge(n1, n2);
+  graph.addEdge(n2, n3);
+  graph.addEdge(n3, n1);
+
+  return graph;
+}
+
+export function graph3(): Graph<number> {
+  const graph = new Graph<number>();
+
+  const n1 = 1;
+  const n2 = 2;
+  const n3 = 3;
+  const n4 = 4;
+  const n5 = 5;
+
+  graph.addNode(n1, n2, n3, n4, n5);
+
+  graph.addEdge(n2, n1);
+  graph.addEdge(n4, n3);
+  graph.addEdge(n3, n4);
+  graph.addEdge(n1, n2);
+  graph.addEdge(n1, n5);
+  graph.addEdge(n2, n3);
+  graph.addEdge(n3, n5);
+  return graph;
+}
+
+export function graph4(): Graph<number> {
+  const graph = new Graph<number>();
+
+  const n0 = 0;
+  const n1 = 1;
+  const n2 = 2;
+  const n3 = 3;
+  const n4 = 4;
+  const n5 = 5;
+  const n6 = 6;
+  const n7 = 7;
+  const n8 = 8;
+  const n9 = 9;
+  const n10 = 10;
+  const n11 = 11;
+  const n12 = 12;
+  const n13 = 13;
+  const n14 = 14;
+  const n15 = 15;
+
+  graph.addNode(
+    n0,
+    n1,
+    n2,
+    n3,
+    n4,
+    n5,
+    n6,
+    n7,
+    n8,
+    n9,
+    n10,
+    n11,
+    n12,
+    n13,
+    n14,
+    n15
+  );
+
+  graph.addEdge(n0, n1);
+  graph.addEdge(n1, n2);
+  graph.addEdge(n2, n3);
+  graph.addEdge(n2, n4);
+  graph.addEdge(n3, n8);
+  graph.addEdge(n7, n1);
+  graph.addEdge(n4, n5);
+  graph.addEdge(n5, n6);
+  graph.addEdge(n5, n7);
+  graph.addEdge(n6, n15);
+  graph.addEdge(n8, n9);
+  graph.addEdge(n9, n10);
+  graph.addEdge(n9, n11);
+  graph.addEdge(n10, n15);
+  graph.addEdge(n11, n12);
+  graph.addEdge(n12, n13);
+  graph.addEdge(n12, n14);
+  graph.addEdge(n13, n15);
+  graph.addEdge(n14, n8);
+
+  return graph;
+}
