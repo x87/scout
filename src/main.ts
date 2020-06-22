@@ -112,9 +112,18 @@ export async function main(): Promise<void> {
               }
             }
           };
-          const loopGraph = loopUtils.structure(func);
-          const ifGraph = conditionUtils.structure(loopGraph);
-          printGraph(ifGraph);
+          try {
+            const loopGraph = loopUtils.structure(func);
+            const ifGraph = conditionUtils.structure(loopGraph);
+            printGraph(ifGraph);
+          } catch {
+            printer.printLine(`// can't structure this function\n`);
+            printer.printLine(`--- Function ${i} Start----\n`);
+            for (const bb of func.nodes) {
+              printer.print(bb as IBasicBlock, Arguments.debugMode);
+            }
+            printer.printLine(`--- Function ${i} End----`);
+          }
           if (Arguments.debugMode) {
             printer.indent--;
             printer.printLine(`}`);
