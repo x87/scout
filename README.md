@@ -6,7 +6,7 @@ Scout Decompiler is a CLI tool to decompile binary scripts of Grand Theft Auto 3
 
 ## Build
 
-Download and install NodeJS from https://nodejs.org. The minimum required NodeJS version to run is v8.9.4
+Download and install Node.js from https://nodejs.org. The minimum required version to run is v12.
 
 ```bash
 git clone https://github.com/x87/scout.git

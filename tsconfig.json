@@ -2,10 +2,10 @@
   "compilerOptions": {
     "baseUrl": "src",
     "typeRoots": ["node_modules/@types"],
-    "target": "es6",
+    "target": "ES2019",
     "module": "commonjs",
     "moduleResolution": "node",
-    "lib": ["es6", "es7"],
+    "lib": ["ES2019"],
     "allowJs": true,
     "checkJs": true,
     "sourceMap": true,

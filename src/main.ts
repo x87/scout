@@ -5,6 +5,7 @@ import * as conditionUtils from './frontend/cfg/conditions-utils';
 import Log from './utils/log';
 import Arguments from './common/arguments';
 import AppError from './common/errors';
+import { inspect } from 'util';
 
 import Loader from './frontend/loader';
 import Parser from './frontend/parser';
@@ -12,11 +13,7 @@ import CFG from './frontend/cfg';
 
 import { DefinitionMap, IBasicBlock } from './common/interfaces';
 import { IInstructionDefinition } from './common/instructions';
-import { LoopGraph } from './frontend/cfg/loop-utils';
-import Graph, { GraphNode } from './frontend/cfg/graph';
-import { eLoopType } from './common/enums';
-import { IfGraph } from './frontend/cfg/conditions-utils';
-import ExpressionPrinter from './utils/printer/ExpressionPrinter';
+import { AST } from './ast';
 
 interface IDefinition extends IInstructionDefinition {
   id: string;
@@ -43,93 +40,34 @@ export async function main(): Promise<void> {
   const scriptFile = await loader.loadScript(Arguments.inputFile);
   const definitionMap = await getDefinitions();
   const parser = new Parser(definitionMap);
-  const scripts = await parser.parse(scriptFile);
+  const scripts = parser.parse(scriptFile);
 
   if (Arguments.printAssembly === true) {
-    const printer = new ExpressionPrinter(definitionMap);
-    scripts.forEach((script) => {
+    scripts.forEach((script, scrIndex) => {
       const cfg = new CFG();
-      const graphs = cfg.getCallGraphs(script);
-      graphs.forEach((graph, i) => {
-        if (Arguments.debugMode) {
-          printer.printLine(`--- Function ${i} Start----\n`);
-        }
-        for (const bb of graph.nodes) {
-          printer.print(bb as IBasicBlock, Arguments.debugMode);
-        }
-        if (Arguments.debugMode) {
-          printer.printLine(`--- Function ${i} End----`);
-        }
-      });
-    });
-
-    if (Arguments.debugMode) {
-      scripts.forEach((script) => {
-        const cfg = new CFG();
-        const functions = cfg.getCallGraphs(script);
-        functions.forEach((func, i) => {
-          if (Arguments.debugMode) {
-            printer.printLine('\n');
-            printer.printLine(`function () {`);
-            printer.indent++;
-          }
-          const printGraph = (graph: Graph<GraphNode<IBasicBlock>>) => {
-            for (const bb of graph.nodes) {
-              if (bb instanceof LoopGraph) {
-                printer.printLine(
-                  `${printer.indentation}${
-                    bb.type === eLoopType.POST_TESTED ? 'repeat' : 'while'
-                  } {`
-                );
-                printer.indent++;
-                printGraph(bb);
-                printer.indent--;
-                printer.printLine(
-                  `${printer.indentation}}${
-                    bb.type === eLoopType.POST_TESTED ? 'until' : ''
-                  }`
-                );
-              } else if (bb instanceof IfGraph) {
-                printer.printLine(`${printer.indentation}if`);
-                printer.indent++;
-                printer.print(bb.nodes[0]);
-                printer.printLine(`${printer.indentation}then {`);
-                printer.indent++;
-                printGraph(bb.thenNode);
-                printer.indent--;
-                printer.printLine(`${printer.indentation}}`);
-                if (bb.elseNode) {
-                  printer.printLine(`${printer.indentation}else {`);
-                  printer.indent++;
-                  printGraph(bb.elseNode);
-                  printer.indent--;
-                  printer.printLine(`${printer.indentation}}`);
-                }
-                printer.indent--;
-                printer.printLine(`${printer.indentation}}`);
-              } else {
-                printer.print(bb as IBasicBlock, Arguments.debugMode);
-              }
-            }
-          };
+      const ast = new AST({
+        name: 'script' + scrIndex,
+        body: cfg.getCallGraphs(script).map((func, i) => {
+          const fnName =
+            'fn_' + (func.root as IBasicBlock).instructions[0].offset;
           try {
             const loopGraph = loopUtils.structure(func);
             const ifGraph = conditionUtils.structure(loopGraph);
-            printGraph(ifGraph);
+            return {
+              type: 'function',
+              name: fnName,
+              body: AST.transform(ifGraph),
+            };
           } catch {
-            printer.printLine(`// can't structure this function\n`);
-            printer.printLine(`--- Function ${i} Start----\n`);
-            for (const bb of func.nodes) {
-              printer.print(bb as IBasicBlock, Arguments.debugMode);
-            }
-            printer.printLine(`--- Function ${i} End----`);
+            return {
+              type: 'function',
+              name: fnName,
+              body: AST.transform(func),
+            };
           }
-          if (Arguments.debugMode) {
-            printer.indent--;
-            printer.printLine(`}`);
-          }
-        });
+        }),
       });
-    }
+      console.log(inspect(ast, { depth: 20 }));
+    });
   }
 }
