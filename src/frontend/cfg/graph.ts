@@ -51,10 +51,10 @@ export default class Graph<T> {
   }
 
   get root(): GraphNode<T> {
-    // todo: think of a definition of the root node
-    // given graph G(N), root(G) = n in N && getImmPredecessors(n) = []
-    // or given graph G(N), root(G) = n in N && n.offset = 0
-    return this.nodes[0];
+    return (
+      this.nodes.find((n) => this.getImmPredecessors(n).length === 0) ||
+      this.nodes[0]
+    );
   }
 
   get latchingNodes(): Array<GraphNode<T>> {

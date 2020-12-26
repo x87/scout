@@ -1,6 +1,13 @@
 import Graph from '../graph';
 import * as graphUtils from '../graph-utils';
-import { complexGraph, endlessLoop } from './graph.sample';
+import {
+  complexGraph,
+  endlessLoop,
+  graph1,
+  graph2,
+  graph3,
+  graph4,
+} from './graph.sample';
 import { IBasicBlock } from 'common/interfaces';
 import { eBasicBlockType } from 'common/enums';
 
@@ -132,30 +139,105 @@ describe('Graph utils', () => {
     expect(pdom).toBeArrayOfSize(rpoGraph.nodes.length);
 
     expect(pdom[0]).toEqual([
-      rpoGraph.nodes[0], // B1
-      rpoGraph.nodes[4], // B5
-      rpoGraph.nodes[5], // B6
-      rpoGraph.nodes[10], // B7
-      rpoGraph.nodes[13], // B10
-      rpoGraph.nodes[14], // B11
+      1, // B1
+      5, // B5
+      6, // B6
+      7, // B7
+      10, // B10
+      11, // B11
     ]);
-    expect(pdom[14]).toEqual([rpoGraph.nodes[14]]); // B11
+    expect(pdom[14]).toEqual([11]); // B11
 
     const pd = graphUtils.findPDom(endlessLoop());
-
     expect(pd).toEqual([[1, 2, 4, 5], [2, 4, 5], [3, 4, 5], [4, 5], [5]]);
   });
 
-  it('should transpose a given graph', () => {
-    const transposed = graphUtils.transpose(endlessLoop());
-    expect(transposed.nodes).toEqual([5, 4, 3, 2, 1]);
-    expect(transposed.edges).toEqual([
-      { from: 1, to: 5 },
-      { from: 5, to: 4 },
-      { from: 4, to: 3 },
-      { from: 3, to: 2 },
-      { from: 4, to: 2 },
-      { from: 2, to: 1 },
+  it('should produce immediate post-dominators list', () => {
+    const g1 = graph1();
+    const idom1 = graphUtils.findIPDom(g1);
+    expect(idom1).toEqual([2, 5, 4, 1, undefined]);
+
+    const g2 = graph2();
+    const idom2 = graphUtils.findIPDom(g2);
+    expect(idom2).toEqual([2, 3, undefined]);
+
+    const g3 = graph3();
+    const idom3 = graphUtils.findIPDom(g3);
+    expect(idom3).toEqual([5, 5, 5, 3, undefined]);
+  });
+
+  it('should reverse a given graph', () => {
+    const g = graph3();
+    const reversed = graphUtils.reverse(g);
+    expect(reversed.nodes).toEqual(g.nodes);
+    g.edges.forEach((edge, i) => {
+      expect(edge.from).toBe(reversed.edges[i].to);
+      expect(edge.to).toBe(reversed.edges[i].from);
+    });
+    expect(reversed.root).toBe(g.nodes[4]);
+  });
+
+  it('should calculate post-dominators using simple-fast algorithm', () => {
+    const g = graph4();
+    const dom = graphUtils.findIDom(g);
+    expect(dom).toEqual([
+      undefined,
+      0,
+      1,
+      2,
+      2,
+      4,
+      5,
+      5,
+      3,
+      8,
+      9,
+      9,
+      11,
+      12,
+      12,
+      2,
+    ]);
+
+    const reversed = graphUtils.reverse(g);
+    const idom = graphUtils.findIDom(reversed);
+    expect(idom).toEqual([
+      1,
+      2,
+      15,
+      8,
+      5,
+      15,
+      15,
+      1,
+      9,
+      15,
+      15,
+      12,
+      15,
+      15,
+      8,
+      undefined,
+    ]);
+
+    const ipdom = graphUtils.findIPDom(g);
+    expect(ipdom).toEqual([
+      1,
+      2,
+      15,
+      8,
+      5,
+      15,
+      15,
+      1,
+      9,
+      15,
+      15,
+      12,
+      15,
+      15,
+      8,
+      undefined,
     ]);
   });
 });
