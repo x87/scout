@@ -44,13 +44,12 @@ export async function main(): Promise<void> {
   const definitionMap = await getDefinitions();
   const parser = new Parser(definitionMap);
   const scripts = await parser.parse(scriptFile);
-  const main = scripts[0];
 
   if (Arguments.printAssembly === true) {
     const printer = new ExpressionPrinter(definitionMap);
     scripts.forEach((script) => {
       const cfg = new CFG();
-      const funcs = cfg.getCallGraphs(script, main);
+      const funcs = cfg.getCallGraphs(script, scripts);
       funcs.forEach((func, i) => {
         if (Arguments.debugMode) {
           printer.printLine(`--- Function ${i} Start----\n`);
@@ -67,7 +66,7 @@ export async function main(): Promise<void> {
     if (Arguments.debugMode) {
       scripts.forEach((script) => {
         const cfg = new CFG();
-        const functions = cfg.getCallGraphs(script, main);
+        const functions = cfg.getCallGraphs(script, scripts);
         functions.forEach((func, i) => {
           if (Arguments.debugMode) {
             printer.printLine('\n');

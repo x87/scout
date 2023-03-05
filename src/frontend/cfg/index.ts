@@ -44,12 +44,20 @@ const branchOpcodesMap: any = {
 export default class CFG {
   getCallGraphs(
     script: IScript,
-    mainScript: IScript
+    allScripts: IScript[]
   ): Array<Graph<IBasicBlock>> {
     const functions: number[] = [
       script.instructionMap.keys().next().value,
-      ...this.findFunctions(script, mainScript),
+      ...this.findFunctions(script),
     ];
+    if (script.type === eScriptType.MAIN) {
+      // some functions in MAIN are referenced only by missions/externals
+      allScripts.forEach((s) => {
+        if (s.type !== eScriptType.MAIN) {
+          functions.push(...this.findGlobalFunctions(s, script));
+        }
+      });
+    }
     const entries = [...new Set(functions)].sort();
     const basicBlocks = this.findBasicBlocks(script, entries);
 
@@ -141,33 +149,50 @@ export default class CFG {
     return result;
   }
 
-  private findFunctions(script: IScript, mainScript: IScript): number[] {
+  private findGlobalFunctions(
+    innerScript: IScript,
+    mainScript: IScript
+  ): number[] {
     const res = [];
-    for (const [offset, instruction] of script.instructionMap) {
+    for (const [offset, instruction] of innerScript.instructionMap) {
       if (callOpcodes.includes(instruction.opcode)) {
         const targetOffset = Instruction.getNumericParam(instruction);
         if (targetOffset >= 0) {
-          if (script.type === eScriptType.CLEO) {
-            throw Log.error(AppError.INVALID_ABS_OFFSET, offset);
-          }
           const target = mainScript.instructionMap.get(targetOffset);
           if (!target) {
             Log.warn(AppError.NO_TARGET, targetOffset, offset);
             continue;
           }
           res.push(targetOffset);
-        } else {
-          if (script.type === eScriptType.MAIN) {
-            throw Log.error(AppError.INVALID_REL_OFFSET, offset);
-          }
-          const absTargetOffset = Math.abs(targetOffset);
-          const target = script.instructionMap.get(absTargetOffset);
-          if (!target) {
-            Log.warn(AppError.NO_TARGET, targetOffset, offset);
+        }
+      }
+    }
+    return res;
+  }
+
+  private findFunctions(script: IScript): number[] {
+    const res = [];
+    for (const [offset, instruction] of script.instructionMap) {
+      if (callOpcodes.includes(instruction.opcode)) {
+        const targetOffset = Instruction.getNumericParam(instruction);
+        if (targetOffset >= 0) {
+          if (script.type !== eScriptType.MAIN) {
             continue;
           }
-          res.push(absTargetOffset);
+        } else {
+          if (script.type === eScriptType.MAIN) {
+            Log.warn(AppError.INVALID_REL_OFFSET, offset);
+            continue;
+          }
         }
+
+        const absTargetOffset = Math.abs(targetOffset);
+        const target = script.instructionMap.get(absTargetOffset);
+        if (!target) {
+          Log.warn(AppError.NO_TARGET, targetOffset, offset);
+          continue;
+        }
+        res.push(absTargetOffset);
       }
     }
     return res;

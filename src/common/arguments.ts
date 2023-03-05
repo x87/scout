@@ -6,7 +6,8 @@ import AppError from './errors';
 import { eGame } from './enums';
 import { readBinaryStream } from 'utils/file';
 
-const commander = require('commander');
+import { Command } from 'commander';
+const program = new Command();
 
 interface IGameDictionary {
   [key: string]: eGame;
@@ -17,16 +18,16 @@ const gameMap: IGameDictionary = {
   gtavc: eGame.GTAVC,
   vc: eGame.GTAVC,
   gtasa: eGame.GTASA,
-  sa: eGame.GTASA
+  sa: eGame.GTASA,
 };
 
 const definitionMap = {
   [eGame.GTA3]: 'gta3.json',
   [eGame.GTAVC]: 'gtavc.json',
-  [eGame.GTASA]: 'gtasa.json'
+  [eGame.GTASA]: 'gtasa.json',
 };
 
-commander
+program
   .usage('<inputfile> [options]')
   .version(require('../../package.json').version, '-v, --version')
   .option('-p, --print', 'print the result into stdout')
@@ -34,7 +35,7 @@ commander
   .option(
     '-g, --game <game>',
     'target game: gta3, vc, sa',
-    arg => {
+    (arg) => {
       if (!gameMap.hasOwnProperty(arg)) {
         throw Log.error(AppError.UNKNOWN_GAME, arg);
       }
@@ -44,7 +45,9 @@ commander
   )
   .parse(process.argv);
 
-const game = gameMap[commander.game];
+const options = program.opts();
+
+const game = gameMap[options.game];
 const definitionFile = definitionMap[game];
 let inputFile: Promise<Buffer>;
 
@@ -58,7 +61,7 @@ if (process.env.NODE_ENV === 'test') {
     const args = process.argv.slice(2);
     const fileName = args[0];
     if (!fileName) {
-      commander.help();
+      program.help();
     }
     stream = fs.createReadStream(path.join('./', fileName));
   }
@@ -69,6 +72,6 @@ export default {
   inputFile,
   definitionFile,
   game,
-  printAssembly: commander.print,
-  debugMode: commander.debug
+  printAssembly: options.print,
+  debugMode: options.debug,
 };
