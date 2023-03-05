@@ -87,7 +87,7 @@ export default class CFG {
         case eBasicBlockType.RETURN:
           break;
         case eBasicBlockType.TWO_WAY:
-        case eBasicBlockType.ONE_WAY:
+        case eBasicBlockType.ONE_WAY: {
           const targetOffset = Instruction.getNumericParam(lastInstruction);
           const targetIndex = this.findBasicBlockIndex(
             basicBlocks,
@@ -100,7 +100,8 @@ export default class CFG {
           }
           graph.addEdge(bb, basicBlocks[targetIndex]);
           traverse(targetIndex);
-          if (bb.type === eBasicBlockType.ONE_WAY) break; // else fall
+          if (bb.type === eBasicBlockType.ONE_WAY) break; // else fallthrough
+        }
         case eBasicBlockType.FALL:
           graph.addEdge(bb, basicBlocks[index + 1]);
           traverse(index + 1);
