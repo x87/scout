@@ -23,19 +23,19 @@ describe(Parser.name, () => {
   });
 
   it('should create a Script out of input ScriptFile', () => {
-    const scriptFile = new ScriptFile(Buffer.from([]));
+    const scriptFile = new ScriptFile(Buffer.from([]), eScriptType.CLEO);
     const spy = spyOn(parser, 'getInstructions').and.callThrough();
     const script = parser.parse(scriptFile);
 
     expect(script.length).toBe(1);
-    expect(script[0].type).toBe(eScriptType.HEADLESS);
+    expect(script[0].type).toBe(eScriptType.CLEO);
     expect(script[0].instructionMap instanceof Map).toBe(true);
     expect(spy).toHaveBeenCalledWith(scriptFile);
   });
 
   it('should parse instructions out of input ScriptFile', () => {
     const buf = Buffer.from(`0100040002000164000000`, 'hex');
-    const scriptFile = new ScriptFile(buf);
+    const scriptFile = new ScriptFile(buf, eScriptType.CLEO);
 
     const parsed: IInstruction[] = [
       {
@@ -68,7 +68,7 @@ describe(Parser.name, () => {
 
   it('should parse instruction with variable number of arguments', () => {
     const buf = Buffer.from(`4F00010100000000`, 'hex');
-    const scriptFile = new ScriptFile(buf);
+    const scriptFile = new ScriptFile(buf, eScriptType.CLEO);
 
     const parsed: IInstruction[] = [
       {

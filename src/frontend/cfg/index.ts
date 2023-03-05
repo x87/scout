@@ -42,18 +42,14 @@ const branchOpcodesMap: any = {
 };
 
 export default class CFG {
-  getCallGraphs(script: IScript): Array<Graph<IBasicBlock>> {
-    const functions: number[] = [script.instructionMap.keys().next().value];
-
-    // extract external calls from child scripts (for ScriptMultifile)
-    if (script.innerScripts) {
-      for (const innerScript of script.innerScripts) {
-        functions.push(...this.findGlobalFunctions(innerScript, script));
-      }
-      functions.push(...this.findGlobalFunctions(script, script));
-    } else {
-      functions.push(...this.findLocalFunctions(script));
-    }
+  getCallGraphs(
+    script: IScript,
+    mainScript: IScript
+  ): Array<Graph<IBasicBlock>> {
+    const functions: number[] = [
+      script.instructionMap.keys().next().value,
+      ...this.findFunctions(script, mainScript),
+    ];
     const entries = [...new Set(functions)].sort();
     const basicBlocks = this.findBasicBlocks(script, entries);
 
@@ -104,7 +100,7 @@ export default class CFG {
           }
           graph.addEdge(bb, basicBlocks[targetIndex]);
           traverse(targetIndex);
-          if (bb.type === eBasicBlockType.ONE_WAY) break;
+          if (bb.type === eBasicBlockType.ONE_WAY) break; // else fall
         case eBasicBlockType.FALL:
           graph.addEdge(bb, basicBlocks[index + 1]);
           traverse(index + 1);
@@ -144,33 +140,25 @@ export default class CFG {
     return result;
   }
 
-  private findGlobalFunctions(
-    innerScript: IScript,
-    mainScript: IScript
-  ): number[] {
+  private findFunctions(script: IScript, mainScript: IScript): number[] {
     const res = [];
-    for (const [offset, instruction] of innerScript.instructionMap) {
+    for (const [offset, instruction] of script.instructionMap) {
       if (callOpcodes.includes(instruction.opcode)) {
         const targetOffset = Instruction.getNumericParam(instruction);
         if (targetOffset >= 0) {
+          if (script.type === eScriptType.CLEO) {
+            throw Log.error(AppError.INVALID_ABS_OFFSET, offset);
+          }
           const target = mainScript.instructionMap.get(targetOffset);
           if (!target) {
             Log.warn(AppError.NO_TARGET, targetOffset, offset);
             continue;
           }
           res.push(targetOffset);
-        }
-      }
-    }
-    return res;
-  }
-
-  private findLocalFunctions(script: IScript): number[] {
-    const res = [];
-    for (const [offset, instruction] of script.instructionMap) {
-      if (callOpcodes.includes(instruction.opcode)) {
-        const targetOffset = Instruction.getNumericParam(instruction);
-        if (targetOffset < 0) {
+        } else {
+          if (script.type === eScriptType.MAIN) {
+            throw Log.error(AppError.INVALID_REL_OFFSET, offset);
+          }
           const absTargetOffset = Math.abs(targetOffset);
           const target = script.instructionMap.get(absTargetOffset);
           if (!target) {
@@ -185,19 +173,19 @@ export default class CFG {
   }
 
   private findLeaderOffsets(script: IScript): number[] {
-    let isThisFollowBranchInstruction = false;
+    let doesThisFollowBranchInstruction = false;
     const offsets: number[] = [];
     for (const [offset, instruction] of script.instructionMap) {
-      if (isThisFollowBranchInstruction || offsets.length === 0) {
+      if (doesThisFollowBranchInstruction || offsets.length === 0) {
         offsets.push(offset);
       }
 
       if (blockEndOpcodes.includes(instruction.opcode)) {
-        isThisFollowBranchInstruction = true;
+        doesThisFollowBranchInstruction = true;
         continue;
       }
 
-      isThisFollowBranchInstruction = false;
+      doesThisFollowBranchInstruction = false;
 
       const branchType = this.getBranchType(instruction);
       if (!branchType) {
@@ -206,27 +194,20 @@ export default class CFG {
 
       if (branchType === eBasicBlockType.FALL) {
         offsets.push(offset);
-        isThisFollowBranchInstruction = true;
+        doesThisFollowBranchInstruction = true;
         continue;
       }
 
       const targetOffset = Instruction.getNumericParam(instruction);
-      if (targetOffset < 0 && script.type !== eScriptType.HEADLESS) {
-        throw Log.error(AppError.INVALID_REL_OFFSET, offset);
-      }
-
-      if (targetOffset >= 0 && script.type === eScriptType.HEADLESS) {
-        throw Log.error(AppError.INVALID_ABS_OFFSET, offset);
-      }
-
       const absTargetOffset = Math.abs(targetOffset);
       const target = script.instructionMap.get(absTargetOffset);
+
       if (!target) {
         Log.warn(AppError.NO_TARGET, targetOffset, offset);
         continue;
       }
       offsets.push(absTargetOffset);
-      isThisFollowBranchInstruction = true;
+      doesThisFollowBranchInstruction = true;
     }
     return offsets;
   }

@@ -44,17 +44,18 @@ export async function main(): Promise<void> {
   const definitionMap = await getDefinitions();
   const parser = new Parser(definitionMap);
   const scripts = await parser.parse(scriptFile);
+  const main = scripts[0];
 
   if (Arguments.printAssembly === true) {
     const printer = new ExpressionPrinter(definitionMap);
     scripts.forEach((script) => {
       const cfg = new CFG();
-      const graphs = cfg.getCallGraphs(script);
-      graphs.forEach((graph, i) => {
+      const funcs = cfg.getCallGraphs(script, main);
+      funcs.forEach((func, i) => {
         if (Arguments.debugMode) {
           printer.printLine(`--- Function ${i} Start----\n`);
         }
-        for (const bb of graph.nodes) {
+        for (const bb of func.nodes) {
           printer.print(bb as IBasicBlock, Arguments.debugMode);
         }
         if (Arguments.debugMode) {
@@ -66,7 +67,7 @@ export async function main(): Promise<void> {
     if (Arguments.debugMode) {
       scripts.forEach((script) => {
         const cfg = new CFG();
-        const functions = cfg.getCallGraphs(script);
+        const functions = cfg.getCallGraphs(script, main);
         functions.forEach((func, i) => {
           if (Arguments.debugMode) {
             printer.printLine('\n');

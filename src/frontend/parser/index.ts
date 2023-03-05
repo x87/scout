@@ -139,14 +139,13 @@ export default class Parser {
       instructionMap: this.getInstructions(scriptFile),
       type: scriptFile.type,
     };
-    const scripts = [];
+    const scripts = [main];
     if (scriptFile instanceof ScriptMultifile) {
-      main.innerScripts = scripts;
       for (const script of scriptFile.scripts) {
         scripts.push(this.parse(script)[0]);
       }
     }
-    return [main, ...scripts];
+    return scripts;
   }
 
   getInstructions(scriptFile: ScriptFile): InstructionMap {

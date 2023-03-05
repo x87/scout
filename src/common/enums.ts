@@ -45,8 +45,10 @@ export enum eScriptFileSegments {
 }
 
 export enum eScriptType {
-  HEADLESS,
-  MULTIFILE
+  MAIN,
+  MISSION,
+  EXTERNAL,
+  CLEO
 }
 
 export enum eBasicBlockType {
