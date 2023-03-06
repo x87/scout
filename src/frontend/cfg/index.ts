@@ -2,7 +2,7 @@ import Log from 'utils/log';
 
 import Arguments from 'common/arguments';
 import AppError from 'common/errors';
-import Graph from './graph';
+import {Graph} from './graph';
 
 import * as Instruction from 'common/instructions';
 import { IInstruction } from 'common/instructions';

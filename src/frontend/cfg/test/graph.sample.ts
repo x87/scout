@@ -1,4 +1,4 @@
-import Graph from '../graph';
+import { Graph } from '../graph';
 
 export function complexGraph(): Graph<number> {
   const graph = new Graph<number>();
@@ -6,23 +6,8 @@ export function complexGraph(): Graph<number> {
   for (let i = 0; i < 15; i++) {
     blocks.push(i + 1);
   }
-  const [
-    b1,
-    b2,
-    b3,
-    b4,
-    b5,
-    b6,
-    b7,
-    b8,
-    b9,
-    b10,
-    b11,
-    b12,
-    b13,
-    b14,
-    b15,
-  ] = blocks;
+  const [b1, b2, b3, b4, b5, b6, b7, b8, b9, b10, b11, b12, b13, b14, b15] =
+    blocks;
   graph.addNode(...blocks);
 
   graph.addEdge(b1, b2);

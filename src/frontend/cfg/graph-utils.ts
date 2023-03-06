@@ -1,6 +1,6 @@
 import * as utils from 'utils';
 import Log from 'utils/log';
-import Graph, { GraphNode } from './graph';
+import { Graph, GraphNode } from './graph';
 import AppError from '../../common/errors';
 
 export function split<Node>(graph: Graph<Node>): Array<Graph<Node>> {
@@ -246,6 +246,9 @@ export function transpose<Node>(graph: Graph<Node>): Graph<Node> {
     const successors = graph.getImmSuccessors(node);
     successors.forEach((bb) => {
       const nextIndex = graph.getNodeIndex(bb);
+      if (nextIndex === -1) {
+        return;
+      }
       if (!visited[nextIndex]) {
         traverse(bb);
       }

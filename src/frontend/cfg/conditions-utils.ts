@@ -1,15 +1,9 @@
 import * as graphUtils from './graph-utils';
-import Graph, { GraphNode } from './graph';
+import  { Graph, GraphNode, IfGraph, LoopGraph } from './graph';
 import { eIfType } from 'common/enums';
 import Log from '../../utils/log';
 import AppError from '../../common/errors';
-import { LoopGraph } from './loop-utils';
 
-export class IfGraph<Node> extends Graph<Node> {
-  thenNode: Graph<Node>;
-  elseNode?: Graph<Node>;
-  followNode: GraphNode<Node>;
-}
 
 export function getIfType<Node>(
   graph: Graph<Node>,

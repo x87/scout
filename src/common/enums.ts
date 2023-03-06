@@ -61,9 +61,9 @@ export enum eBasicBlockType {
 }
 
 export enum eLoopType {
-  PRE_TESTED,
-  POST_TESTED,
-  ENDLESS
+  PRE_TESTED = 'PRE_TESTED',
+  POST_TESTED = 'POST_TESTED',
+  ENDLESS = 'ENDLESS'
 }
 
 export enum eIfType {

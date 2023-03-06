@@ -12,10 +12,9 @@ import CFG from './frontend/cfg';
 
 import { DefinitionMap, IBasicBlock } from './common/interfaces';
 import { IInstructionDefinition } from './common/instructions';
-import { LoopGraph } from './frontend/cfg/loop-utils';
-import Graph, { GraphNode } from './frontend/cfg/graph';
+import {  } from './frontend/cfg/loop-utils';
+import  { Graph, GraphNode, LoopGraph, IfGraph } from './frontend/cfg/graph';
 import { eLoopType } from './common/enums';
-import { IfGraph } from './frontend/cfg/conditions-utils';
 import ExpressionPrinter from './utils/printer/ExpressionPrinter';
 
 interface IDefinition extends IInstructionDefinition {
@@ -116,7 +115,8 @@ export async function main(): Promise<void> {
             const loopGraph = loopUtils.structure(func);
             const ifGraph = conditionUtils.structure(loopGraph);
             printGraph(ifGraph);
-          } catch {
+          } catch (e) {
+            console.log(e);
             printer.printLine(`// can't structure this function\n`);
             printer.printLine(`--- Function ${i} Start----\n`);
             for (const bb of func.nodes) {

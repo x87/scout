@@ -1,12 +1,7 @@
 import * as graphUtils from './graph-utils';
-import Graph, { GraphNode } from './graph';
+import { Graph, GraphNode, LoopGraph } from './graph';
 import { eLoopType } from 'common/enums';
 import { structure as ifStructure } from './conditions-utils';
-
-export class LoopGraph<Node> extends Graph<Node> {
-  type: eLoopType;
-  followNode?: Node;
-}
 
 export function getLoopType<Node>(
   graph: Graph<Node>,
@@ -59,16 +54,14 @@ export function findFollowNode<Node>(
     const loopNodes = loop.nodes as Node[];
     let minIndex = graph.nodes.length;
     for (const node of loopNodes) {
-      const successors = graph.getImmSuccessors(node);
-      if (successors.length === 2) {
-        if (!loop.hasNode(successors[0])) {
-          const index = graph.getNodeIndex(successors[0]);
+      // find a closest node that is not in the loop
+      graph
+        .getImmSuccessors(node)
+        .filter((s) => !loop.hasNode(s))
+        .forEach((s) => {
+          const index = graph.getNodeIndex(s);
           minIndex = Math.min(minIndex, index);
-        } else if (!loop.hasNode(successors[1])) {
-          const index = graph.getNodeIndex(successors[1]);
-          minIndex = Math.min(minIndex, index);
-        }
-      }
+        });
     }
     if (minIndex !== graph.nodes.length) {
       return graph.nodes[minIndex] as Node;
@@ -78,6 +71,18 @@ export function findFollowNode<Node>(
 
 export function structure<Node>(graph: Graph<Node>): Graph<Node> {
   const intervals = graphUtils.split(graph);
+  // console.log('intervals', intervals.length);
+  // for (const interval of intervals) {
+  // console.log('\n---------------------------');
+  // console.log('has loop', interval.hasLoop);
+  // if (interval.hasLoop) {
+  //   console.log('latching nodes');
+  //   for (const node of interval.latchingNodes) {
+  //     console.log(interval.getNodeIndex(node));
+  //   }
+  // }
+  // interval.print();
+  // }
   const reducible = intervals.find((i) => i.hasLoop);
 
   if (!reducible) return graph;
@@ -85,18 +90,16 @@ export function structure<Node>(graph: Graph<Node>): Graph<Node> {
   // there could be multiple Continue statements referencing loop root
   // therefore picking up the last node in the interval
   const lastNode = reducible.latchingNodes[reducible.latchingNodes.length - 1];
-  const loop = new LoopGraph<Node>();
+  const lastNodeIndex = reducible.getNodeIndex(lastNode);
 
   // populating loop with inner nodes and
   // replacing nodes in the original graph with a single node
   // producing a new graph for the next iteration
-  const reduced = graphUtils.replaceNodes(
-    graph,
-    reducible.root,
-    lastNode,
-    loop
-  );
-
+  const loop = new LoopGraph<Node>();
+  loop.nodes = reducible.nodes; //.filter((n, i) => i <= lastNodeIndex);
+  loop.edges = reducible.edges;//.filter(
+    // (e) => loop.hasNode(e.from) && loop.hasNode(e.to)
+  // );
   loop.type = getLoopType(graph, loop, reducible.root, lastNode);
   loop.followNode = findFollowNode<Node>(
     graph,
@@ -104,6 +107,33 @@ export function structure<Node>(graph: Graph<Node>): Graph<Node> {
     reducible.root as Node,
     lastNode as Node
   );
+
+  // loop.print();
+
+  let reduced = new Graph<Node>();
+  for (const node of graph.nodes) {
+    if (!loop.hasNode(node)) {
+      reduced.addNode(node);
+    }
+  }
+  reduced.addNode(loop);
+  for (const edge of graph.edges) {
+    if (!loop.hasEdge(edge.from, edge.to)) {
+      reduced.addEdge(edge.from, edge.to);
+    }
+    if (loop.hasNode(edge.from) && !loop.hasNode(edge.to)) {
+      reduced.addEdge(loop, edge.to);
+    }
+    if (!loop.hasNode(edge.from) && loop.hasNode(edge.to)) {
+      reduced.addEdge(edge.from, loop);
+    }
+  }
+
+  // sort nodes in the new graph in topological order
+  reduced = graphUtils.reversePostOrder(reduced);
+
+  // reduced.print('Reduced graph');
+  // process.exit(0);
 
   const loopBody = ifStructure(loop);
   loop.nodes = loopBody.nodes as Array<GraphNode<Node>>;
