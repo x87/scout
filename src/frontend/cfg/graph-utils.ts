@@ -1,7 +1,5 @@
 import * as utils from 'utils';
-import Log from 'utils/log';
 import { Graph, GraphNode } from './graph';
-import AppError from '../../common/errors';
 
 export function split<Node>(graph: Graph<Node>): Array<Graph<Node>> {
   if (graph.nodes.length < 1) {

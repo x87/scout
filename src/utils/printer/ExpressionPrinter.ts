@@ -16,6 +16,10 @@ export default class ExpressionPrinter extends SimplePrinter {
     return utils.strPadLeft('', this.indent, '\t');
   }
 
+  printLine(line: string): void {
+    Log.msg(this.indentation + line);
+  }
+
   print(bb: IBasicBlock, printComments: boolean = false): void {
     let output = '';
 
@@ -28,7 +32,6 @@ export default class ExpressionPrinter extends SimplePrinter {
     }
     bb.instructions.forEach((instruction, i) => {
       const id = instruction.opcode;
-      append(this.indentation);
 
       if (id > 0x7fff) {
         append('NOT ');
@@ -43,11 +46,9 @@ export default class ExpressionPrinter extends SimplePrinter {
           append(' ' + param.value);
         }
       }
-      if (i < bb.instructions.length - 1) {
-        append('\n');
-      }
+      this.printLine(output);
+      output = '';
     });
-    append('\n');
-    this.printLine(output);
+
   }
 }

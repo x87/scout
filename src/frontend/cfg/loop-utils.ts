@@ -75,24 +75,26 @@ export function findFollowNode<Node>(
 
 export function structure<Node>(graph: Graph<Node>): Graph<Node> {
   const intervals = graphUtils.split(graph);
-  // graph.print('GRAPH');
-  // console.log(
-  //   `Found ${intervals.length} intervals. With loops: ${
-  //     intervals.filter((i) => i.hasLoop).length
-  //   }`
-  // );
-  // let i = 0;
-  // for (const interval of intervals) {
-  //   console.log('\n---------------------------');
-  //   console.log('has loop', interval.hasLoop);
-  //   if (interval.hasLoop) {
-  //     console.log('latching nodes');
-  //     for (const node of interval.latchingNodes) {
-  //       console.log(interval.getNodeIndex(node));
-  //     }
-  //     interval.print(`INTERVAL ${i++}:`);
-  //   }
-  // }
+  graph.print('Structuring this graph');
+  if (Arguments.debugMode) {
+    console.log(
+      `Found ${intervals.length} intervals. With loops: ${
+        intervals.filter((i) => i.hasLoop).length
+      }`
+    );
+    let i = 0;
+    for (const interval of intervals) {
+      console.log('\n---------------------------');
+      console.log('has loop', interval.hasLoop);
+      if (interval.hasLoop) {
+        console.log('latching nodes');
+        for (const node of interval.latchingNodes) {
+          console.log(interval.getNodeIndex(node));
+        }
+        interval.print(`INTERVAL ${i++}:`);
+      }
+    }
+  }
 
   const reducible = intervals.find((i) => i.hasLoop);
 
@@ -125,7 +127,8 @@ export function structure<Node>(graph: Graph<Node>): Graph<Node> {
   );
 
   // now it is time to find exit nodes and identify them as Break, Continue or Unstructured jumps
-  for (const edge of loop.edges) {
+  // todo: Continue is not implemented yet
+  loop.edges = loop.edges.filter((edge) => {
     const from = edge.from as IBasicBlock;
     if (
       from.type === eBasicBlockType.ONE_WAY ||
@@ -139,24 +142,18 @@ export function structure<Node>(graph: Graph<Node>): Graph<Node> {
             console.log(`// Found 'BREAK' at ${fromOffset}`);
           }
           from.type = eBasicBlockType.BREAK;
+          return false;
         } else {
           if (Arguments.debugMode) {
             console.log(`// Found 'JUMP' from ${fromOffset} to ${toOffset}`);
           }
           from.type = eBasicBlockType.UNSTRUCTURED;
+          return false;
         }
       }
     }
-  }
-
-  loop.edges = loop.edges.filter(
-    (e) =>
-      ![
-        eBasicBlockType.UNSTRUCTURED,
-        eBasicBlockType.BREAK,
-        eBasicBlockType.CONTINUE,
-      ].includes((e.from as IBasicBlock).type)
-  );
+    return true;
+  });
 
   loop.print('Creating a loop node');
   let reduced = new Graph<Node>();

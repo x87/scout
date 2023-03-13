@@ -72,7 +72,9 @@ export class Graph<T> {
   }
 
   print(header: string = '', level = 0) {
-    if (!Arguments.debugMode) { return };
+    if (!Arguments.debugMode) {
+      return;
+    }
     try {
       console.log();
       console.log(header);
@@ -82,9 +84,14 @@ export class Graph<T> {
         printNode(this.followNode, 0, level);
       }
       if (this instanceof IfGraph) {
-        // console.log(
-        // `Found ${this.type} with follow node at ${getOffset(this.followNode)}`
-        // );
+        if (Arguments.debugMode) {
+          console.log(
+            `Found ${this.type} with follow node at ${getOffset(
+              this.followNode
+            )}`
+          );
+        }
+
         // this.thenNode.print('thenNode:');
         // this.elseNode?.print('elseNode:');
       }

@@ -49,15 +49,14 @@ export async function main(): Promise<void> {
   const printer = new ExpressionPrinter(definitionMap);
 
   scripts.forEach((script) => {
-    printer.printLine(`/* #region ${script.name} */`);
     const cfg = new CFG();
-    const functions = cfg.getCallGraphs(script, scripts);
+    const functions = cfg.getCallGraphs(script, scripts).sort((a, b) => {
+      return getOffset(a) - getOffset(b);
+    });
     functions.forEach((func, i) => {
-      printer.printLine('\n');
-
       const offset = getOffset(func);
-      const name = offset === 0 ? script.name : `fn_${offset}`;
-      printer.printLine(`function ${name}() {`);
+      const name = offset === 0 ? script.name : `${script.name}_${offset}`;
+      printer.printLine(`\n:${name.toUpperCase()}`);
       printer.indent++;
 
       if (Arguments.printAssembly === true) {
@@ -70,36 +69,28 @@ export async function main(): Promise<void> {
         for (const bb of graph.nodes) {
           if (bb instanceof LoopGraph) {
             printer.printLine(
-              `${printer.indentation}${
-                bb.type === eLoopType.POST_TESTED ? 'repeat' : 'while'
-              } {`
+              `${bb.type === eLoopType.POST_TESTED ? 'repeat' : 'while'}`
             );
             printer.indent++;
             printGraph(bb);
             printer.indent--;
-            printer.printLine(
-              `${printer.indentation}}${
-                bb.type === eLoopType.POST_TESTED ? 'until' : ''
-              }`
-            );
+            printer.printLine('end');
           } else if (bb instanceof IfGraph) {
-            printer.printLine(`${printer.indentation}if`);
+            printer.printLine(`if`);
             printer.indent++;
             printer.print(bb.nodes[0]);
-            printer.printLine(`${printer.indentation}then {`);
+            printer.indent--;
+            printer.printLine(`then`);
             printer.indent++;
             printGraph(bb.thenNode);
             printer.indent--;
-            printer.printLine(`${printer.indentation}}`);
             if (bb.elseNode) {
-              printer.printLine(`${printer.indentation}else {`);
+              printer.printLine(`else`);
               printer.indent++;
               printGraph(bb.elseNode);
               printer.indent--;
-              printer.printLine(`${printer.indentation}}`);
             }
-            printer.indent--;
-            printer.printLine(`${printer.indentation}}`);
+            printer.printLine(`end`);
           } else {
             printer.print(bb as IBasicBlock, Arguments.debugMode);
           }
@@ -120,9 +111,6 @@ export async function main(): Promise<void> {
       }
 
       printer.indent--;
-      printer.printLine(`}`);
     });
-
-    printer.printLine(`/* #endregion */`);
   });
 }
