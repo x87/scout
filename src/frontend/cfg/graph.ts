@@ -1,6 +1,8 @@
 import { eIfType, eLoopType } from 'common/enums';
 import { IBasicBlock } from 'common/interfaces';
 import { opcodeToHex } from 'utils';
+import Arguments from 'common/arguments';
+
 interface IEdge<T> {
   from: T;
   to: T;
@@ -70,7 +72,7 @@ export class Graph<T> {
   }
 
   print(header: string = '', level = 0) {
-    if(1)return;
+    if (!Arguments.debugMode) { return };
     try {
       console.log();
       console.log(header);

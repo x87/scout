@@ -96,6 +96,7 @@ export default class CFG {
           break;
         case eBasicBlockType.TWO_WAY:
         case eBasicBlockType.ONE_WAY: {
+          // todo: argument could be a variable
           const targetOffset = Instruction.getNumericParam(lastInstruction);
           const targetIndex = this.findBasicBlockIndex(
             basicBlocks,

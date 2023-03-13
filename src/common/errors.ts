@@ -10,7 +10,8 @@ enum AppError {
   INVALID_ABS_OFFSET = 'Absolute offset found in a CLEO file at %s',
   NO_TARGET = 'WARNING: No target instruction found for branch %s at %s',
   NO_BRANCH = 'WARNING: No branch found at offset %s during linkage',
-  NOT_NUMERIC_INSTRUCTION = 'Expected numeric value for parameter in instruction at %s',
+  NOT_NUMERIC_INSTRUCTION = 'Expected a numeric argument in instruction at %s',
+  NOT_STRING_INSTRUCTION = 'Expected a string argument in instruction at %s',
   UNKNOWN_LOOP_TYPE = 'WARNING: Unknown loop type with header nodes %s and latching nodes %s',
   INVALID_BB_TYPE = 'Invalid block type %s',
   NODE_NOT_FOUND = 'Internal error: node not found'

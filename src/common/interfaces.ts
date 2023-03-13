@@ -15,6 +15,7 @@ export type DefinitionMap = Map<number, IInstructionDefinition>;
 export interface IScript {
   type: eScriptType;
   instructionMap: InstructionMap;
+  name: string;
 }
 
 export type Opcode = number;

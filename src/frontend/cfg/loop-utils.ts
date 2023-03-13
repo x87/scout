@@ -3,6 +3,7 @@ import { getOffset, Graph, GraphNode, LoopGraph } from './graph';
 import { eBasicBlockType, eLoopType } from 'common/enums';
 import { structure as ifStructure } from './conditions-utils';
 import { IBasicBlock } from 'common/interfaces';
+import Arguments from 'common/arguments';
 
 export function getLoopType<Node>(
   graph: Graph<Node>,
@@ -134,10 +135,14 @@ export function structure<Node>(graph: Graph<Node>): Graph<Node> {
         const fromOffset = getOffset(edge.from);
         const toOffset = getOffset(edge.to);
         if (edge.to === loop.followNode) {
-          console.log(`Found 'BREAK' at ${fromOffset}`);
+          if (Arguments.debugMode) {
+            console.log(`// Found 'BREAK' at ${fromOffset}`);
+          }
           from.type = eBasicBlockType.BREAK;
         } else {
-          console.log(`Found 'JUMP' from ${fromOffset} to ${toOffset}`);
+          if (Arguments.debugMode) {
+            console.log(`// Found 'JUMP' from ${fromOffset} to ${toOffset}`);
+          }
           from.type = eBasicBlockType.UNSTRUCTURED;
         }
       }

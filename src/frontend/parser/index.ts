@@ -7,6 +7,7 @@ import ScriptMultifile from 'frontend/script/ScriptMultifile';
 import { eParamType } from 'common/enums';
 import { DefinitionMap, IScript } from 'common/interfaces';
 import {
+  getString8Param,
   IInstruction,
   IInstructionParam,
   IInstructionParamArray,
@@ -23,6 +24,8 @@ export default class Parser {
   private readonly definitionMap: DefinitionMap;
   private readonly paramTypesHandlers: any;
   private readonly paramValuesHandlers: any;
+
+  private nonameCounter = 0;
 
   constructor(definitionMap: DefinitionMap) {
     this.definitionMap = definitionMap;
@@ -138,6 +141,7 @@ export default class Parser {
     const main: IScript = {
       instructionMap: this.getInstructions(scriptFile),
       type: scriptFile.type,
+      name: scriptFile.name || 'noname_' + this.nonameCounter++,
     };
     const scripts = [main];
     if (scriptFile instanceof ScriptMultifile) {
@@ -155,6 +159,11 @@ export default class Parser {
     for (const instruction of this) {
       instruction.offset += scriptFile.baseOffset;
       map.set(instruction.offset, instruction);
+
+      // todo: SCRIPT_NAME opcode
+      if (instruction.opcode === 0x03a4) {
+        scriptFile.name ??= getString8Param(instruction);
+      }
     }
     return map;
   }

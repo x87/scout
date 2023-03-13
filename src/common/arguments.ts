@@ -30,7 +30,6 @@ const definitionMap = {
 program
   .usage('<inputfile> [options]')
   .version(require('../../package.json').version, '-v, --version')
-  .option('-p, --print', 'print the result into stdout')
   .option('-d, --debug', 'enable the debug mode')
   .option(
     '-g, --game <game>',
