@@ -1,9 +1,9 @@
 import * as graphUtils from './graph-utils';
-import  { Graph, GraphNode, IfGraph, LoopGraph } from './graph';
-import { eIfType } from 'common/enums';
+import { Graph, GraphNode, IfGraph, LoopGraph } from './graph';
+import { eBasicBlockType, eIfType } from 'common/enums';
 import Log from '../../utils/log';
 import AppError from '../../common/errors';
-
+import { IBasicBlock } from 'common/interfaces';
 
 export function getIfType<Node>(
   graph: Graph<Node>,
@@ -55,43 +55,76 @@ export function structure<Node>(graph: Graph<Node>): Graph<GraphNode<Node>> {
     const succ = res.getImmSuccessors(header);
     return succ[0];
   };
-  const replaceIf = (header: Node, followNode: GraphNode<Node>): void => {
+  const replaceIf = (header: Node, followNode: GraphNode<Node>): Graph<Node> => {
     const ifGraph = new IfGraph<Node>();
     ifGraph.followNode = followNode;
+    const followIndex = res.getNodeIndex(followNode);
     const ifType = getIfType(res, header, followNode);
+    ifGraph.type = ifType;
     const ifHeaderSuccessors = res.getImmSuccessors(header);
+    ifGraph.print();
+    // console.log('header:', header);
     if (ifType === eIfType.IF_THEN) {
       const thenHeader = ifHeaderSuccessors[1];
+      const thenIndex = res.getNodeIndex(thenHeader);
+
       ifGraph.thenNode = new Graph<Node>();
-      res = graphUtils.replaceNodes(
-        res,
-        thenHeader,
-        followNode,
-        ifGraph.thenNode,
-        { rightEdge: false }
-      ) as Graph<Node>;
+
+      for (let i = thenIndex; i < followIndex; i++) {
+        const node = res.nodes[i];
+        ifGraph.thenNode.nodes.push(node);
+      }
     } else {
       const [elseHeader, thenHeader] = ifHeaderSuccessors;
       ifGraph.thenNode = new Graph<Node>();
       ifGraph.elseNode = new Graph<Node>();
-      res = graphUtils.replaceNodes(
-        res,
-        thenHeader,
-        elseHeader,
-        ifGraph.thenNode,
-        { rightEdge: false }
-      ) as Graph<Node>;
-      res = graphUtils.replaceNodes(
-        res,
-        elseHeader,
-        followNode,
-        ifGraph.elseNode,
-        { rightEdge: false }
-      ) as Graph<Node>;
+      const thenIndex = res.getNodeIndex(thenHeader);
+      const elseIndex = res.getNodeIndex(elseHeader);
+      
+      for (let i = thenIndex; i < elseIndex; i++) {
+        const node = res.nodes[i];
+        ifGraph.thenNode.nodes.push(node);
+      }
+      for (let i = elseIndex; i < followIndex; i++) {
+        const node = res.nodes[i];
+        ifGraph.elseNode.nodes.push(node);
+      }
+
     }
-    res = graphUtils.replaceNodes(res, header, followNode, ifGraph, {
-      rightEdge: false,
-    });
+    ifGraph.addNode(header);
+    let reduced = new Graph<Node>();
+  
+    for (const node of res.nodes) {
+      if (!ifGraph.thenNode.hasNode(node) && !ifGraph.elseNode?.hasNode(node) && node !== header) {
+        reduced.addNode(node);
+      }
+      if (node == header) {
+        reduced.addNode(ifGraph);
+      }
+    }
+    reduced.addEdge(ifGraph, ifGraph.followNode);
+    for (const edge of graph.edges) {
+      if (ifGraph.thenNode.hasNode(edge.from) || ifGraph.elseNode?.hasNode(edge.from)) {
+        if ((edge.from as IBasicBlock).type === eBasicBlockType.UNSTRUCTURED) {
+          reduced.addEdge(ifGraph, edge.to);
+        }
+  
+        // if another edge originates from the loop, it is either BREAK or CONTINUE
+        // we don't need to add it to the new graph
+        continue;
+      }
+  
+      if (!ifGraph.thenNode.hasEdge(edge.from, edge.to) && !ifGraph.elseNode?.hasEdge(edge.from, edge.to) && edge.from !== header) {
+        if (edge.to === header) {
+          edge.to = ifGraph;
+        }
+        reduced.addEdge(edge.from, edge.to);
+      }
+    }
+  
+    // reduced.print("before reverse post order");
+    // return graphUtils.reversePostOrder(reduced);
+    return reduced;
   };
 
   const head = twoWayNodes[twoWayNodes.length - 1];
@@ -99,7 +132,9 @@ export function structure<Node>(graph: Graph<Node>): Graph<GraphNode<Node>> {
   if (!tail) {
     throw Log.error(AppError.NODE_NOT_FOUND);
   }
-  replaceIf(head, tail);
+  // res.print("Structure graph before replacing IF node");
+  res = replaceIf(head, tail);
+  res.print("Structure graph after replacing IF node");
 
   return twoWayNodes.length > 1 ? structure(res) : res;
 }

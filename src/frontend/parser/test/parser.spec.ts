@@ -24,7 +24,7 @@ describe(Parser.name, () => {
 
   it('should create a Script out of input ScriptFile', () => {
     const scriptFile = new ScriptFile(Buffer.from([]), eScriptType.CLEO);
-    const spy = spyOn(parser, 'getInstructions').and.callThrough();
+    const spy = jest.spyOn(parser, 'getInstructions');
     const script = parser.parse(scriptFile);
 
     expect(script.length).toBe(1);

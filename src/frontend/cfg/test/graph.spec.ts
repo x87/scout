@@ -1,4 +1,4 @@
-import Graph from '../graph';
+import { Graph } from '../graph';
 import { IBasicBlock } from 'common/interfaces';
 import { eBasicBlockType } from 'common/enums';
 

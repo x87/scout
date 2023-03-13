@@ -1,8 +1,6 @@
-import { eLoopType } from 'common/enums';
+import { eIfType, eLoopType } from 'common/enums';
 import { IBasicBlock } from 'common/interfaces';
 import { opcodeToHex } from 'utils';
-// import { IfGraph } from './conditions-utils';
-
 interface IEdge<T> {
   from: T;
   to: T;
@@ -64,67 +62,82 @@ export class Graph<T> {
 
   get latchingNodes(): Array<GraphNode<T>> {
     const header = this.root;
-    return this.nodes.filter((node) =>
-      this.getImmSuccessors(node).includes(header)
-    );
+    return this.nodes.filter((node) => {
+      return (
+        !(node instanceof Graph) && this.getImmSuccessors(node).includes(header)
+      );
+    });
   }
 
   print(header: string = '', level = 0) {
-    console.log(''.padStart(level, ' '), header);
-    if (this instanceof LoopGraph) {
-      console.log(''.padStart(level, ' '), 'Type: ', this.type);
-      console.log(''.padStart(level, ' '), 'Follow: ', this.followNode);
-    }
-    console.log(''.padStart(level, ' '), 'Nodes: ');
-    for (let i = 0; i < this.nodes.length; i++) {
-      const node = this.nodes[i];
-      if (node instanceof Graph) {
-        console.log('---------------------');
+    if(1)return;
+    try {
+      console.log();
+      console.log(header);
+      if (this instanceof LoopGraph) {
+        console.log('Loop type:', this.type);
+        console.log('Follow node:');
+        printNode(this.followNode, 0, level);
+      }
+      if (this instanceof IfGraph) {
+        // console.log(
+        // `Found ${this.type} with follow node at ${getOffset(this.followNode)}`
+        // );
+        // this.thenNode.print('thenNode:');
+        // this.elseNode?.print('elseNode:');
+      }
+      if (this.nodes.length) {
+        console.log('Nodes: ');
+      }
+
+      for (let i = 0; i < this.nodes.length; i++) {
+        const node = this.nodes[i];
+        printNode(node, i, level);
+      }
+      if (this.edges.length) {
+        console.log('Edges: ');
+      }
+      const edgesSorted = [...this.edges].sort((a, b) => {
+        const aFrom = this.getNodeIndex(a.from);
+        const bFrom = this.getNodeIndex(b.from);
+        const aTo = this.getNodeIndex(a.to);
+        const bTo = this.getNodeIndex(b.to);
+        if (aFrom === bFrom) return aTo - bTo;
+        return aFrom - bFrom;
+      });
+      for (let i = 0; i < edgesSorted.length; i++) {
+        const edge = edgesSorted[i];
         console.log(
-          ''.padStart(level, ' '),
-          `${i}: [${getOffset(node)}] ${nodeType(node)}`
-        );
-        node.print('', level + 4);
-        console.log('---------------------');
-      } else {
-        const type = nodeType(node);
-        console.log(type);
-        const first_instr = (node as IBasicBlock).instructions[0];
-        const last_instr = (node as IBasicBlock).instructions[
-          (node as IBasicBlock).instructions.length - 1
-        ];
-        console.log(
-          ''.padStart(level, ' '),
-          `${i}: [${first_instr.offset}] ${type}. ${opcodeToHex(
-            first_instr.opcode
-          )}...${opcodeToHex(last_instr.opcode)}`
+          `${i}: [${nodeType(edge.from)}] ${this.getNodeIndex(
+            edge.from
+          )} -> ${this.getNodeIndex(edge.to)}`
         );
       }
-    }
-    console.log(''.padStart(level, ' '), 'Edges: ');
-    const edgesSorted = this.edges.sort((a, b) => {
-      const aFrom = this.getNodeIndex(a.from);
-      const bFrom = this.getNodeIndex(b.from);
-      const aTo = this.getNodeIndex(a.to);
-      const bTo = this.getNodeIndex(b.to);
-      if (aFrom === bFrom) return aTo - bTo;
-      return aFrom - bFrom;
-    });
-    for (let i = 0; i < edgesSorted.length; i++) {
-      const edge = edgesSorted[i];
-      console.log(
-        ''.padStart(level, ' '),
-        `${i}: [${nodeType(edge.from)}] ${this.getNodeIndex(
-          edge.from
-        )} -> ${this.getNodeIndex(edge.to)}`
-      );
-    }
+    } catch {}
+  }
+}
+
+function printNode<T>(node: GraphNode<T>, index: number, level: number) {
+  if (node instanceof Graph) {
+    console.log(`-${level}--------------------`);
+    console.log(`${index}: [${getOffset(node)}] ${nodeType(node)}`);
+    node.print('', level + 1);
+    console.log(`-/${level}--------------------`);
+  } else {
+    const type = nodeType(node);
+    const { instructions } = node as IBasicBlock;
+    const { offset, opcode } = instructions[0];
+    console.log(
+      `${index}: [${offset}] ${type}. ${opcodeToHex(opcode)}...${opcodeToHex(
+        instructions[instructions.length - 1].opcode
+      )}`
+    );
   }
 }
 
 function nodeType<T>(node: GraphNode<T>): string {
   if (node instanceof LoopGraph) return 'LOOP';
-  // if (i instanceof IfGraph) return 'IF';
+  if (node instanceof IfGraph) return 'IF';
   switch ((node as IBasicBlock).type) {
     case 0:
       return 'UNDEFINED';
@@ -138,28 +151,29 @@ function nodeType<T>(node: GraphNode<T>): string {
       return 'FALL';
     case 5:
       return 'N_WAY';
+    case 6:
+      return 'BREAK';
+    case 7:
+      return 'CONTINUE';
+    case 8:
+      return 'UNSTRUCTURED';
     default:
-      return 'UNKNOWN';
+      return `UNKNOWN`;
   }
 }
 
-function getOffset<T>(node: GraphNode<T>) {
-  // console.log(node);
+export function getOffset<T>(node: GraphNode<T>) {
   if (node instanceof Graph) {
     if (node.nodes.length) {
-    return getOffset(node.nodes[0]);
+      return getOffset(node.nodes[0]);
     }
+    return -1;
   }
-  // if (node instanceof IfGraph) {
-  //   return getOffset(node.nodes[0]);
-  // }
   return (node as IBasicBlock).instructions[0].offset;
 }
 
-
-
-
 export class IfGraph<Node> extends Graph<Node> {
+  type: eIfType;
   thenNode: Graph<Node>;
   elseNode?: Graph<Node>;
   followNode: GraphNode<Node>;

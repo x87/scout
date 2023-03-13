@@ -57,7 +57,10 @@ export enum eBasicBlockType {
   ONE_WAY, // jump
   TWO_WAY, // jf
   FALL,
-  N_WAY // switch
+  N_WAY, // switch
+  BREAK,
+  CONTINUE,
+  UNSTRUCTURED,
 }
 
 export enum eLoopType {
@@ -67,6 +70,6 @@ export enum eLoopType {
 }
 
 export enum eIfType {
-  IF_THEN,
-  IF_THEN_ELSE
+  IF_THEN = 'IF_THEN',
+  IF_THEN_ELSE = 'IF_THEN_ELSE'
 }

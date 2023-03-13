@@ -8,11 +8,14 @@ module.exports = {
   modulePaths: ['<rootDir>/src/'],
   preset: 'ts-jest',
   roots: ['<rootDir>/src'],
-  setupFilesAfterEnv: ['jest-extended'],
+  setupFilesAfterEnv: ['jest-extended/all'],
   testPathIgnorePatterns: ['<rootDir>/node_modules/'],
-  globals: {
-    'ts-jest': {
-      tsConfig: 'tsconfig.spec.json',
-    },
+  transform: {
+    '^.+\\.(ts|tsx)$': [
+      'ts-jest',
+      {
+        tsconfig: 'tsconfig.spec.json',
+      },
+    ],
   },
 };
