@@ -84,14 +84,8 @@ export function structure<Node>(graph: Graph<Node>): Graph<Node> {
     );
     let i = 0;
     for (const interval of intervals) {
-      console.log('\n---------------------------');
-      console.log('has loop', interval.hasLoop);
       if (interval.hasLoop) {
-        console.log('latching nodes');
-        for (const node of interval.latchingNodes) {
-          console.log(interval.getNodeIndex(node));
-        }
-        interval.print(`INTERVAL ${i++}:`);
+        interval.print(`LOOP INTERVAL ${i++}:`);
       }
     }
   }
@@ -141,6 +135,8 @@ export function structure<Node>(graph: Graph<Node>): Graph<Node> {
           if (Arguments.debugMode) {
             console.log(`// Found 'BREAK' at ${fromOffset}`);
           }
+          // note that a 2-way node becomes 1-way here as we are removing the edge
+          // so in order to structure the IF block properly we will have to check the block type
           from.type = eBasicBlockType.BREAK;
           return false;
         } else {
