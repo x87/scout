@@ -8,6 +8,7 @@ import {
 export interface IBasicBlock {
   type: eBasicBlockType;
   instructions: IInstruction[];
+  start: number;
 }
 
 export type DefinitionMap = Map<number, IInstructionDefinition>;

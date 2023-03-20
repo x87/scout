@@ -13,6 +13,7 @@ import {
   IInstructionParamArray,
   InstructionMap,
 } from 'common/instructions';
+import { OP_NAME } from 'frontend/cfg';
 
 export const PARAM_ANY = 'any';
 export const PARAM_ARGUMENTS = 'arguments';
@@ -160,8 +161,7 @@ export default class Parser {
       instruction.offset += scriptFile.baseOffset;
       map.set(instruction.offset, instruction);
 
-      // todo: SCRIPT_NAME opcode
-      if (instruction.opcode === 0x03a4) {
+      if (instruction.opcode === OP_NAME) {
         scriptFile.name ??= getString8Param(instruction);
       }
     }

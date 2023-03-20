@@ -100,6 +100,7 @@ function nodes(n: number) {
           opcode: i + 1,
         },
       ],
+      start: 0
     });
   }
   return blocks;

@@ -123,7 +123,13 @@ describe('Graph utils', () => {
     const endless = endlessLoop();
     const pd = graphUtils.findPDom(endless);
     const [n1, n2, n3, n4, n5] = endless.nodes;
-    expect(pd).toEqual([[n1, n2, n4, n5], [n2, n4, n5], [n3, n4, n5], [n4, n5], [n5]]);
+    expect(pd).toEqual([
+      [n1, n2, n4, n5],
+      [n2, n4, n5],
+      [n3, n4, n5],
+      [n4, n5],
+      [n5],
+    ]);
   });
 
   it('should transpose a given graph', () => {
@@ -139,5 +145,62 @@ describe('Graph utils', () => {
       { from: n4, to: n2 },
       { from: n2, to: n1 },
     ]);
+  });
+
+  it('should correctly RPO', () => {
+    const n2 = {
+      type: eBasicBlockType.RETURN,
+      instructions: [
+        {
+          offset: 2,
+          params: [],
+          opcode: 2,
+        },
+      ],
+    };
+    const n1 = {
+      type: eBasicBlockType.FALL,
+      instructions: [
+        {
+          offset: 1,
+          params: [],
+          opcode: 1,
+        },
+      ],
+    };
+
+    const g1 = new Graph<IBasicBlock>();
+    g1.addNode(n1, n2);
+    g1.addEdge(n1, n2);
+    const rpo1 = graphUtils.reversePostOrder(g1);
+    expect(rpo1.nodes).toEqual([n1, n2]);
+  });
+
+  it('should find a root node', () => {
+    const g = new Graph<IBasicBlock>();
+    const n1 = {
+      type: eBasicBlockType.RETURN,
+      instructions: [
+        {
+          offset: 2,
+          params: [],
+          opcode: 2,
+        },
+      ],
+    };
+    const n2 = {
+      type: eBasicBlockType.FALL,
+      instructions: [
+        {
+          offset: 1,
+          params: [],
+          opcode: 1,
+        },
+      ],
+    };
+    g.addNode(n1, n2);
+    g.addEdge(n2, n1);
+    const isRoot = graphUtils.isRoot(g, n2);
+    expect(isRoot).toBe(true);
   });
 });

@@ -31,6 +31,7 @@ program
   .usage('<inputfile> [options]')
   .version(require('../../package.json').version, '-v, --version')
   .option('-d, --debug', 'enable the debug mode')
+  .option('-p, --print', 'print the assembly')
   .option(
     '-g, --game <game>',
     'target game: gta3, vc, sa',

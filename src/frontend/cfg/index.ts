@@ -2,7 +2,7 @@ import Log from 'utils/log';
 
 import Arguments from 'common/arguments';
 import AppError from 'common/errors';
-import {Graph} from './graph';
+import { Graph } from './graph';
 
 import * as Instruction from 'common/instructions';
 import { IInstruction } from 'common/instructions';
@@ -10,14 +10,15 @@ import * as graphUtils from './graph-utils';
 import { eBasicBlockType, eGame, eScriptType } from 'common/enums';
 import { IBasicBlock, IScript } from 'common/interfaces';
 
-const OP_JMP = 0x0002;
+export const OP_JMP = 0x0002;
 const OP_JT = 0x004c;
-const OP_JF = 0x004d;
+export const OP_JF = 0x004d;
 const OP_END = 0x004e;
 const OP_CALL = 0x004f;
 const OP_GOSUB = 0x0050;
 const OP_RETURN = 0x0051;
-const OP_IF = 0x00d6;
+export const OP_NAME = 0x03a4;
+export const OP_IF = 0x00d6;
 const blockEndOpcodes = [OP_END, OP_RETURN];
 
 const callOpcodes = [OP_GOSUB, OP_CALL];
@@ -27,7 +28,7 @@ const branchOpcodesMap: any = {
     [OP_JMP]: eBasicBlockType.ONE_WAY,
     [OP_IF]: eBasicBlockType.FALL,
     [OP_JF]: eBasicBlockType.TWO_WAY,
-    [OP_JT]: eBasicBlockType.TWO_WAY,
+    // [OP_JT]: eBasicBlockType.TWO_WAY, // todo: different order of successor nodes
   },
   [eGame.GTAVC]: {
     [OP_JMP]: eBasicBlockType.ONE_WAY,
@@ -62,13 +63,14 @@ export default class CFG {
     const basicBlocks = this.findBasicBlocks(script, entries);
 
     return entries.map((offset) => {
-      return this.buildGraph(basicBlocks, offset);
+      return this.buildGraph(basicBlocks, offset, entries);
     });
   }
 
   private buildGraph(
     basicBlocks: IBasicBlock[],
-    startOffset: number
+    startOffset: number,
+    entries: number[]
   ): Graph<IBasicBlock> {
     const graph = new Graph<IBasicBlock>();
 
@@ -85,6 +87,7 @@ export default class CFG {
       visited[index] = true;
 
       const bb = basicBlocks[index];
+      bb.start = startOffset;
       graph.addNode(bb);
 
       const lastInstruction = bb.instructions[bb.instructions.length - 1];
@@ -98,14 +101,22 @@ export default class CFG {
         case eBasicBlockType.ONE_WAY: {
           // todo: argument could be a variable
           const targetOffset = Instruction.getNumericParam(lastInstruction);
+          const targetOffsetAbs = Math.abs(targetOffset);
           const targetIndex = this.findBasicBlockIndex(
             basicBlocks,
-            Math.abs(targetOffset)
+            targetOffsetAbs
           );
 
           if (targetIndex === -1) {
             Log.warn(AppError.NO_BRANCH, targetOffset);
             return;
+          }
+          if (
+            entries.includes(targetOffsetAbs) &&
+            bb.start !== targetOffsetAbs
+          ) {
+            bb.type = eBasicBlockType.UNSTRUCTURED; // jump into another function
+            break;
           }
           graph.addEdge(bb, basicBlocks[targetIndex]);
           traverse(targetIndex);
@@ -121,6 +132,8 @@ export default class CFG {
     };
 
     traverse(startIndex);
+    // todo: add unvisited nodes as separate entries
+
     return this.patchSelfLoops(graphUtils.reversePostOrder(graph));
   }
 
@@ -130,7 +143,7 @@ export default class CFG {
     const result: IBasicBlock[] = [];
     const leaderOffsets = [
       ...new Set(entries.concat(this.findLeaderOffsets(script))),
-    ].sort();
+    ].sort((a, b) => a - b);
 
     if (leaderOffsets.length) {
       for (const [offset, instruction] of script.instructionMap) {
@@ -221,7 +234,7 @@ export default class CFG {
 
       if (branchType === eBasicBlockType.FALL) {
         offsets.push(offset);
-        doesThisFollowBranchInstruction = true;
+        // doesThisFollowBranchInstruction = true;
         continue;
       }
 
@@ -243,7 +256,7 @@ export default class CFG {
     instructions: IInstruction[],
     type: eBasicBlockType = eBasicBlockType.UNDEFINED
   ): IBasicBlock {
-    return { type, instructions };
+    return { type, instructions, start: undefined };
   }
 
   private findBasicBlockIndex(

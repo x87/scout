@@ -228,3 +228,19 @@ export function transpose<Node>(graph: Graph<Node>): Graph<Node> {
   // res.nodes = res.nodes.reverse();
   return res;
 }
+
+export function isRoot<Node>(graph: Graph<Node>, node: Node) {
+  let visited = new Set();
+  let stack: Array<GraphNode<Node>> = [node];
+  while (stack.length > 0) {
+    let curr = stack.pop();
+    if (visited.has(curr)) {
+      continue;
+    }
+    visited.add(curr);
+    for (const succ of graph.getImmSuccessors(curr)) {
+      stack.push(succ);
+    }
+  }
+  return visited.size === graph.nodes.length;
+}

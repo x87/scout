@@ -1,10 +1,12 @@
 import * as graphUtils from './graph-utils';
-import { Graph, GraphNode, IfGraph, LoopGraph } from './graph';
+import { getOffset, Graph, GraphNode, IfGraph, LoopGraph } from './graph';
 import { eBasicBlockType, eIfType } from 'common/enums';
 import Log from '../../utils/log';
 import AppError from '../../common/errors';
 import { IBasicBlock } from 'common/interfaces';
 import Arguments from 'common/arguments';
+import { OP_IF } from './index';
+import { getNumericParam } from 'common/instructions';
 
 export function getIfType<Node>(
   graph: Graph<Node>,
@@ -19,9 +21,10 @@ export function getIfType<Node>(
 
 export function structure<Node>(graph: Graph<Node>): Graph<GraphNode<Node>> {
   const twoWayNodes = graph.nodes.filter((node) => {
-    if (node instanceof IfGraph || node instanceof LoopGraph) return false;
-    const successors = graph.getImmSuccessors(node);
-    return successors.length === 2 || was2WayNode(node, successors);
+    if (node instanceof Graph) return false;
+    // const successors = graph.getImmSuccessors(node);
+    // return successors.length === 2;
+    return (node as IBasicBlock).type === eBasicBlockType.TWO_WAY;
   }) as Node[];
 
   if (twoWayNodes.length === 0) {
@@ -65,18 +68,18 @@ export function structure<Node>(graph: Graph<Node>): Graph<GraphNode<Node>> {
     header: Node,
     followNode: GraphNode<Node>
   ): Graph<Node> => {
+    const ifHeaderSuccessors = res.getImmSuccessors(header);
     const ifGraph = new IfGraph<Node>();
     ifGraph.followNode = followNode;
     const followIndex = res.getNodeIndex(followNode);
     const ifType = getIfType(res, header, followNode);
     ifGraph.type = ifType;
-    const ifHeaderSuccessors = res.getImmSuccessors(header);
-    ifGraph.print();
+    ifGraph.ifNumber = getIfCondNumber(res, header);
+
+    ifGraph.print(`New IF graph with id ${ifGraph.id}`);
 
     if (ifType === eIfType.IF_THEN) {
-      const thenHeader = was2WayNode(header, ifHeaderSuccessors)
-        ? ifHeaderSuccessors[0]
-        : ifHeaderSuccessors[1];
+      const thenHeader = ifHeaderSuccessors.at(-1);
       const thenIndex = res.getNodeIndex(thenHeader);
 
       ifGraph.thenNode = new Graph<Node>();
@@ -143,27 +146,39 @@ export function structure<Node>(graph: Graph<Node>): Graph<GraphNode<Node>> {
       }
     }
 
-    // reduced.print("before reverse post order");
-    // return graphUtils.reversePostOrder(reduced);
     return reduced;
   };
 
-  const head = twoWayNodes[twoWayNodes.length - 1];
+  const head = twoWayNodes.at(-1);
   const tail = findFollowNode(head);
   if (!tail) {
     throw Log.error(AppError.NODE_NOT_FOUND);
   }
   // res.print("Structure graph before replacing IF node");
   res = replaceIf(head, tail);
-  res.print(`New graph after replacing IF node (${twoWayNodes.length} left)`);
+  res.print(
+    `New graph after replacing IF node (${twoWayNodes.length - 1} left)`
+  );
 
   // recursively structure until no more 2-way nodes are found
   return structure(res);
 }
 
-function was2WayNode<Node>(node: Node, successors: Array<GraphNode<Node>>) {
-  return (
-    successors.length === 1 &&
-    (node as IBasicBlock).type === eBasicBlockType.BREAK
-  );
+function getIfCondNumber<Node>(res: Graph<Node>, header: Node) {
+  // const pred = res.getImmPredecessors(header);
+  // if (
+  //   pred.length === 1 &&
+  //   (pred[0] as IBasicBlock).type === eBasicBlockType.FALL
+  // ) {
+  //   const { instructions } = pred[0] as IBasicBlock;
+  //   if (instructions.length === 1 && instructions[0].opcode === OP_IF) {
+  //     return getNumericParam(instructions[0]);
+  //   }
+  // }
+  const { instructions } = header as IBasicBlock;
+  if (instructions.length > 1 && instructions[0].opcode === OP_IF) {
+    return getNumericParam(instructions[0]);
+  }
+  Log.warn(AppError.NO_IF_PREDICATE, getOffset(header));
+  return 0;
 }

@@ -8,12 +8,14 @@ interface IEdge<T> {
   to: T;
 }
 
+let id = 0;
+
 export type GraphNode<T> = T | Graph<T>;
 
 export class Graph<T> {
   nodes: Array<GraphNode<T>>;
   edges: Array<IEdge<GraphNode<T>>>;
-
+  id = id++;
   constructor() {
     this.nodes = [];
     this.edges = [];
@@ -23,6 +25,13 @@ export class Graph<T> {
     nodes.forEach((node) => {
       if (!this.hasNode(node)) this.nodes.push(node);
     });
+  }
+
+  removeNode(node: GraphNode<T>): void {
+    this.nodes = this.nodes.filter((n) => n !== node);
+    this.edges = this.edges.filter(
+      (edge) => edge.from !== node && edge.to !== node
+    );
   }
 
   hasNode(node: GraphNode<T>): boolean {
@@ -75,20 +84,26 @@ export class Graph<T> {
     if (!Arguments.debugMode) {
       return;
     }
+    console.group(header);
     try {
-      console.log();
-      console.log(header);
       if (this instanceof LoopGraph) {
         console.log('Loop type:', this.type);
         console.log('Follow node:');
-        printNode(this.followNode, 0, level);
+        if (this.followNode) {
+          printNode(this.followNode, 0, level);
+        } else {
+          console.log('undefined');
+        }
+        if (this.condition) {
+          console.log('Condition:');
+          printNode(this.condition, 0, level)
+
+        }
       }
       if (this instanceof IfGraph) {
         if (Arguments.debugMode) {
           console.log(
-            `Found ${this.type} with follow node at ${getOffset(
-              this.followNode
-            )}`
+            `${this.type} with follow node at ${getOffset(this.followNode)}`
           );
         }
 
@@ -96,15 +111,18 @@ export class Graph<T> {
         // this.elseNode?.print('elseNode:');
       }
       if (this.nodes.length) {
-        console.log('Nodes: ');
+        console.group('Nodes: ');
       }
 
       for (let i = 0; i < this.nodes.length; i++) {
         const node = this.nodes[i];
         printNode(node, i, level);
       }
+      if (this.nodes.length) {
+        console.groupEnd();
+      }
       if (this.edges.length) {
-        console.log('Edges: ');
+        console.group('Edges: ');
       }
       const edgesSorted = [...this.edges].sort((a, b) => {
         const aFrom = this.getNodeIndex(a.from);
@@ -122,23 +140,28 @@ export class Graph<T> {
           )} -> ${this.getNodeIndex(edge.to)}`
         );
       }
-    } catch {}
+      if (this.edges.length) {
+        console.groupEnd();
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    console.groupEnd();
   }
 }
 
 function printNode<T>(node: GraphNode<T>, index: number, level: number) {
   if (node instanceof Graph) {
-    console.log(`-${level}--------------------`);
+    // console.group();
     console.log(`${index}: [${getOffset(node)}] ${nodeType(node)}`);
-    node.print('', level + 1);
-    console.log(`-/${level}--------------------`);
+    // console.groupEnd();
   } else {
     const type = nodeType(node);
     const { instructions } = node as IBasicBlock;
-    const { offset, opcode } = instructions[0];
+    const { offset, opcode } = instructions[0] ?? { offset: -1, opcode: -1 };
     console.log(
       `${index}: [${offset}] ${type}. ${opcodeToHex(opcode)}...${opcodeToHex(
-        instructions[instructions.length - 1].opcode
+        instructions.at(-1)?.opcode ?? -1
       )}`
     );
   }
@@ -166,6 +189,8 @@ function nodeType<T>(node: GraphNode<T>): string {
       return 'CONTINUE';
     case 8:
       return 'UNSTRUCTURED';
+    case 9:
+      return 'LOOP_COND';
     default:
       return `UNKNOWN`;
   }
@@ -178,7 +203,7 @@ export function getOffset<T>(node: GraphNode<T>) {
     }
     return -1;
   }
-  return (node as IBasicBlock).instructions[0].offset;
+  return (node as IBasicBlock).instructions[0]?.offset ?? -1;
 }
 
 export class IfGraph<Node> extends Graph<Node> {
@@ -186,9 +211,11 @@ export class IfGraph<Node> extends Graph<Node> {
   thenNode: Graph<Node>;
   elseNode?: Graph<Node>;
   followNode: GraphNode<Node>;
+  ifNumber: number = 0;
 }
 
 export class LoopGraph<Node> extends Graph<Node> {
   type: eLoopType;
   followNode?: Node;
+  condition?: Node
 }

@@ -4,6 +4,7 @@ import { eBasicBlockType, eLoopType } from 'common/enums';
 import { structure as ifStructure } from './conditions-utils';
 import { IBasicBlock } from 'common/interfaces';
 import Arguments from 'common/arguments';
+import { OP_IF } from '.';
 
 export function getLoopType<Node>(
   graph: Graph<Node>,
@@ -74,33 +75,34 @@ export function findFollowNode<Node>(
 }
 
 export function structure<Node>(graph: Graph<Node>): Graph<Node> {
+  graph.print('Finding loops in this graph:');
   const intervals = graphUtils.split(graph);
-  graph.print('Structuring this graph');
   if (Arguments.debugMode) {
     console.log(
-      `Found ${intervals.length} intervals. With loops: ${
-        intervals.filter((i) => i.hasLoop).length
-      }`
+      `Found ${intervals.filter((i) => i.hasLoop).length} loop(s) in ${
+        intervals.length
+      } interval(s).`
     );
-    let i = 0;
-    for (const interval of intervals) {
-      if (interval.hasLoop) {
-        interval.print(`LOOP INTERVAL ${i++}:`);
-      }
-    }
+    // for (let i = 0; i < intervals.length; i++) {
+    //   if (intervals[i].hasLoop) {
+    //     intervals[i].print(`LOOP INTERVAL ${i}:`);
+    //   }
+    // }
   }
 
-  const reducible = intervals.find((i) => i.hasLoop);
-
-  if (!reducible) {
+  const index = intervals.findIndex((i) => i.hasLoop);
+  if (index === -1) {
     // todo: should we run ifStructure there?
     return graph;
   }
-  reducible.print(`Structuring this interval`);
+  const reducible = intervals[index];
+  if (Arguments.debugMode) {
+    reducible.print(`\nPicked interval ${index} for structuring.`)
+  }
 
   // there could be multiple Continue statements referencing loop root
-  // therefore picking up the last node in the interval
-  const lastNode = reducible.latchingNodes[reducible.latchingNodes.length - 1];
+  // therefore picking up the last latching node in the interval
+  const lastNode = reducible.latchingNodes.at(-1);
   const lastNodeIndex = reducible.getNodeIndex(lastNode);
 
   // populating loop with inner nodes and
@@ -122,26 +124,61 @@ export function structure<Node>(graph: Graph<Node>): Graph<Node> {
 
   // now it is time to find exit nodes and identify them as Break, Continue or Unstructured jumps
   // todo: Continue is not implemented yet
+
+  // ONE_WAY exit nodes are BREAKs;
+  // TWO_WAY exit nodes depend on the type of the loop:
+  // - POST_TESTED && node is last: jf->header; make it the loop condition and delete from the loop
+  // - PRE_TESTED && node is first: jf->exit; make it the loop condition and delete from the loop
+  // - else: abnormal exit, should not be structured as if block; change to UNSTRUCTURED
+  for (const node of loop.nodes) {
+    const successors = graph.getImmSuccessors(node);
+
+    if (successors.includes(loop.followNode)) {
+      if ((node as IBasicBlock).type === eBasicBlockType.ONE_WAY) {
+        (node as IBasicBlock).type = eBasicBlockType.BREAK;
+        continue;
+      }
+      if (node === loop.root && loop.type === eLoopType.PRE_TESTED) {
+        loop.condition = node as Node;
+        (node as IBasicBlock).type = eBasicBlockType.LOOP_COND;
+        continue;
+      }
+      if (node === lastNode && loop.type === eLoopType.POST_TESTED) {
+        loop.condition = node as Node;
+        (node as IBasicBlock).type = eBasicBlockType.LOOP_COND;
+        continue;
+      }
+      (node as IBasicBlock).type = eBasicBlockType.UNSTRUCTURED;
+    }
+  }
+
+  // todo: refactor this mess
   loop.edges = loop.edges.filter((edge) => {
     const from = edge.from as IBasicBlock;
     if (
       from.type === eBasicBlockType.ONE_WAY ||
-      from.type === eBasicBlockType.TWO_WAY
+      from.type === eBasicBlockType.TWO_WAY ||
+      from.type === eBasicBlockType.UNSTRUCTURED ||
+      from.type === eBasicBlockType.BREAK ||
+      from.type === eBasicBlockType.LOOP_COND
     ) {
       if (!loop.hasNode(edge.to)) {
         const fromOffset = getOffset(edge.from);
         const toOffset = getOffset(edge.to);
         if (edge.to === loop.followNode) {
           if (Arguments.debugMode) {
-            console.log(`// Found 'BREAK' at ${fromOffset}`);
+            console.log(`Found 'BREAK' at ${fromOffset}`);
           }
-          // note that a 2-way node becomes 1-way here as we are removing the edge
-          // so in order to structure the IF block properly we will have to check the block type
-          from.type = eBasicBlockType.BREAK;
+          if (
+            from.type === eBasicBlockType.ONE_WAY ||
+            from.type === eBasicBlockType.TWO_WAY
+          ) {
+            from.type = eBasicBlockType.UNSTRUCTURED;
+          }
           return false;
         } else {
           if (Arguments.debugMode) {
-            console.log(`// Found 'JUMP' from ${fromOffset} to ${toOffset}`);
+            console.log(`Found 'JUMP' from ${fromOffset} to ${toOffset}`);
           }
           from.type = eBasicBlockType.UNSTRUCTURED;
           return false;
@@ -157,9 +194,10 @@ export function structure<Node>(graph: Graph<Node>): Graph<Node> {
     if (!loop.hasNode(node)) {
       reduced.addNode(node);
     }
+    if (node === loop.root) {
+      reduced.addNode(loop);
+    }
   }
-  reduced.addNode(loop);
-
   // follow node could be undefined if the loop is the last node in the graph
   if (loop.followNode) {
     reduced.addEdge(loop, loop.followNode);
@@ -169,7 +207,9 @@ export function structure<Node>(graph: Graph<Node>): Graph<Node> {
       if ((edge.from as IBasicBlock).type === eBasicBlockType.UNSTRUCTURED) {
         // when there is an unstructured jump from the loop we must add it,
         // otherwise the nodes that the jump is pointing to could become unreachable
-        reduced.addEdge(loop, edge.to);
+
+        // todo: rethink RPO algo to iterate over all nodes and create multiple disjoint graphs
+        // reduced.addEdge(loop, edge.to);
       }
 
       // if another edge originates from the loop, it is either BREAK or CONTINUE

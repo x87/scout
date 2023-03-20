@@ -19,6 +19,7 @@ import {
   LoopGraph,
 } from './frontend/cfg/graph';
 import ExpressionPrinter from './utils/printer/ExpressionPrinter';
+import * as graphUtils from 'frontend/cfg/graph-utils';
 
 interface IDefinition extends IInstructionDefinition {
   id: string;
@@ -68,15 +69,43 @@ export async function main(): Promise<void> {
       const printGraph = (graph: Graph<GraphNode<IBasicBlock>>) => {
         for (const bb of graph.nodes) {
           if (bb instanceof LoopGraph) {
-            printer.printLine(
-              `${bb.type === eLoopType.POST_TESTED ? 'repeat' : 'while'}`
-            );
-            printer.indent++;
-            printGraph(bb);
-            printer.indent--;
-            printer.printLine('end');
+            printer.printLine('');
+            switch (bb.type) {
+              case eLoopType.PRE_TESTED: {
+                printer.printLine(`while ${printer.stringifyCondition(bb.condition)}`);
+                printer.indent++;
+                const g = graphUtils.from(bb);
+                g.nodes.splice(0, 1);
+                printGraph(g);
+                printer.indent--;
+                printer.printLine('end');
+                break;
+              }
+              case eLoopType.POST_TESTED: {
+                printer.printLine(`repeat`);
+                printer.indent++;
+                const g = graphUtils.from(bb);
+                g.nodes.splice(g.nodes.length - 1, 1);
+                printGraph(g);
+                printer.indent--;
+                printer.printLine(`until ${printer.stringifyCondition(bb.condition)}`);
+                break;
+              }
+              case eLoopType.ENDLESS:
+                printer.printLine(`while true`);
+                printer.indent++;
+                printGraph(bb);
+                printer.indent--;
+                printer.printLine('end');
+                break;
+            }
+            printer.printLine('');
           } else if (bb instanceof IfGraph) {
-            printer.printLine(`if`);
+            printer.printLine(
+              `if ${bb.ifNumber || ''} ${
+                Arguments.debugMode ? `// id: ${bb.id}` : ''
+              }`
+            );
             printer.indent++;
             printer.print(bb.nodes[0]);
             printer.indent--;
@@ -92,7 +121,7 @@ export async function main(): Promise<void> {
             }
             printer.printLine(`end`);
           } else {
-            printer.print(bb as IBasicBlock, Arguments.debugMode);
+            bb && printer.print(bb as IBasicBlock, Arguments.debugMode);
           }
         }
       };

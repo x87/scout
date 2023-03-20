@@ -61,6 +61,7 @@ export enum eBasicBlockType {
   BREAK,
   CONTINUE,
   UNSTRUCTURED,
+  LOOP_COND
 }
 
 export enum eLoopType {
