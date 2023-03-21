@@ -1,6 +1,6 @@
 {
   "name": "scout",
-  "version": "0.4.3",
+  "version": "0.5.0",
   "description": "Scout Decompiler",
   "main": "scout.js",
   "repository": {
@@ -8,7 +8,7 @@
     "url": "https://github.com/x87/scout.git"
   },
   "scripts": {
-    "lint": "tslint -c tslint.json src/**/*.ts",
+    "lint": "eslint ./src",
     "build": "webpack",
     "dev": "webpack --watch",
     "test": "jest"
@@ -17,21 +17,22 @@
   "author": "Seemann",
   "license": "MIT",
   "devDependencies": {
-    "@types/jest": "25.2.3",
-    "@types/node": "14.0.5",
-    "jest": "26.0.1",
-    "jest-extended": "0.11.5",
-    "ts-jest": "26.0.0",
-    "ts-loader": "7.0.4",
-    "ts-node": "8.10.1",
-    "tslint": "6.1.2",
-    "tslint-loader": "3.5.4",
-    "typescript": "3.9.3",
-    "webpack": "4.43.0",
-    "webpack-cli": "3.3.11"
+    "@types/jest": "29.4.0",
+    "@types/node": "18.14.6",
+    "@typescript-eslint/eslint-plugin": "^5.54.0",
+    "@typescript-eslint/parser": "^5.54.0",
+    "eslint": "^8.35.0",
+    "jest": "29.4.3",
+    "jest-extended": "3.2.4",
+    "ts-jest": "29.0.5",
+    "ts-loader": "9.4.2",
+    "ts-node": "10.9.1",
+    "typescript": "4.9.5",
+    "webpack": "5.75.0",
+    "webpack-cli": "5.0.1"
   },
   "dependencies": {
-    "commander": "5.1.0",
+    "commander": "10.0.0",
     "eol": "0.9.1"
   }
 }

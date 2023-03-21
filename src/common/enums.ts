@@ -45,8 +45,10 @@ export enum eScriptFileSegments {
 }
 
 export enum eScriptType {
-  HEADLESS,
-  MULTIFILE
+  MAIN,
+  MISSION,
+  EXTERNAL,
+  CLEO
 }
 
 export enum eBasicBlockType {
@@ -55,16 +57,20 @@ export enum eBasicBlockType {
   ONE_WAY, // jump
   TWO_WAY, // jf
   FALL,
-  N_WAY // switch
+  N_WAY, // switch
+  BREAK,
+  CONTINUE,
+  UNSTRUCTURED,
+  LOOP_COND
 }
 
 export enum eLoopType {
-  PRE_TESTED,
-  POST_TESTED,
-  ENDLESS
+  PRE_TESTED = 'PRE_TESTED',
+  POST_TESTED = 'POST_TESTED',
+  ENDLESS = 'ENDLESS'
 }
 
 export enum eIfType {
-  IF_THEN,
-  IF_THEN_ELSE
+  IF_THEN = 'IF_THEN',
+  IF_THEN_ELSE = 'IF_THEN_ELSE'
 }

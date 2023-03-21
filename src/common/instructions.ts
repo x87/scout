@@ -15,8 +15,11 @@ export interface IInstruction {
   params: IInstructionParam[];
 }
 
-export interface IInstructionInt32 extends IInstruction {
-  params: [{ type: eParamType.NUM32; value: number }];
+interface TypedInstruction<
+  T extends eParamType,
+  V extends number | string | IInstructionParamArray
+> extends IInstruction {
+  params: [{ type: T; value: V }];
 }
 
 export interface IInstructionParam {
@@ -35,10 +38,19 @@ export type InstructionMap = Map<number, IInstruction>;
 
 export const isNumeric = (
   instruction: IInstruction
-): instruction is IInstructionInt32 => {
+): instruction is TypedInstruction<
+  eParamType.NUM32,
+  number
+> => {
   return [eParamType.NUM32, eParamType.NUM16, eParamType.NUM8].includes(
     instruction.params[0].type
   );
+};
+
+export const isString8 = (
+  instruction: IInstruction
+): instruction is TypedInstruction<eParamType.STR8, string> => {
+  return [eParamType.STR8].includes(instruction.params[0].type);
 };
 
 export const getNumericParam = (instruction: IInstruction): number => {
@@ -46,4 +58,11 @@ export const getNumericParam = (instruction: IInstruction): number => {
     throw Log.error(AppError.NOT_NUMERIC_INSTRUCTION, instruction.offset);
   }
   return Number(instruction.params[0].value);
+};
+
+export const getString8Param = (instruction: IInstruction): string => {
+  if (!isString8(instruction)) {
+    throw Log.error(AppError.NOT_STRING_INSTRUCTION, instruction.offset);
+  }
+  return instruction.params[0].value;
 };

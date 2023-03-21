@@ -2,6 +2,7 @@ import Log from 'utils/log';
 import ScriptFile from 'frontend/script/ScriptFile';
 import ScriptMultifile from 'frontend/script/ScriptMultifile';
 import AppError from 'common/errors';
+import { eScriptType } from 'common/enums';
 
 export default class Loader {
   async loadScript(stream: Promise<Buffer>): Promise<ScriptFile> {
@@ -10,7 +11,7 @@ export default class Loader {
       if (Buffer.isBuffer(buffer)) {
         return this.isHeaderPresent(buffer)
           ? new ScriptMultifile(buffer)
-          : new ScriptFile(buffer);
+          : new ScriptFile(buffer, eScriptType.CLEO);
       }
     } catch {
       throw Log.error(AppError.INVALID_INPUT_FILE);

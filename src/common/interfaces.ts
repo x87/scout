@@ -8,6 +8,7 @@ import {
 export interface IBasicBlock {
   type: eBasicBlockType;
   instructions: IInstruction[];
+  start: number;
 }
 
 export type DefinitionMap = Map<number, IInstructionDefinition>;
@@ -15,7 +16,7 @@ export type DefinitionMap = Map<number, IInstructionDefinition>;
 export interface IScript {
   type: eScriptType;
   instructionMap: InstructionMap;
-  innerScripts?: IScript[];
+  name: string;
 }
 
 export type Opcode = number;

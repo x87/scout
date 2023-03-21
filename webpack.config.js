@@ -21,16 +21,6 @@ module.exports = {
           configFile: 'tsconfig.build.json',
         },
       },
-      {
-        test: /\.ts$/,
-        loader: 'tslint-loader',
-        enforce: 'pre',
-        exclude: /node_modules/,
-        options: {
-          configFile: 'tslint.json',
-          emitErrors: true,
-        },
-      },
     ],
   },
 };

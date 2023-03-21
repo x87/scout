@@ -5,14 +5,16 @@ enum AppError {
   UNKNOWN_GAME = 'Unknown game alias <%s> passed as command-line argument',
   UNKNOWN_PARAM = 'Unknown data type %s found at offset %s',
   NO_PARAM = 'No parameters found for opcode %s at %s',
-  END_OF_BUFFER = 'End of buffer unexpectedly reached while reading %s bytes',
+  END_OF_BUFFER = 'Unexpectedly reached the end of the buffer while reading %s bytes',
   INVALID_REL_OFFSET = 'Relative offset found in the main section at %s',
-  INVALID_ABS_OFFSET = 'Absolute offset found in an external file at %s',
+  INVALID_ABS_OFFSET = 'Absolute offset found in a CLEO file at %s',
   NO_TARGET = 'WARNING: No target instruction found for branch %s at %s',
   NO_BRANCH = 'WARNING: No branch found at offset %s during linkage',
-  NOT_NUMERIC_INSTRUCTION = 'Expected numeric value for parameter in instruction at %s',
+  NOT_NUMERIC_INSTRUCTION = 'Expected a numeric argument in instruction at %s',
+  NOT_STRING_INSTRUCTION = 'Expected a string argument in instruction at %s',
   UNKNOWN_LOOP_TYPE = 'WARNING: Unknown loop type with header nodes %s and latching nodes %s',
   INVALID_BB_TYPE = 'Invalid block type %s',
-  NODE_NOT_FOUND = 'Internal error: node not found'
+  NODE_NOT_FOUND = 'Internal error: node not found',
+  NO_IF_PREDICATE = 'No IF instruction found for the condition at %s',
 }
 export default AppError;

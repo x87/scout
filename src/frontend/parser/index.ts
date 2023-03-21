@@ -7,11 +7,13 @@ import ScriptMultifile from 'frontend/script/ScriptMultifile';
 import { eParamType } from 'common/enums';
 import { DefinitionMap, IScript } from 'common/interfaces';
 import {
+  getString8Param,
   IInstruction,
   IInstructionParam,
   IInstructionParamArray,
   InstructionMap,
 } from 'common/instructions';
+import { OP_NAME } from 'frontend/cfg';
 
 export const PARAM_ANY = 'any';
 export const PARAM_ARGUMENTS = 'arguments';
@@ -23,6 +25,8 @@ export default class Parser {
   private readonly definitionMap: DefinitionMap;
   private readonly paramTypesHandlers: any;
   private readonly paramValuesHandlers: any;
+
+  private nonameCounter = 0;
 
   constructor(definitionMap: DefinitionMap) {
     this.definitionMap = definitionMap;
@@ -124,12 +128,11 @@ export default class Parser {
               this.offset--;
               return eParamType.STR128;
             };
-          } else {
-            return () => {
-              this.offset--;
-              return eParamType.STR8;
-            };
           }
+          return () => {
+            this.offset--;
+            return eParamType.STR8;
+          };
       }
     });
   }
@@ -138,15 +141,15 @@ export default class Parser {
     const main: IScript = {
       instructionMap: this.getInstructions(scriptFile),
       type: scriptFile.type,
+      name: scriptFile.name || 'noname_' + this.nonameCounter++,
     };
-    const scripts = [];
+    const scripts = [main];
     if (scriptFile instanceof ScriptMultifile) {
-      main.innerScripts = scripts;
       for (const script of scriptFile.scripts) {
         scripts.push(this.parse(script)[0]);
       }
     }
-    return [main, ...scripts];
+    return scripts;
   }
 
   getInstructions(scriptFile: ScriptFile): InstructionMap {
@@ -156,6 +159,10 @@ export default class Parser {
     for (const instruction of this) {
       instruction.offset += scriptFile.baseOffset;
       map.set(instruction.offset, instruction);
+
+      if (instruction.opcode === OP_NAME) {
+        scriptFile.name ??= getString8Param(instruction);
+      }
     }
     return map;
   }

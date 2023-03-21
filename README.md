@@ -6,7 +6,7 @@ Scout Decompiler is a CLI tool to decompile binary scripts of Grand Theft Auto 3
 
 ## Build
 
-Download and install NodeJS from https://nodejs.org. The minimum required NodeJS version to run is v8.9.4
+Download and install Node.js from https://nodejs.org. Then run the following commands.
 
 ```bash
 git clone https://github.com/x87/scout.git
@@ -42,23 +42,22 @@ node scout <inputfile> [....options]
 | Option Name | Description                                     |
 | ----------- | ----------------------------------------------- |
 | `-g <game>` | Target game. Possible options are: gta3, vc, sa |
-| `-p`        | Print the result into stdout                    |
 
 Input/Output redirection is supported
 
 ```bash
-node scout < inputfile -p > outputfile
+node.exe scout < inputfile > outputfile
 ```
 
 Get detailed help information
 
 ```bash
-node scout -h
+node.exe scout -h
 ```
 
 #### Example
 
 ```bash
 cd build
-node scout < test.scm -g gta3 -p > out.txt
+node.exe scout < test.scm -g gta3 > out.txt
 ```

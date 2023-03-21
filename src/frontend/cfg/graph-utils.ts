@@ -1,7 +1,5 @@
 import * as utils from 'utils';
-import Log from 'utils/log';
-import Graph, { GraphNode } from './graph';
-import AppError from '../../common/errors';
+import { Graph, GraphNode } from './graph';
 
 export function split<Node>(graph: Graph<Node>): Array<Graph<Node>> {
   if (graph.nodes.length < 1) {
@@ -12,7 +10,7 @@ export function split<Node>(graph: Graph<Node>): Array<Graph<Node>> {
   const visited: boolean[] = [];
 
   const isCandidateNode = (g: Graph<Node>, n: GraphNode<Node>): boolean => {
-    return !visited[graph.getNodeIndex(n)] && !g.nodes.includes(n);
+    return !visited[graph.getNodeIndex(n)] && !g.hasNode(n);
   };
 
   const markVisited = (node: GraphNode<Node>): void => {
@@ -100,38 +98,6 @@ export function from<Node>(graph: Graph<Node>): Graph<Node> {
   for (const edge of graph.edges) {
     res.addEdge(edge.from, edge.to);
   }
-  return res;
-}
-
-export function replaceNodes<Node>(
-  rpoGraph: Graph<Node>,
-  startNode: GraphNode<Node>,
-  endNode: GraphNode<Node>,
-  newGraphNode: Graph<Node>,
-  options: { rightEdge: boolean } = { rightEdge: true }
-): Graph<Node> {
-  const res = from(rpoGraph);
-
-  const startIndex = res.getNodeIndex(startNode);
-  const endIndex = res.getNodeIndex(endNode);
-
-  if (startIndex === -1 || endIndex === -1) {
-    throw Log.error(AppError.NODE_NOT_FOUND);
-  }
-  const count = endIndex - startIndex + (options.rightEdge ? 1 : 0);
-  const removed = res.nodes.splice(startIndex, count, newGraphNode);
-  newGraphNode.nodes = removed;
-
-  // need to preserve edges for the further structuring, e.g condition in a loop
-  newGraphNode.edges = utils.removeFromArray(res.edges, (edge) => {
-    return removed.includes(edge.from) && removed.includes(edge.to);
-  });
-
-  for (const edge of res.edges) {
-    if (removed.includes(edge.from)) edge.from = newGraphNode;
-    if (removed.includes(edge.to)) edge.to = newGraphNode;
-  }
-
   return res;
 }
 
@@ -246,6 +212,9 @@ export function transpose<Node>(graph: Graph<Node>): Graph<Node> {
     const successors = graph.getImmSuccessors(node);
     successors.forEach((bb) => {
       const nextIndex = graph.getNodeIndex(bb);
+      if (nextIndex === -1) {
+        return;
+      }
       if (!visited[nextIndex]) {
         traverse(bb);
       }

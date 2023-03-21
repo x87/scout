@@ -1,4 +1,4 @@
-import Graph from '../graph';
+import { Graph } from '../graph';
 import * as graphUtils from '../graph-utils';
 import { complexGraph, endlessLoop } from './graph.sample';
 import { IBasicBlock } from 'common/interfaces';
@@ -8,12 +8,12 @@ type G = Graph<IBasicBlock>;
 
 describe('Graph utils', () => {
   let graph: G;
-  const a: IBasicBlock = { type: eBasicBlockType.UNDEFINED, instructions: [] };
-  const b: IBasicBlock = { type: eBasicBlockType.RETURN, instructions: [] };
-  const c: IBasicBlock = { type: eBasicBlockType.ONE_WAY, instructions: [] };
-  const d: IBasicBlock = { type: eBasicBlockType.TWO_WAY, instructions: [] };
-  const e: IBasicBlock = { type: eBasicBlockType.FALL, instructions: [] };
-  const f: IBasicBlock = { type: eBasicBlockType.FALL, instructions: [] };
+  const a: IBasicBlock = newBlock(eBasicBlockType.UNDEFINED);
+  const b: IBasicBlock = newBlock(eBasicBlockType.RETURN);
+  const c: IBasicBlock = newBlock(eBasicBlockType.ONE_WAY);
+  const d: IBasicBlock = newBlock(eBasicBlockType.TWO_WAY);
+  const e: IBasicBlock = newBlock(eBasicBlockType.FALL);
+  const f: IBasicBlock = newBlock(eBasicBlockType.FALL);
 
   beforeEach(() => {
     graph = new Graph<IBasicBlock>();
@@ -67,39 +67,18 @@ describe('Graph utils', () => {
     expect(copy.edges).toEqual(graph.edges);
   });
 
-  it('replaceNodes shall replace given nodes in the given graph with a new given node', () => {
-    graph.addNode(a, b, c, d, e, f);
-    graph.addEdge(a, b);
-    graph.addEdge(b, c);
-    graph.addEdge(c, d);
-    graph.addEdge(d, b);
-    graph.addEdge(b, e);
-    graph.addEdge(e, f);
-    graph.addEdge(e, a);
-
-    const node = new Graph();
-    const newGraph = graphUtils.replaceNodes(graph, b, d, node);
-    expect(graph.nodes.length).toEqual(6);
-    expect(newGraph.nodes.length).toEqual(4);
-    expect(newGraph.hasNode(node)).toBeTrue();
-    const prev = newGraph.getImmPredecessors(node);
-    const next = newGraph.getImmSuccessors(node);
-    expect(prev).toEqual([a]);
-    expect(next).toEqual([e]);
-  });
-
   it(`findDom shall return an array of arrays of nodes that
 		dominate each node in the given graph (including the node itself)`, () => {
     const rpoGraph = graphUtils.reversePostOrder(complexGraph());
     const dom = graphUtils.findDom(rpoGraph);
     expect(dom).toBeArrayOfSize(rpoGraph.nodes.length);
     expect(dom[0]).toBeArrayOfSize(1);
-    expect(dom[0]).toEqual([rpoGraph.root] as number[]);
+    expect(dom[0]).toEqual([rpoGraph.root]);
     expect(dom[1]).toBeArrayOfSize(2);
-    expect(dom[1]).toContain(rpoGraph.nodes[0] as number);
-    expect(dom[1]).toContain(rpoGraph.nodes[1] as number);
+    expect(dom[1]).toContain(rpoGraph.nodes[0]);
+    expect(dom[1]).toContain(rpoGraph.nodes[1]);
     expect(dom[14]).toBeArrayOfSize(6);
-    expect(dom[14]).toContain(rpoGraph.nodes[14] as number);
+    expect(dom[14]).toContain(rpoGraph.nodes[14]);
   });
 
   it(`findSDom shall return an array of arrays of nodes that
@@ -109,9 +88,9 @@ describe('Graph utils', () => {
     expect(sdom).toBeArrayOfSize(rpoGraph.nodes.length);
     expect(sdom[0]).toBeArrayOfSize(0);
     expect(sdom[1]).toBeArrayOfSize(1);
-    expect(sdom[1]).toContain(rpoGraph.nodes[0] as number);
+    expect(sdom[1]).toContain(rpoGraph.nodes[0]);
     expect(sdom[14]).toBeArrayOfSize(5);
-    expect(sdom[14]).not.toContain(rpoGraph.nodes[14] as number);
+    expect(sdom[14]).not.toContain(rpoGraph.nodes[14]);
   });
 
   it(`findIDom shall return an array of nodes that
@@ -120,9 +99,9 @@ describe('Graph utils', () => {
     const idom = graphUtils.findIDom(rpoGraph);
     expect(idom).toBeArrayOfSize(rpoGraph.nodes.length);
     expect(idom[0]).toBeUndefined();
-    expect(idom[1]).toBe(rpoGraph.nodes[0] as number);
-    expect(idom[4]).toBe(rpoGraph.nodes[0] as number);
-    expect(idom[5]).toBe(rpoGraph.nodes[4] as number);
+    expect(idom[1]).toBe(rpoGraph.nodes[0]);
+    expect(idom[4]).toBe(rpoGraph.nodes[0]);
+    expect(idom[5]).toBe(rpoGraph.nodes[4]);
   });
 
   it('should produce the post-dominator matrix for a given graph', () => {
@@ -141,21 +120,76 @@ describe('Graph utils', () => {
     ]);
     expect(pdom[14]).toEqual([rpoGraph.nodes[14]]); // B11
 
-    const pd = graphUtils.findPDom(endlessLoop());
-
-    expect(pd).toEqual([[1, 2, 4, 5], [2, 4, 5], [3, 4, 5], [4, 5], [5]]);
+    const endless = endlessLoop();
+    const pd = graphUtils.findPDom(endless);
+    const [n1, n2, n3, n4, n5] = endless.nodes;
+    expect(pd).toEqual([
+      [n1, n2, n4, n5],
+      [n2, n4, n5],
+      [n3, n4, n5],
+      [n4, n5],
+      [n5],
+    ]);
   });
 
   it('should transpose a given graph', () => {
-    const transposed = graphUtils.transpose(endlessLoop());
-    expect(transposed.nodes).toEqual([5, 4, 3, 2, 1]);
+    const endless = endlessLoop();
+    const [n1, n2, n3, n4, n5] = endless.nodes;
+    const transposed = graphUtils.transpose(endless);
+    expect(transposed.nodes).toEqual([n5, n4, n3, n2, n1]);
     expect(transposed.edges).toEqual([
-      { from: 1, to: 5 },
-      { from: 5, to: 4 },
-      { from: 4, to: 3 },
-      { from: 3, to: 2 },
-      { from: 4, to: 2 },
-      { from: 2, to: 1 },
+      { from: n1, to: n5 },
+      { from: n5, to: n4 },
+      { from: n4, to: n3 },
+      { from: n3, to: n2 },
+      { from: n4, to: n2 },
+      { from: n2, to: n1 },
     ]);
   });
+
+  it('should correctly RPO', () => {
+    const n2 = {
+      type: eBasicBlockType.RETURN,
+      instructions: [
+        {
+          offset: 2,
+          params: [],
+          opcode: 2,
+        },
+      ],
+      start: 0,
+    };
+    const n1 = {
+      type: eBasicBlockType.FALL,
+      instructions: [
+        {
+          offset: 1,
+          params: [],
+          opcode: 1,
+        },
+      ],
+      start: 0,
+    };
+
+    const g1 = new Graph<IBasicBlock>();
+    g1.addNode(n1, n2);
+    g1.addEdge(n1, n2);
+    const rpo1 = graphUtils.reversePostOrder(g1);
+    expect(rpo1.nodes).toEqual([n1, n2]);
+  });
+
 });
+
+function newBlock(type: eBasicBlockType) {
+  return {
+    type,
+    instructions: [
+      {
+        offset: 1,
+        params: [],
+        opcode: 1,
+      },
+    ],
+    start: 0
+  };
+}

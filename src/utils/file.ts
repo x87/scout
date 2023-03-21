@@ -1,13 +1,12 @@
-import * as fs from 'fs';
-import { promisify } from 'util';
-
-const readFile = promisify(fs.readFile);
+import { ReadStream } from 'fs';
+import { readFile } from 'fs/promises';
 
 export async function loadText(
   fileName: string,
-  encoding: string = 'utf8'
+  encoding: BufferEncoding = 'utf8'
 ): Promise<string> {
-  return await readFile(fileName, encoding);
+  const buf = await readFile(fileName, { encoding });
+  return buf.toString();
 }
 
 export async function loadJson<T>(fileName: string): Promise<T> {
@@ -15,7 +14,7 @@ export async function loadJson<T>(fileName: string): Promise<T> {
   return JSON.parse(text);
 }
 
-export async function readBinaryStream(stream: fs.ReadStream): Promise<Buffer> {
+export async function readBinaryStream(stream: ReadStream): Promise<Buffer> {
   return new Promise<Buffer>((resolve, reject) => {
     const chunks: Buffer[] = [];
     stream.on('readable', () => {
@@ -27,7 +26,7 @@ export async function readBinaryStream(stream: fs.ReadStream): Promise<Buffer> {
     stream.on('end', () => {
       resolve(Buffer.concat(chunks));
     });
-    stream.on('error', e => {
+    stream.on('error', (e) => {
       reject(e);
     });
   });

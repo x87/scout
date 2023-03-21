@@ -1,4 +1,4 @@
-import Graph from '../graph';
+import { Graph } from '../graph';
 import { IBasicBlock } from 'common/interfaces';
 import { eBasicBlockType } from 'common/enums';
 
@@ -6,9 +6,21 @@ type G = Graph<IBasicBlock>;
 
 describe(Graph.name, () => {
   let graph: G;
-  const a: IBasicBlock = { type: eBasicBlockType.RETURN, instructions: [] };
-  const b: IBasicBlock = { type: eBasicBlockType.RETURN, instructions: [] };
-  const c: IBasicBlock = { type: eBasicBlockType.RETURN, instructions: [] };
+  const a: IBasicBlock = {
+    type: eBasicBlockType.RETURN,
+    instructions: [],
+    start: 0,
+  };
+  const b: IBasicBlock = {
+    type: eBasicBlockType.RETURN,
+    instructions: [],
+    start: 0,
+  };
+  const c: IBasicBlock = {
+    type: eBasicBlockType.RETURN,
+    instructions: [],
+    start: 0,
+  };
 
   beforeEach(() => {
     graph = new Graph<IBasicBlock>();
