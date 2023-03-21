@@ -1,5 +1,5 @@
 import * as graphUtils from './graph-utils';
-import { getOffset, Graph, GraphNode, IfGraph, LoopGraph } from './graph';
+import { getOffset, Graph, GraphNode, IfGraph } from './graph';
 import { eBasicBlockType, eIfType } from 'common/enums';
 import Log from '../../utils/log';
 import AppError from '../../common/errors';
@@ -76,7 +76,7 @@ export function structure<Node>(graph: Graph<Node>): Graph<GraphNode<Node>> {
     ifGraph.type = ifType;
     ifGraph.ifNumber = getIfCondNumber(res, header);
 
-    ifGraph.print(`New IF graph with id ${ifGraph.id}`);
+    ifGraph.print(`New IF graph`);
 
     if (ifType === eIfType.IF_THEN) {
       const thenHeader = ifHeaderSuccessors.at(-1);
@@ -105,7 +105,7 @@ export function structure<Node>(graph: Graph<Node>): Graph<GraphNode<Node>> {
       }
     }
     ifGraph.addNode(header);
-    let reduced = new Graph<Node>();
+    const reduced = new Graph<Node>();
 
     for (const node of res.nodes) {
       if (

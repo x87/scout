@@ -8,14 +8,11 @@ interface IEdge<T> {
   to: T;
 }
 
-let id = 0;
-
 export type GraphNode<T> = T | Graph<T>;
 
 export class Graph<T> {
   nodes: Array<GraphNode<T>>;
   edges: Array<IEdge<GraphNode<T>>>;
-  id = id++;
   constructor() {
     this.nodes = [];
     this.edges = [];
@@ -80,7 +77,7 @@ export class Graph<T> {
     });
   }
 
-  print(header: string = '', level = 0) {
+  print(header: string = '') {
     if (!Arguments.debugMode) {
       return;
     }
@@ -90,13 +87,13 @@ export class Graph<T> {
         console.log('Loop type:', this.type);
         console.log('Follow node:');
         if (this.followNode) {
-          printNode(this.followNode, 0, level);
+          printNode(this.followNode, 0);
         } else {
           console.log('undefined');
         }
         if (this.condition) {
           console.log('Condition:');
-          printNode(this.condition, 0, level)
+          printNode(this.condition, 0)
 
         }
       }
@@ -116,7 +113,7 @@ export class Graph<T> {
 
       for (let i = 0; i < this.nodes.length; i++) {
         const node = this.nodes[i];
-        printNode(node, i, level);
+        printNode(node, i);
       }
       if (this.nodes.length) {
         console.groupEnd();
@@ -150,7 +147,7 @@ export class Graph<T> {
   }
 }
 
-function printNode<T>(node: GraphNode<T>, index: number, level: number) {
+function printNode<T>(node: GraphNode<T>, index: number) {
   if (node instanceof Graph) {
     // console.group();
     console.log(`${index}: [${getOffset(node)}] ${nodeType(node)}`);

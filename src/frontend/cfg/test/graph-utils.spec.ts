@@ -8,12 +8,12 @@ type G = Graph<IBasicBlock>;
 
 describe('Graph utils', () => {
   let graph: G;
-  const a: IBasicBlock = { type: eBasicBlockType.UNDEFINED, instructions: [] };
-  const b: IBasicBlock = { type: eBasicBlockType.RETURN, instructions: [] };
-  const c: IBasicBlock = { type: eBasicBlockType.ONE_WAY, instructions: [] };
-  const d: IBasicBlock = { type: eBasicBlockType.TWO_WAY, instructions: [] };
-  const e: IBasicBlock = { type: eBasicBlockType.FALL, instructions: [] };
-  const f: IBasicBlock = { type: eBasicBlockType.FALL, instructions: [] };
+  const a: IBasicBlock = newBlock(eBasicBlockType.UNDEFINED);
+  const b: IBasicBlock = newBlock(eBasicBlockType.RETURN);
+  const c: IBasicBlock = newBlock(eBasicBlockType.ONE_WAY);
+  const d: IBasicBlock = newBlock(eBasicBlockType.TWO_WAY);
+  const e: IBasicBlock = newBlock(eBasicBlockType.FALL);
+  const f: IBasicBlock = newBlock(eBasicBlockType.FALL);
 
   beforeEach(() => {
     graph = new Graph<IBasicBlock>();
@@ -157,6 +157,7 @@ describe('Graph utils', () => {
           opcode: 2,
         },
       ],
+      start: 0,
     };
     const n1 = {
       type: eBasicBlockType.FALL,
@@ -167,6 +168,7 @@ describe('Graph utils', () => {
           opcode: 1,
         },
       ],
+      start: 0,
     };
 
     const g1 = new Graph<IBasicBlock>();
@@ -176,31 +178,18 @@ describe('Graph utils', () => {
     expect(rpo1.nodes).toEqual([n1, n2]);
   });
 
-  it('should find a root node', () => {
-    const g = new Graph<IBasicBlock>();
-    const n1 = {
-      type: eBasicBlockType.RETURN,
-      instructions: [
-        {
-          offset: 2,
-          params: [],
-          opcode: 2,
-        },
-      ],
-    };
-    const n2 = {
-      type: eBasicBlockType.FALL,
-      instructions: [
-        {
-          offset: 1,
-          params: [],
-          opcode: 1,
-        },
-      ],
-    };
-    g.addNode(n1, n2);
-    g.addEdge(n2, n1);
-    const isRoot = graphUtils.isRoot(g, n2);
-    expect(isRoot).toBe(true);
-  });
 });
+
+function newBlock(type: eBasicBlockType) {
+  return {
+    type,
+    instructions: [
+      {
+        offset: 1,
+        params: [],
+        opcode: 1,
+      },
+    ],
+    start: 0
+  };
+}

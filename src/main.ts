@@ -72,7 +72,9 @@ export async function main(): Promise<void> {
             printer.printLine('');
             switch (bb.type) {
               case eLoopType.PRE_TESTED: {
-                printer.printLine(`while ${printer.stringifyCondition(bb.condition)}`);
+                printer.printLine(
+                  `while ${printer.stringifyCondition(bb.condition)}`
+                );
                 printer.indent++;
                 const g = graphUtils.from(bb);
                 g.nodes.splice(0, 1);
@@ -88,7 +90,9 @@ export async function main(): Promise<void> {
                 g.nodes.splice(g.nodes.length - 1, 1);
                 printGraph(g);
                 printer.indent--;
-                printer.printLine(`until ${printer.stringifyCondition(bb.condition)}`);
+                printer.printLine(
+                  `until ${printer.stringifyCondition(bb.condition)}`
+                );
                 break;
               }
               case eLoopType.ENDLESS:
@@ -101,11 +105,7 @@ export async function main(): Promise<void> {
             }
             printer.printLine('');
           } else if (bb instanceof IfGraph) {
-            printer.printLine(
-              `if ${bb.ifNumber || ''} ${
-                Arguments.debugMode ? `// id: ${bb.id}` : ''
-              }`
-            );
+            printer.printLine(`if ${bb.ifNumber || ''}`);
             printer.indent++;
             printer.print(bb.nodes[0]);
             printer.indent--;

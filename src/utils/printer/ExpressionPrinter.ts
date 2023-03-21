@@ -37,7 +37,7 @@ export default class ExpressionPrinter extends SimplePrinter {
       const offset = utils.strPadLeft(bb.instructions[0]?.offset.toString(), 6);
       // append(`// %s:%s\n`, offset, eBasicBlockType[bb.type]);
     }
-    bb.instructions.forEach((instruction, i) => {
+    bb.instructions.forEach((instruction) => {
       const id = instruction.opcode;
 
       if (id > 0x7fff) {

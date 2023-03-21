@@ -5,7 +5,7 @@ export async function loadText(
   fileName: string,
   encoding: BufferEncoding = 'utf8'
 ): Promise<string> {
-  let buf = await readFile(fileName, { encoding });
+  const buf = await readFile(fileName, { encoding });
   return buf.toString();
 }
 

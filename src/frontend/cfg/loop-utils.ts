@@ -4,7 +4,6 @@ import { eBasicBlockType, eLoopType } from 'common/enums';
 import { structure as ifStructure } from './conditions-utils';
 import { IBasicBlock } from 'common/interfaces';
 import Arguments from 'common/arguments';
-import { OP_IF } from '.';
 
 export function getLoopType<Node>(
   graph: Graph<Node>,

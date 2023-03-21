@@ -128,12 +128,11 @@ export default class Parser {
               this.offset--;
               return eParamType.STR128;
             };
-          } else {
-            return () => {
-              this.offset--;
-              return eParamType.STR8;
-            };
           }
+          return () => {
+            this.offset--;
+            return eParamType.STR8;
+          };
       }
     });
   }
