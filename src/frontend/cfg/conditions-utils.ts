@@ -4,7 +4,6 @@ import { eBasicBlockType, eIfType } from 'common/enums';
 import Log from '../../utils/log';
 import AppError from '../../common/errors';
 import { IBasicBlock } from 'common/interfaces';
-import Arguments from 'common/arguments';
 import { OP_IF } from './index';
 import { getNumericParam } from 'common/instructions';
 
@@ -28,9 +27,7 @@ export function structure<Node>(graph: Graph<Node>): Graph<GraphNode<Node>> {
   }) as Node[];
 
   if (twoWayNodes.length === 0) {
-    if (Arguments.debugMode) {
-      console.log('No 2-way nodes found. Stopping.');
-    }
+    Log.debug('No 2-way nodes found. Stopping.');
     return graph;
   }
 

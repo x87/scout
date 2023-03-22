@@ -1,10 +1,10 @@
-import Arguments from 'common/arguments';
+import { GLOBAL_OPTIONS } from 'common/arguments';
 import { eGame, eParamType } from 'common/enums';
 import { Opcode } from 'common/interfaces';
 
-export const isGameGTA3 = (): boolean => Arguments.game === eGame.GTA3;
-export const isGameVC = (): boolean => Arguments.game === eGame.GTAVC;
-export const isGameSA = (): boolean => Arguments.game === eGame.GTASA;
+export const isGameGTA3 = (): boolean => GLOBAL_OPTIONS.game === eGame.GTA3;
+export const isGameVC = (): boolean => GLOBAL_OPTIONS.game === eGame.GTAVC;
+export const isGameSA = (): boolean => GLOBAL_OPTIONS.game === eGame.GTASA;
 export const isArrayParam = (param: eParamType): boolean =>
   [
     eParamType.GARRSTR8,

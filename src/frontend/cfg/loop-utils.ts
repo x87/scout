@@ -3,7 +3,7 @@ import { getOffset, Graph, GraphNode, LoopGraph } from './graph';
 import { eBasicBlockType, eLoopType } from 'common/enums';
 import { structure as ifStructure } from './conditions-utils';
 import { IBasicBlock } from 'common/interfaces';
-import Arguments from 'common/arguments';
+import Log from 'utils/log';
 
 export function getLoopType<Node>(
   graph: Graph<Node>,
@@ -76,18 +76,16 @@ export function findFollowNode<Node>(
 export function structure<Node>(graph: Graph<Node>): Graph<Node> {
   graph.print('Finding loops in this graph:');
   const intervals = graphUtils.split(graph);
-  if (Arguments.debugMode) {
-    console.log(
-      `Found ${intervals.filter((i) => i.hasLoop).length} loop(s) in ${
-        intervals.length
-      } interval(s).`
-    );
-    // for (let i = 0; i < intervals.length; i++) {
-    //   if (intervals[i].hasLoop) {
-    //     intervals[i].print(`LOOP INTERVAL ${i}:`);
-    //   }
-    // }
-  }
+  Log.debug(
+    `Found ${intervals.filter((i) => i.hasLoop).length} loop(s) in ${
+      intervals.length
+    } interval(s).`
+  );
+  // for (let i = 0; i < intervals.length; i++) {
+  //   if (intervals[i].hasLoop) {
+  //     intervals[i].print(`LOOP INTERVAL ${i}:`);
+  //   }
+  // }
 
   const index = intervals.findIndex((i) => i.hasLoop);
   if (index === -1) {
@@ -95,9 +93,7 @@ export function structure<Node>(graph: Graph<Node>): Graph<Node> {
     return graph;
   }
   const reducible = intervals[index];
-  if (Arguments.debugMode) {
-    reducible.print(`\nPicked interval ${index} for structuring.`)
-  }
+  reducible.print(`\nPicked interval ${index} for structuring.`);
 
   // there could be multiple Continue statements referencing loop root
   // therefore picking up the last latching node in the interval
@@ -165,9 +161,7 @@ export function structure<Node>(graph: Graph<Node>): Graph<Node> {
         const fromOffset = getOffset(edge.from);
         const toOffset = getOffset(edge.to);
         if (edge.to === loop.followNode) {
-          if (Arguments.debugMode) {
-            console.log(`Found 'BREAK' at ${fromOffset}`);
-          }
+          Log.debug(`Found 'BREAK' at ${fromOffset}`);
           if (
             from.type === eBasicBlockType.ONE_WAY ||
             from.type === eBasicBlockType.TWO_WAY
@@ -176,9 +170,7 @@ export function structure<Node>(graph: Graph<Node>): Graph<Node> {
           }
           return false;
         } else {
-          if (Arguments.debugMode) {
-            console.log(`Found 'JUMP' from ${fromOffset} to ${toOffset}`);
-          }
+          Log.debug(`Found 'JUMP' from ${fromOffset} to ${toOffset}`);
           from.type = eBasicBlockType.UNSTRUCTURED;
           return false;
         }
@@ -206,7 +198,6 @@ export function structure<Node>(graph: Graph<Node>): Graph<Node> {
       if ((edge.from as IBasicBlock).type === eBasicBlockType.UNSTRUCTURED) {
         // when there is an unstructured jump from the loop we must add it,
         // otherwise the nodes that the jump is pointing to could become unreachable
-
         // todo: rethink RPO algo to iterate over all nodes and create multiple disjoint graphs
         // reduced.addEdge(loop, edge.to);
       }

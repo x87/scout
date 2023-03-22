@@ -1,5 +1,5 @@
 import * as utils from 'utils';
-import Arguments from 'common/arguments';
+import {GLOBAL_OPTIONS} from 'common/arguments';
 import AppError from 'common/errors';
 import Log from 'utils/log';
 import { eGame, eScriptFileSegments } from 'common/enums';
@@ -32,13 +32,13 @@ const MultifileHeaderMap: IMultifileHeader = {
     [eScriptFileSegments.GLOBAL_VARS]: 0,
     [eScriptFileSegments.MODELS]: 1,
     [eScriptFileSegments.MISSIONS]: 2,
-    [eScriptFileSegments.MAIN]: 3
+    [eScriptFileSegments.MAIN]: 3,
   },
   [eGame.GTAVC]: {
     [eScriptFileSegments.GLOBAL_VARS]: 0,
     [eScriptFileSegments.MODELS]: 1,
     [eScriptFileSegments.MISSIONS]: 2,
-    [eScriptFileSegments.MAIN]: 3
+    [eScriptFileSegments.MAIN]: 3,
   },
   [eGame.GTASA]: {
     [eScriptFileSegments.GLOBAL_VARS]: 0,
@@ -47,8 +47,8 @@ const MultifileHeaderMap: IMultifileHeader = {
     [eScriptFileSegments.EXTERNALS]: 3,
     [eScriptFileSegments.SASEG5]: 4,
     [eScriptFileSegments.SASEG6]: 5,
-    [eScriptFileSegments.MAIN]: 6
-  }
+    [eScriptFileSegments.MAIN]: 6,
+  },
 };
 
 export default class MultifileMetadata implements IMultifileMetadata {
@@ -64,8 +64,8 @@ export default class MultifileMetadata implements IMultifileMetadata {
   largestExternalSize: number;
   externals: IExternalScriptMetadata[];
 
-  constructor(data: Buffer) {
-    if (data.buffer.byteLength === 0) {
+  constructor(data: DataView) {
+    if (data.byteLength === 0) {
       throw Log.error(AppError.EMPTY_SCM);
     }
     this.loadModelSegment(data);
@@ -76,13 +76,13 @@ export default class MultifileMetadata implements IMultifileMetadata {
     }
 
     const segmentId =
-      MultifileHeaderMap[Arguments.game][eScriptFileSegments.MAIN];
+      MultifileHeaderMap[GLOBAL_OPTIONS.game][eScriptFileSegments.MAIN];
     this.size = this.getSegmentOffset(data, segmentId, false);
   }
 
-  private loadModelSegment(data: Buffer): void {
+  private loadModelSegment(data: DataView): void {
     const segmentId =
-      MultifileHeaderMap[Arguments.game][eScriptFileSegments.MODELS];
+      MultifileHeaderMap[GLOBAL_OPTIONS.game][eScriptFileSegments.MODELS];
     this.offset = this.getSegmentOffset(data, segmentId);
 
     const numModels = this.read32Bit(data);
@@ -94,9 +94,9 @@ export default class MultifileMetadata implements IMultifileMetadata {
     }
   }
 
-  private loadMissionSegment(data: Buffer): void {
+  private loadMissionSegment(data: DataView): void {
     const segmentId =
-      MultifileHeaderMap[Arguments.game][eScriptFileSegments.MISSIONS];
+      MultifileHeaderMap[GLOBAL_OPTIONS.game][eScriptFileSegments.MISSIONS];
     this.offset = this.getSegmentOffset(data, segmentId);
     this.mainSize = this.read32Bit(data);
     this.largestMission = this.read32Bit(data);
@@ -114,9 +114,9 @@ export default class MultifileMetadata implements IMultifileMetadata {
     }
   }
 
-  private loadExternalSegment(data: Buffer): void {
+  private loadExternalSegment(data: DataView): void {
     const segmentId =
-      MultifileHeaderMap[Arguments.game][eScriptFileSegments.EXTERNALS];
+      MultifileHeaderMap[GLOBAL_OPTIONS.game][eScriptFileSegments.EXTERNALS];
     this.offset = this.getSegmentOffset(data, segmentId);
     this.largestExternalSize = this.read32Bit(data);
     const numExternals = this.read32Bit(data);
@@ -126,38 +126,41 @@ export default class MultifileMetadata implements IMultifileMetadata {
       this.externals.push({
         name: this.readString(data, 20),
         offset: this.read32Bit(data),
-        size: this.read32Bit(data)
+        size: this.read32Bit(data),
       });
     }
   }
 
   private getSegmentOffset(
-    data: Buffer,
+    data: DataView,
     segmentId: SegmentId,
     skipJumpOpcode: boolean = true
   ): number {
     let result = 0;
     while (segmentId--) {
-      result = data.readInt32LE(result + 3);
+      result = data.getInt32(result + 3, true);
     }
     return result + (skipJumpOpcode ? 8 : 0);
   }
 
-  private readString(data: Buffer, len: number): string {
+  private readString(data: DataView, len: number): string {
+    let s = '';
+    for (let i = 0; i < len; i++) {
+      const char = data.getUint8(this.offset + i);
+      if (char == 0) break;
+      s += String.fromCharCode(char);
+    }
     this.offset += len;
-    return data
-      .toString('utf8', this.offset - len, this.offset)
-      .split('\0')
-      .shift();
+    return s;
   }
 
-  private read32Bit(data: Buffer): number {
+  private read32Bit(data: DataView): number {
     this.offset += 4;
-    return data.readInt32LE(this.offset - 4);
+    return data.getInt32(this.offset - 4, true);
   }
 
-  private read16Bit(data: Buffer): number {
+  private read16Bit(data: DataView): number {
     this.offset += 2;
-    return data.readInt16LE(this.offset - 2);
+    return data.getInt16(this.offset - 2, true);
   }
 }

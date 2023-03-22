@@ -3,6 +3,7 @@ import ScriptFile from 'frontend/script/ScriptFile';
 import { DefinitionMap } from 'common/interfaces';
 import { eParamType, eScriptType } from 'common/enums';
 import { IInstruction } from 'common/instructions';
+import { bufferFromHex, emptyBuffer } from 'utils/file';
 
 describe(Parser.name, () => {
   let parser: Parser;
@@ -23,7 +24,7 @@ describe(Parser.name, () => {
   });
 
   it('should create a Script out of input ScriptFile', () => {
-    const scriptFile = new ScriptFile(Buffer.from([]), eScriptType.CLEO);
+    const scriptFile = new ScriptFile(emptyBuffer(), eScriptType.CLEO);
     const spy = jest.spyOn(parser, 'getInstructions');
     const script = parser.parse(scriptFile);
 
@@ -34,7 +35,7 @@ describe(Parser.name, () => {
   });
 
   it('should parse instructions out of input ScriptFile', () => {
-    const buf = Buffer.from(`0100040002000164000000`, 'hex');
+    const buf = bufferFromHex(`0100040002000164000000`);
     const scriptFile = new ScriptFile(buf, eScriptType.CLEO);
 
     const parsed: IInstruction[] = [
@@ -67,7 +68,7 @@ describe(Parser.name, () => {
   });
 
   it('should parse instruction with variable number of arguments', () => {
-    const buf = Buffer.from(`4F00010100000000`, 'hex');
+    const buf = bufferFromHex(`4F00010100000000`);
     const scriptFile = new ScriptFile(buf, eScriptType.CLEO);
 
     const parsed: IInstruction[] = [

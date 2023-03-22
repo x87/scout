@@ -1,24 +1,24 @@
 import * as utils from 'utils';
-import Arguments from 'common/arguments';
+import {GLOBAL_OPTIONS} from 'common/arguments';
 import { eGame, eParamType } from 'common/enums';
 
 describe('utils spec', () => {
   it('should be true if Arguments game is gta3', () => {
-    Arguments.game = eGame.GTA3;
+    GLOBAL_OPTIONS.game = eGame.GTA3;
     expect(utils.isGameGTA3()).toBe(true);
     expect(utils.isGameVC()).toBe(false);
     expect(utils.isGameSA()).toBe(false);
   });
 
   it('should be true if Arguments game is vc', () => {
-    Arguments.game = eGame.GTAVC;
+    GLOBAL_OPTIONS.game = eGame.GTAVC;
     expect(utils.isGameGTA3()).toBe(false);
     expect(utils.isGameVC()).toBe(true);
     expect(utils.isGameSA()).toBe(false);
   });
 
   it('should be true if Arguments game is sa', () => {
-    Arguments.game = eGame.GTASA;
+    GLOBAL_OPTIONS.game = eGame.GTASA;
     expect(utils.isGameGTA3()).toBe(false);
     expect(utils.isGameVC()).toBe(false);
     expect(utils.isGameSA()).toBe(true);

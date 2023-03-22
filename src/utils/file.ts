@@ -1,10 +1,15 @@
 import { ReadStream } from 'fs';
 import { readFile } from 'fs/promises';
+import { isBrowser } from 'browser-or-node';
 
 export async function loadText(
   fileName: string,
   encoding: BufferEncoding = 'utf8'
 ): Promise<string> {
+  if (isBrowser) {
+    const response = await fetch(fileName);
+    return await response.text();
+  }
   const buf = await readFile(fileName, { encoding });
   return buf.toString();
 }
@@ -30,4 +35,15 @@ export async function readBinaryStream(stream: ReadStream): Promise<Buffer> {
       reject(e);
     });
   });
+}
+
+export function emptyBuffer() {
+  return new DataView(new ArrayBuffer(0));
+}
+
+export function bufferFromHex(hex: string) {
+  const { buffer } = new Uint8Array(
+    hex.match(/[\da-f]{2}/gi)!.map((h) => parseInt(h, 16))
+  );
+  return new DataView(buffer);
 }

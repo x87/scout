@@ -20,7 +20,7 @@ export const PARAM_ARGUMENTS = 'arguments';
 export const PARAM_LABEL = 'label';
 
 export default class Parser {
-  private data: Buffer;
+  private data: DataView;
   private offset: number;
   private readonly definitionMap: DefinitionMap;
   private readonly paramTypesHandlers: any;
@@ -171,7 +171,7 @@ export default class Parser {
     const self = this;
     return {
       next(): IteratorResult<IInstruction> {
-        if (self.offset >= self.data.length) {
+        if (self.offset >= self.data.byteLength) {
           return { value: undefined, done: true };
         }
 
@@ -186,7 +186,7 @@ export default class Parser {
   private nextUInt8(): number {
     let result: number;
     try {
-      result = this.data.readUInt8(this.offset);
+      result = this.data.getUint8(this.offset);
       this.offset += 1;
     } catch {
       throw Log.error(AppError.END_OF_BUFFER, 1);
@@ -197,7 +197,7 @@ export default class Parser {
   private nextInt8(): number {
     let result: number;
     try {
-      result = this.data.readInt8(this.offset);
+      result = this.data.getInt8(this.offset);
       this.offset += 1;
     } catch {
       throw Log.error(AppError.END_OF_BUFFER, 1);
@@ -208,7 +208,7 @@ export default class Parser {
   private nextUInt16(): number {
     let result: number;
     try {
-      result = this.data.readUInt16LE(this.offset);
+      result = this.data.getUint16(this.offset, true);
       this.offset += 2;
     } catch {
       throw Log.error(AppError.END_OF_BUFFER, 2);
@@ -219,7 +219,7 @@ export default class Parser {
   private nextInt16(): number {
     let result: number;
     try {
-      result = this.data.readInt16LE(this.offset);
+      result = this.data.getInt16(this.offset, true);
       this.offset += 2;
     } catch {
       throw Log.error(AppError.END_OF_BUFFER, 2);
@@ -230,7 +230,7 @@ export default class Parser {
   private nextUInt32(): number {
     let result: number;
     try {
-      result = this.data.readUInt32LE(this.offset);
+      result = this.data.getUint32(this.offset, true);
       this.offset += 4;
     } catch {
       throw Log.error(AppError.END_OF_BUFFER, 4);
@@ -241,7 +241,7 @@ export default class Parser {
   private nextInt32(): number {
     let result: number;
     try {
-      result = this.data.readInt32LE(this.offset);
+      result = this.data.getInt32(this.offset, true);
       this.offset += 4;
     } catch {
       throw Log.error(AppError.END_OF_BUFFER, 4);
@@ -252,7 +252,7 @@ export default class Parser {
   private nextFloat(): number {
     let result: number;
     try {
-      result = this.data.readFloatLE(this.offset);
+      result = this.data.getFloat32(this.offset, true);
       this.offset += 4;
     } catch {
       throw Log.error(AppError.END_OF_BUFFER, 4);
@@ -269,17 +269,18 @@ export default class Parser {
   }
 
   private getString(length: number): string {
-    let result: string;
     try {
-      result = this.data
-        .toString('utf8', this.offset, this.offset + length)
-        .split('\0')
-        .shift();
+      let s = '';
+      for (let i = 0; i < length; i++) {
+        const char = this.data.getUint8(this.offset + i);
+        if (char == 0) break;
+        s += String.fromCharCode(char);
+      }
       this.offset += length;
+      return s;
     } catch {
       throw Log.error(AppError.END_OF_BUFFER, length);
     }
-    return result;
   }
 
   private getArray(): IInstructionParamArray {

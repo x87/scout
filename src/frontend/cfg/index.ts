@@ -1,6 +1,6 @@
 import Log from 'utils/log';
 
-import Arguments from 'common/arguments';
+import {GLOBAL_OPTIONS} from 'common/arguments';
 import AppError from 'common/errors';
 import { Graph } from './graph';
 
@@ -269,7 +269,7 @@ export default class CFG {
   private getBranchType(
     instruction: IInstruction
   ): eBasicBlockType | undefined {
-    return branchOpcodesMap[Arguments.game][instruction.opcode];
+    return branchOpcodesMap[GLOBAL_OPTIONS.game][instruction.opcode];
   }
 
   private getBasicBlockType(instruction: IInstruction): eBasicBlockType {

@@ -1,7 +1,8 @@
 import { eIfType, eLoopType } from 'common/enums';
 import { IBasicBlock } from 'common/interfaces';
 import { opcodeToHex } from 'utils';
-import Arguments from 'common/arguments';
+import { GLOBAL_OPTIONS } from 'common/arguments';
+import Log from 'utils/log';
 
 interface IEdge<T> {
   from: T;
@@ -78,31 +79,28 @@ export class Graph<T> {
   }
 
   print(header: string = '') {
-    if (!Arguments.debugMode) {
+    if (!GLOBAL_OPTIONS.debugMode) {
       return;
     }
     console.group(header);
     try {
       if (this instanceof LoopGraph) {
-        console.log('Loop type:', this.type);
-        console.log('Follow node:');
+        Log.debug('Loop type:', this.type);
+        Log.debug('Follow node:');
         if (this.followNode) {
           printNode(this.followNode, 0);
         } else {
-          console.log('undefined');
+          Log.debug('undefined');
         }
         if (this.condition) {
-          console.log('Condition:');
-          printNode(this.condition, 0)
-
+          Log.debug('Condition:');
+          printNode(this.condition, 0);
         }
       }
       if (this instanceof IfGraph) {
-        if (Arguments.debugMode) {
-          console.log(
-            `${this.type} with follow node at ${getOffset(this.followNode)}`
-          );
-        }
+        Log.debug(
+          `${this.type} with follow node at ${getOffset(this.followNode)}`
+        );
 
         // this.thenNode.print('thenNode:');
         // this.elseNode?.print('elseNode:');
@@ -131,7 +129,7 @@ export class Graph<T> {
       });
       for (let i = 0; i < edgesSorted.length; i++) {
         const edge = edgesSorted[i];
-        console.log(
+        Log.debug(
           `${i}: [${nodeType(edge.from)}] ${this.getNodeIndex(
             edge.from
           )} -> ${this.getNodeIndex(edge.to)}`
@@ -149,14 +147,12 @@ export class Graph<T> {
 
 function printNode<T>(node: GraphNode<T>, index: number) {
   if (node instanceof Graph) {
-    // console.group();
-    console.log(`${index}: [${getOffset(node)}] ${nodeType(node)}`);
-    // console.groupEnd();
+    Log.debug(`${index}: [${getOffset(node)}] ${nodeType(node)}`);
   } else {
     const type = nodeType(node);
     const { instructions } = node as IBasicBlock;
     const { offset, opcode } = instructions[0] ?? { offset: -1, opcode: -1 };
-    console.log(
+    Log.debug(
       `${index}: [${offset}] ${type}. ${opcodeToHex(opcode)}...${opcodeToHex(
         instructions.at(-1)?.opcode ?? -1
       )}`
@@ -214,5 +210,5 @@ export class IfGraph<Node> extends Graph<Node> {
 export class LoopGraph<Node> extends Graph<Node> {
   type: eLoopType;
   followNode?: Node;
-  condition?: Node
+  condition?: Node;
 }

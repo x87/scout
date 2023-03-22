@@ -4,7 +4,7 @@ import { DefinitionMap, IBasicBlock } from 'common/interfaces';
 import { IInstructionParamArray } from 'common/instructions';
 import Log from '../log';
 import { OP_IF, OP_JF, OP_JMP } from 'frontend/cfg';
-import Arguments from 'common/arguments';
+import { GLOBAL_OPTIONS } from 'common/arguments';
 import { eBasicBlockType } from 'common/enums';
 
 export default class ExpressionPrinter extends SimplePrinter {
@@ -16,7 +16,7 @@ export default class ExpressionPrinter extends SimplePrinter {
   }
 
   get indentation(): string {
-    return utils.strPadLeft('', this.indent, '\t');
+    return utils.strPadLeft('', this.indent * 4, ' ');
   }
 
   printLine(line: string): void {
@@ -43,11 +43,11 @@ export default class ExpressionPrinter extends SimplePrinter {
       if (id > 0x7fff) {
         append('NOT ');
       }
-      if (!Arguments.debugMode && [OP_JF, OP_IF].includes(id)) {
+      if (!GLOBAL_OPTIONS.debugMode && [OP_JF, OP_IF].includes(id)) {
         return;
       }
       if (
-        !Arguments.debugMode &&
+        !GLOBAL_OPTIONS.debugMode &&
         id === OP_JMP &&
         bb.type !== eBasicBlockType.UNSTRUCTURED
       ) {
@@ -69,7 +69,7 @@ export default class ExpressionPrinter extends SimplePrinter {
   }
 
   stringifyCondition(bb: IBasicBlock): string {
-    this.indent ++;
+    this.indent++;
     const result = bb.instructions
       .map(({ opcode, params }) => {
         let output = '';
@@ -101,8 +101,8 @@ export default class ExpressionPrinter extends SimplePrinter {
       .filter(Boolean)
       .join(`\n${this.indentation}`);
 
-      this.indent --;
+    this.indent--;
 
-      return result;
+    return result;
   }
 }

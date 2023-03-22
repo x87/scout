@@ -1,4 +1,4 @@
-import Arguments from './common/arguments';
+import { GLOBAL_OPTIONS } from './common/arguments';
 import AppError from './common/errors';
 import * as conditionUtils from './frontend/cfg/conditions-utils';
 import * as loopUtils from './frontend/cfg/loop-utils';
@@ -8,7 +8,7 @@ import Log from './utils/log';
 import CFG from './frontend/cfg';
 import Loader from './frontend/loader';
 import Parser from './frontend/parser';
-import { eLoopType } from './common/enums';
+import { eGame, eLoopType } from './common/enums';
 import { IInstructionDefinition } from './common/instructions';
 import { DefinitionMap, IBasicBlock } from './common/interfaces';
 import {
@@ -26,10 +26,14 @@ interface IDefinition extends IInstructionDefinition {
 }
 
 async function getDefinitions(): Promise<DefinitionMap> {
+  const definitionMap = {
+    [eGame.GTA3]: 'gta3.json',
+    [eGame.GTAVC]: 'gtavc.json',
+    [eGame.GTASA]: 'gtasa.json',
+  };
+  const definitionFile = definitionMap[GLOBAL_OPTIONS.game];
   try {
-    const definitions = await file.loadJson<IDefinition[]>(
-      Arguments.definitionFile
-    );
+    const definitions = await file.loadJson<IDefinition[]>(definitionFile);
     const map: DefinitionMap = new Map();
     definitions.forEach((definition) => {
       const { name, params } = definition;
@@ -37,13 +41,13 @@ async function getDefinitions(): Promise<DefinitionMap> {
     });
     return map;
   } catch {
-    throw Log.error(AppError.NO_OPCODE, Arguments.definitionFile);
+    throw Log.error(AppError.NO_OPCODE, definitionFile);
   }
 }
 
-export async function main(): Promise<void> {
+export async function main(inputFile: Promise<DataView>): Promise<void> {
   const loader = new Loader();
-  const scriptFile = await loader.loadScript(Arguments.inputFile);
+  const scriptFile = await loader.loadScript(inputFile);
   const definitionMap = await getDefinitions();
   const parser = new Parser(definitionMap);
   const scripts = await parser.parse(scriptFile);
@@ -60,7 +64,7 @@ export async function main(): Promise<void> {
       printer.printLine(`\n:${name.toUpperCase()}`);
       printer.indent++;
 
-      if (Arguments.printAssembly === true) {
+      if (GLOBAL_OPTIONS.printAssembly === true) {
         for (const bb of func.nodes) {
           printer.print(bb as IBasicBlock);
         }
@@ -121,7 +125,7 @@ export async function main(): Promise<void> {
             }
             printer.printLine(`end`);
           } else {
-            bb && printer.print(bb as IBasicBlock, Arguments.debugMode);
+            bb && printer.print(bb as IBasicBlock, GLOBAL_OPTIONS.debugMode);
           }
         }
       };

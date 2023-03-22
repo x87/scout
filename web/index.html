@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Scout Decompiler</title>
+  </head>
+  <body>
+    <script>
+      const gta3 = 0;
+      const vc = 1;
+      var game = gta3;
+      var start = function () {
+        let textArea = document.getElementById('text');
+        textArea.value = '';
+        let errorBlock = document.getElementById('error');
+        errorBlock.innerText = '';
+
+        let file = document.getElementById('file').files[0];
+        file
+          .arrayBuffer()
+          .then((buffer) => new DataView(buffer))
+          .then((file) => {
+            decompile(file);
+          })
+          .catch((e) => {
+            errorBlock.innerText = e;
+            console.error(e);
+          });
+      };
+
+      var selectGame = function (option) {
+        if (option === 'GTA III') {
+          updateArguments({ game: gta3 });
+        } else if (option === 'GTA VC') {
+          updateArguments({ game: vc });
+        }
+      };
+    </script>
+    <h1 style="font-size: 1.5rem">
+      <a href="https://github.com/x87/scout" target="_blank"
+        >Scout Decompiler v0.5.0</a
+      >
+    </h1>
+    <hr />
+    <p>
+      Select a script file (*.scm, *.cs), the target game, then click
+      `Decompile`.
+    </p>
+    <input type="file" id="file" />
+    <select onchange="selectGame(this.value)">
+      <option>GTA III</option>
+      <option>GTA VC</option>
+    </select>
+    <button id="decompile" onclick="start()">Decompile</button>
+
+    <p style="color: red" id="error"></p>
+
+    <div>
+      <textarea
+        id="text"
+        style="margin-top: 16px; width: 90%; height: 500px"
+        readonly
+      ></textarea>
+    </div>
+
+    <p style="color: #888; text-align: center">
+      <small>Early preview. Use at your own risk.</small>
+    </p>
+    <script src="scout.web.js"></script>
+  </body>
+</html>

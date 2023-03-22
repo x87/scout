@@ -5,22 +5,21 @@ import AppError from 'common/errors';
 import { eScriptType } from 'common/enums';
 
 export default class Loader {
-  async loadScript(stream: Promise<Buffer>): Promise<ScriptFile> {
+  async loadScript(stream: Promise<DataView>): Promise<ScriptFile> {
     try {
       const buffer = await stream;
-      if (Buffer.isBuffer(buffer)) {
-        return this.isHeaderPresent(buffer)
-          ? new ScriptMultifile(buffer)
-          : new ScriptFile(buffer, eScriptType.CLEO);
-      }
-    } catch {
+      return this.isHeaderPresent(buffer)
+        ? new ScriptMultifile(buffer)
+        : new ScriptFile(buffer, eScriptType.CLEO);
+    } catch (e){
+      console.log(e);
       throw Log.error(AppError.INVALID_INPUT_FILE);
     }
   }
 
-  private isHeaderPresent(buf: Buffer): boolean {
+  private isHeaderPresent(buf: DataView): boolean {
     // todo: count jumps
-    const firstOp = buf.readInt16LE(0);
+    const firstOp = buf.getInt16(0, true);
     return firstOp === 2;
   }
 }
