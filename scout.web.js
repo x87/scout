@@ -18,46 +18,106 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.main = void 0;
 const arguments_1 = __webpack_require__(2);
-const errors_1 = __webpack_require__(18);
 const conditionUtils = __webpack_require__(25);
 const loopUtils = __webpack_require__(31);
-const utils = __webpack_require__(27);
-const file = __webpack_require__(22);
-const log_1 = __webpack_require__(20);
 const cfg_1 = __webpack_require__(29);
 const loader_1 = __webpack_require__(32);
 const parser_1 = __webpack_require__(36);
 const enums_1 = __webpack_require__(19);
 const graph_1 = __webpack_require__(28);
-const ExpressionPrinter_1 = __webpack_require__(37);
+const ExpressionPrinter_1 = __webpack_require__(38);
 const graphUtils = __webpack_require__(26);
-function getDefinitions() {
-    return __awaiter(this, void 0, void 0, function* () {
-        const definitionMap = {
-            [enums_1.eGame.GTA3]: 'gta3.json',
-            [enums_1.eGame.GTAVC]: 'gtavc.json',
-            [enums_1.eGame.GTASA]: 'gtasa.json',
+const definitions_1 = __webpack_require__(37);
+function print(functions, printer, script) {
+    functions.forEach((func, i) => {
+        const offset = (0, graph_1.getOffset)(func);
+        const name = offset === 0 ? script.name : `${script.name}_${offset}`;
+        printer.printLine(`\n:${name.toUpperCase()}`);
+        printer.indent++;
+        if (arguments_1.GLOBAL_OPTIONS.printAssembly === true) {
+            for (const bb of func.nodes) {
+                printer.print(bb);
+            }
+        }
+        const printGraph = (graph) => {
+            for (const bb of graph.nodes) {
+                if (bb instanceof graph_1.LoopGraph) {
+                    printer.printLine('');
+                    switch (bb.type) {
+                        case enums_1.eLoopType.PRE_TESTED: {
+                            printer.printLine(`while ${printer.stringifyCondition(bb.condition)}`);
+                            printer.indent++;
+                            const g = graphUtils.from(bb);
+                            g.nodes.splice(0, 1);
+                            printGraph(g);
+                            printer.indent--;
+                            printer.printLine('end');
+                            break;
+                        }
+                        case enums_1.eLoopType.POST_TESTED: {
+                            printer.printLine(`repeat`);
+                            printer.indent++;
+                            const g = graphUtils.from(bb);
+                            g.nodes.splice(g.nodes.length - 1, 1);
+                            printGraph(g);
+                            printer.indent--;
+                            printer.printLine(`until ${printer.stringifyCondition(bb.condition)}`);
+                            break;
+                        }
+                        case enums_1.eLoopType.ENDLESS:
+                            printer.printLine(`while true`);
+                            printer.indent++;
+                            printGraph(bb);
+                            printer.indent--;
+                            printer.printLine('end');
+                            break;
+                    }
+                    printer.printLine('');
+                }
+                else if (bb instanceof graph_1.IfGraph) {
+                    printer.printLine(`if ${bb.ifNumber || ''}`);
+                    printer.indent++;
+                    printer.print(bb.nodes[0]);
+                    printer.indent--;
+                    printer.printLine(`then`);
+                    printer.indent++;
+                    printGraph(bb.thenNode);
+                    printer.indent--;
+                    if (bb.elseNode) {
+                        printer.printLine(`else`);
+                        printer.indent++;
+                        printGraph(bb.elseNode);
+                        printer.indent--;
+                    }
+                    printer.printLine(`end`);
+                }
+                else {
+                    bb && printer.print(bb, arguments_1.GLOBAL_OPTIONS.debugMode);
+                }
+            }
         };
-        const definitionFile = definitionMap[arguments_1.GLOBAL_OPTIONS.game];
         try {
-            const definitions = yield file.loadJson(definitionFile);
-            const map = new Map();
-            definitions.forEach((definition) => {
-                const { name, params } = definition;
-                map.set(utils.hexToOpcode(definition.id), { name, params });
-            });
-            return map;
+            const loopGraph = loopUtils.structure(func);
+            const ifGraph = conditionUtils.structure(loopGraph);
+            printGraph(ifGraph);
         }
-        catch (_a) {
-            throw log_1.default.error(errors_1.default.NO_OPCODE, definitionFile);
+        catch (e) {
+            console.log(e);
+            printer.printLine(`// can't structure this function\n`);
+            printer.printLine(`--- Function ${i} Start----\n`);
+            for (const bb of func.nodes) {
+                printer.print(bb);
+            }
+            printer.printLine(`--- Function ${i} End----`);
         }
+        printer.indent--;
     });
 }
 function main(inputFile) {
     return __awaiter(this, void 0, void 0, function* () {
         const loader = new loader_1.default();
         const scriptFile = yield loader.loadScript(inputFile);
-        const definitionMap = yield getDefinitions();
+        const definitionMap = yield (0, definitions_1.getDefinitions)();
         const parser = new parser_1.default(definitionMap);
         const scripts = yield parser.parse(scriptFile);
         const printer = new ExpressionPrinter_1.default(definitionMap);
@@ -66,89 +126,7 @@ function main(inputFile) {
             const functions = cfg.getCallGraphs(script, scripts).sort((a, b) => {
                 return (0, graph_1.getOffset)(a) - (0, graph_1.getOffset)(b);
             });
-            functions.forEach((func, i) => {
-                const offset = (0, graph_1.getOffset)(func);
-                const name = offset === 0 ? script.name : `${script.name}_${offset}`;
-                printer.printLine(`\n:${name.toUpperCase()}`);
-                printer.indent++;
-                if (arguments_1.GLOBAL_OPTIONS.printAssembly === true) {
-                    for (const bb of func.nodes) {
-                        printer.print(bb);
-                    }
-                }
-                const printGraph = (graph) => {
-                    for (const bb of graph.nodes) {
-                        if (bb instanceof graph_1.LoopGraph) {
-                            printer.printLine('');
-                            switch (bb.type) {
-                                case enums_1.eLoopType.PRE_TESTED: {
-                                    printer.printLine(`while ${printer.stringifyCondition(bb.condition)}`);
-                                    printer.indent++;
-                                    const g = graphUtils.from(bb);
-                                    g.nodes.splice(0, 1);
-                                    printGraph(g);
-                                    printer.indent--;
-                                    printer.printLine('end');
-                                    break;
-                                }
-                                case enums_1.eLoopType.POST_TESTED: {
-                                    printer.printLine(`repeat`);
-                                    printer.indent++;
-                                    const g = graphUtils.from(bb);
-                                    g.nodes.splice(g.nodes.length - 1, 1);
-                                    printGraph(g);
-                                    printer.indent--;
-                                    printer.printLine(`until ${printer.stringifyCondition(bb.condition)}`);
-                                    break;
-                                }
-                                case enums_1.eLoopType.ENDLESS:
-                                    printer.printLine(`while true`);
-                                    printer.indent++;
-                                    printGraph(bb);
-                                    printer.indent--;
-                                    printer.printLine('end');
-                                    break;
-                            }
-                            printer.printLine('');
-                        }
-                        else if (bb instanceof graph_1.IfGraph) {
-                            printer.printLine(`if ${bb.ifNumber || ''}`);
-                            printer.indent++;
-                            printer.print(bb.nodes[0]);
-                            printer.indent--;
-                            printer.printLine(`then`);
-                            printer.indent++;
-                            printGraph(bb.thenNode);
-                            printer.indent--;
-                            if (bb.elseNode) {
-                                printer.printLine(`else`);
-                                printer.indent++;
-                                printGraph(bb.elseNode);
-                                printer.indent--;
-                            }
-                            printer.printLine(`end`);
-                        }
-                        else {
-                            bb && printer.print(bb, arguments_1.GLOBAL_OPTIONS.debugMode);
-                        }
-                    }
-                };
-                try {
-                    const loopGraph = loopUtils.structure(func);
-                    const ifGraph = conditionUtils.structure(loopGraph);
-                    printGraph(ifGraph);
-                }
-                catch (e) {
-                    console.log(e);
-                    printer.printLine(`// can't structure this function\n`);
-                    printer.printLine(`--- Function ${i} Start----\n`);
-                    for (const bb of func.nodes) {
-                        printer.print(bb);
-                    }
-                    printer.printLine(`--- Function ${i} End----`);
-                }
-                printer.indent--;
-            });
+            print(functions, printer, script);
         });
     });
 }
@@ -230,7 +208,7 @@ if (browser_or_node_1.isNode) {
     }
 }
 function updateArguments(args) {
-    if (args.game) {
+    if (args.game !== undefined) {
         GLOBAL_OPTIONS.game = args.game;
     }
     if (args.inputFile) {
@@ -4450,13 +4428,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.bufferFromHex = exports.emptyBuffer = exports.readBinaryStream = exports.loadJson = exports.loadText = void 0;
 const promises_1 = __webpack_require__(23);
-const browser_or_node_1 = __webpack_require__(5);
 function loadText(fileName, encoding = 'utf8') {
     return __awaiter(this, void 0, void 0, function* () {
-        if (browser_or_node_1.isBrowser) {
-            const response = yield fetch(fileName);
-            return yield response.text();
-        }
         const buf = yield (0, promises_1.readFile)(fileName, { encoding });
         return buf.toString();
     });
@@ -5162,12 +5135,13 @@ exports.OP_JMP = 0x0002;
 const OP_JT = 0x004c;
 exports.OP_JF = 0x004d;
 const OP_END = 0x004e;
+const OP_CLEO_END = 0x0a93;
 const OP_CALL = 0x004f;
 const OP_GOSUB = 0x0050;
 const OP_RETURN = 0x0051;
 exports.OP_NAME = 0x03a4;
 exports.OP_IF = 0x00d6;
-const blockEndOpcodes = [OP_END, OP_RETURN];
+const blockEndOpcodes = [OP_END, OP_CLEO_END, OP_RETURN];
 const callOpcodes = [OP_GOSUB, OP_CALL];
 const branchOpcodesMap = {
     [enums_1.eGame.GTA3]: {
@@ -5861,9 +5835,10 @@ const ScriptMultifile_1 = __webpack_require__(34);
 const enums_1 = __webpack_require__(19);
 const instructions_1 = __webpack_require__(30);
 const cfg_1 = __webpack_require__(29);
-exports.PARAM_ANY = 'any';
-exports.PARAM_ARGUMENTS = 'arguments';
-exports.PARAM_LABEL = 'label';
+const definitions_1 = __webpack_require__(37);
+exports.PARAM_ANY = definitions_1.PrimitiveType.any;
+exports.PARAM_ARGUMENTS = definitions_1.PrimitiveType.arguments;
+exports.PARAM_LABEL = definitions_1.PrimitiveType.label;
 class Parser {
     constructor(definitionMap) {
         this.nonameCounter = 0;
@@ -6170,12 +6145,111 @@ exports["default"] = Parser;
 
 /***/ }),
 /* 37 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getDefinitions = exports.CommandAttributes = exports.PrimitiveType = void 0;
+const arguments_1 = __webpack_require__(2);
+const enums_1 = __webpack_require__(19);
+const file = __webpack_require__(22);
+const utils = __webpack_require__(27);
+const errors_1 = __webpack_require__(18);
+const log_1 = __webpack_require__(20);
+const browser_or_node_1 = __webpack_require__(5);
+var PrimitiveType;
+(function (PrimitiveType) {
+    PrimitiveType["any"] = "any";
+    PrimitiveType["arguments"] = "arguments";
+    PrimitiveType["boolean"] = "bool";
+    PrimitiveType["float"] = "float";
+    PrimitiveType["int"] = "int";
+    PrimitiveType["label"] = "label";
+    PrimitiveType["string"] = "string";
+    PrimitiveType["string128"] = "string128";
+    PrimitiveType["gxt_key"] = "gxt_key";
+    PrimitiveType["zone_key"] = "zone_key";
+    PrimitiveType["model_any"] = "model_any";
+    PrimitiveType["model_char"] = "model_char";
+    PrimitiveType["model_object"] = "model_object";
+    PrimitiveType["model_vehicle"] = "model_vehicle";
+    PrimitiveType["int_script_id"] = "script_id";
+    PrimitiveType["vector3"] = "Vector3";
+})(PrimitiveType = exports.PrimitiveType || (exports.PrimitiveType = {}));
+exports.CommandAttributes = [
+    'is_branch',
+    'is_condition',
+    'is_constructor',
+    'is_destructor',
+    'is_keyword',
+    'is_nop',
+    'is_overload',
+    'is_segment',
+    'is_static',
+    'is_unsupported',
+];
+function getDefinitions() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const definitionMap = {
+            [enums_1.eGame.GTA3]: 'gta3.json',
+            [enums_1.eGame.GTAVC]: 'vc.json',
+            [enums_1.eGame.GTASA]: 'sa.json',
+        };
+        const definitionMapSBL = {
+            [enums_1.eGame.GTA3]: 'https://raw.githubusercontent.com/sannybuilder/library/master/gta3/gta3.json',
+            [enums_1.eGame.GTAVC]: 'https://raw.githubusercontent.com/sannybuilder/library/master/vc/vc.json',
+            [enums_1.eGame.GTASA]: 'https://raw.githubusercontent.com/sannybuilder/library/master/sa/sa.json',
+        };
+        const definitionFile = browser_or_node_1.isBrowser
+            ? definitionMapSBL[arguments_1.GLOBAL_OPTIONS.game]
+            : definitionMap[arguments_1.GLOBAL_OPTIONS.game];
+        try {
+            let data;
+            if (browser_or_node_1.isBrowser) {
+                const response = yield fetch(definitionFile);
+                data = yield response.json();
+            }
+            else {
+                data = yield file.loadJson(definitionFile);
+            }
+            const map = new Map();
+            data.extensions.forEach((extension) => {
+                extension.commands.forEach((command) => {
+                    const { name, input, id, output } = command;
+                    const params = [...(input || []), ...(output || [])].map((param) => {
+                        return { type: param.type };
+                    });
+                    map.set(utils.hexToOpcode(id), { name, params });
+                });
+            });
+            return map;
+        }
+        catch (_a) {
+            throw log_1.default.error(errors_1.default.NO_OPCODE, definitionFile);
+        }
+    });
+}
+exports.getDefinitions = getDefinitions;
+
+
+/***/ }),
+/* 38 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const SimplePrinter_1 = __webpack_require__(38);
+const SimplePrinter_1 = __webpack_require__(39);
 const utils = __webpack_require__(27);
 const log_1 = __webpack_require__(20);
 const cfg_1 = __webpack_require__(29);
@@ -6269,7 +6343,7 @@ exports["default"] = ExpressionPrinter;
 
 
 /***/ }),
-/* 38 */
+/* 39 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
