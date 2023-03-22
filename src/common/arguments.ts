@@ -35,16 +35,12 @@ if (isNode) {
     .version(require('../../package.json').version, '-v, --version')
     .option('-d, --debug', 'enable the debug mode')
     .option('-p, --print', 'print the assembly')
-    .option(
-      '-g, --game <game>',
-      'target game: gta3, vc, sa',
-      (arg) => {
-        if (!gameMap.hasOwnProperty(arg)) {
-          throw Log.error(AppError.UNKNOWN_GAME, arg);
-        }
-        return arg;
-      },
-    )
+    .option('-g, --game <game>', 'target game: gta3, vc, sa', (arg) => {
+      if (!gameMap.hasOwnProperty(arg)) {
+        throw Log.error(AppError.UNKNOWN_GAME, arg);
+      }
+      return arg;
+    })
     .parse(process.argv);
 
   const cli = program.opts();
@@ -79,7 +75,7 @@ if (isNode) {
 }
 
 function updateArguments(args) {
-  if (args.game) {
+  if (args.game !== undefined) {
     GLOBAL_OPTIONS.game = args.game;
   }
   if (args.inputFile) {

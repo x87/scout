@@ -1,12 +1,14 @@
 # Scout Decompiler
 
-[![Build Status](https://travis-ci.org/x87/scout.svg?branch=master)](https://travis-ci.org/x87/scout)
+Scout Decompiler is an experimental CLI tool to decompile binary scripts of Grand Theft Auto 3D series into a human-readable high-level format.
 
-Scout Decompiler is a CLI tool to decompile binary scripts of Grand Theft Auto 3D series into a human-readable high-level format.
+Also available online at https://scout.sannybuilder.com/
 
-## Build
+Use at your own risk. Not intended for production use.
 
-Download and install Node.js from https://nodejs.org. Then run the following commands.
+## Prerequisites
+
+Download and install Node.js from https://nodejs.org. Then run the following commands:
 
 ```bash
 git clone https://github.com/x87/scout.git
@@ -15,33 +17,26 @@ npm install
 npm run build
 ```
 
-### Build opcodes definitions
+It will create a `build` folder with the `scout.js` file.
 
-Opcode definitions are required to disassemble the bytecode.
+### Command definitions
 
-```bash
-mkdir -p build && node opcodes > build/gta3.json
-```
+Scout uses command definitions from Sanny Builder Library. They are required to decompile the bytecode. You can download the latest version by following these links:
 
-### Running tests
+- [GTA3](https://raw.githubusercontent.com/sannybuilder/library/master/gta3/gta3.json)
+- [VC](https://raw.githubusercontent.com/sannybuilder/library/master/vc/vc.json)
 
-```bash
-npm test
-```
+Place JSON files next to the `scout.js` file before decompiling.
 
-## Usage
-
-Build the tool and opcode definitions first. Put them into the same directory. Decompile a file using the following commands.
-
-### Command-line interface
+## Command-line interface
 
 ```bash
-node scout <inputfile> [....options]
+node.exe scout <inputfile> [....options]
 ```
 
 | Option Name | Description                                     |
 | ----------- | ----------------------------------------------- |
-| `-g <game>` | Target game. Possible options are: gta3, vc, sa |
+| `-g <game>` | Target game. Possible values are: gta3, vc, sa |
 
 Input/Output redirection is supported
 
@@ -55,9 +50,9 @@ Get detailed help information
 node.exe scout -h
 ```
 
-#### Example
+### Example
 
 ```bash
 cd build
-node.exe scout < test.scm -g gta3 > out.txt
+node.exe scout < gta3.scm -g gta3 > out.txt
 ```

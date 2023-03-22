@@ -1,6 +1,6 @@
 import Log from 'utils/log';
 
-import {GLOBAL_OPTIONS} from 'common/arguments';
+import { GLOBAL_OPTIONS } from 'common/arguments';
 import AppError from 'common/errors';
 import { Graph } from './graph';
 
@@ -14,12 +14,13 @@ export const OP_JMP = 0x0002;
 const OP_JT = 0x004c;
 export const OP_JF = 0x004d;
 const OP_END = 0x004e;
+const OP_CLEO_END = 0x0a93;
 const OP_CALL = 0x004f;
 const OP_GOSUB = 0x0050;
 const OP_RETURN = 0x0051;
 export const OP_NAME = 0x03a4;
 export const OP_IF = 0x00d6;
-const blockEndOpcodes = [OP_END, OP_RETURN];
+const blockEndOpcodes = [OP_END, OP_CLEO_END, OP_RETURN];
 
 const callOpcodes = [OP_GOSUB, OP_CALL];
 

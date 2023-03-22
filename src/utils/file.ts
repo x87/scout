@@ -6,10 +6,6 @@ export async function loadText(
   fileName: string,
   encoding: BufferEncoding = 'utf8'
 ): Promise<string> {
-  if (isBrowser) {
-    const response = await fetch(fileName);
-    return await response.text();
-  }
   const buf = await readFile(fileName, { encoding });
   return buf.toString();
 }

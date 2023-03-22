@@ -14,10 +14,11 @@ import {
   InstructionMap,
 } from 'common/instructions';
 import { OP_NAME } from 'frontend/cfg';
+import { PrimitiveType } from 'definitions';
 
-export const PARAM_ANY = 'any';
-export const PARAM_ARGUMENTS = 'arguments';
-export const PARAM_LABEL = 'label';
+export const PARAM_ANY = PrimitiveType.any;
+export const PARAM_ARGUMENTS = PrimitiveType.arguments;
+export const PARAM_LABEL = PrimitiveType.label;
 
 export default class Parser {
   private data: DataView;

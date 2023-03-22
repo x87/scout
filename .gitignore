@@ -1,5 +1,4 @@
 !.gitignore
-.idea
 node_modules
 build
 jest-cache
@@ -7,4 +6,5 @@ jest-cache
 *.log
 *.scm
 *.cs
-opcodes/*.json
+web/*
+!web/index.html
