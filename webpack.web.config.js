@@ -16,6 +16,9 @@ module.exports = {
       child_process: false
     }
   },
+  externals: {
+    'node-fetch': {},
+  },
   mode: 'none',
   module: {
     rules: [

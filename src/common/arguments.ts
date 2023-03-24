@@ -10,11 +10,7 @@ import { emptyBuffer, readBinaryStream } from 'utils/file';
 
 const program = new Command();
 
-interface IGameDictionary {
-  [key: string]: eGame;
-}
-
-const gameMap: IGameDictionary = {
+const gameMap: Record<string, eGame> = {
   gta3: eGame.GTA3,
   gtavc: eGame.GTAVC,
   vc: eGame.GTAVC,
@@ -39,7 +35,7 @@ if (isNode) {
       if (!gameMap.hasOwnProperty(arg)) {
         throw Log.error(AppError.UNKNOWN_GAME, arg);
       }
-      return arg;
+      return gameMap[arg];
     })
     .parse(process.argv);
 

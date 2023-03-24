@@ -22,7 +22,7 @@
           .arrayBuffer()
           .then((buffer) => new DataView(buffer))
           .then((file) => {
-            decompile(file);
+            return decompile(file);
           })
           .catch((e) => {
             errorBlock.innerText = e;

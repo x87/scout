@@ -1,6 +1,5 @@
-import { ReadStream } from 'fs';
+import { existsSync, ReadStream, writeFileSync } from 'fs';
 import { readFile } from 'fs/promises';
-import { isBrowser } from 'browser-or-node';
 
 export async function loadText(
   fileName: string,
@@ -13,6 +12,14 @@ export async function loadText(
 export async function loadJson<T>(fileName: string): Promise<T> {
   const text = await loadText(fileName);
   return JSON.parse(text);
+}
+
+export function fileExists(fileName: string): boolean {
+  return existsSync(fileName);
+}
+
+export function saveToFile(fileName: string, content: any) {
+  writeFileSync(fileName, content, { encoding: 'utf8' });
 }
 
 export async function readBinaryStream(stream: ReadStream): Promise<Buffer> {

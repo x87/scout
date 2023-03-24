@@ -21,12 +21,9 @@ It will create a `build` folder with the `scout.js` file.
 
 ### Command definitions
 
-Scout uses command definitions from Sanny Builder Library. They are required to decompile the bytecode. You can download the latest version by following these links:
+Scout uses command definitions from Sanny Builder Library. It downloads them from GitHub automatically.
 
-- [GTA3](https://raw.githubusercontent.com/sannybuilder/library/master/gta3/gta3.json)
-- [VC](https://raw.githubusercontent.com/sannybuilder/library/master/vc/vc.json)
-
-Place JSON files next to the `scout.js` file before decompiling.
+If you need to update the files, simply delete `gta3.json` or `vc.json` from the Scout directory and re-run the tool.
 
 ## Command-line interface
 
@@ -34,9 +31,9 @@ Place JSON files next to the `scout.js` file before decompiling.
 node.exe scout <inputfile> [....options]
 ```
 
-| Option Name | Description                                     |
-| ----------- | ----------------------------------------------- |
-| `-g <game>` | Target game. Possible values are: gta3, vc, sa |
+| Option Name | Description                                |
+| ----------- | ------------------------------------------ |
+| `-g <game>` | Target game. Possible values are: gta3, vc |
 
 Input/Output redirection is supported
 

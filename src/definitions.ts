@@ -6,6 +6,7 @@ import * as utils from './utils';
 import AppError from './common/errors';
 import Log from './utils/log';
 import { isBrowser } from 'browser-or-node';
+import nodeFetch from 'node-fetch';
 
 export interface Attr {
   is_branch: boolean;
@@ -100,7 +101,13 @@ export async function getDefinitions(): Promise<DefinitionMap> {
       const response = await fetch(definitionFile);
       data = await response.json();
     } else {
-      data = await file.loadJson(definitionFile);
+      if (file.fileExists(definitionFile)) {
+        data = await file.loadJson(definitionFile);
+      } else {
+        const response = await nodeFetch(definitionMapSBL[GLOBAL_OPTIONS.game]);
+        data = (await response.json()) as { extensions: Extension[] };
+        file.saveToFile(definitionFile, JSON.stringify(data, null, 2));
+      }
     }
 
     const map: DefinitionMap = new Map();
