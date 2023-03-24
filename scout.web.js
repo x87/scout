@@ -18,16 +18,16 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.main = void 0;
 const arguments_1 = __webpack_require__(2);
-const conditionUtils = __webpack_require__(25);
-const loopUtils = __webpack_require__(31);
-const cfg_1 = __webpack_require__(29);
-const loader_1 = __webpack_require__(32);
-const parser_1 = __webpack_require__(36);
+const conditionUtils = __webpack_require__(26);
+const loopUtils = __webpack_require__(32);
+const cfg_1 = __webpack_require__(30);
+const loader_1 = __webpack_require__(33);
+const parser_1 = __webpack_require__(37);
 const enums_1 = __webpack_require__(19);
-const graph_1 = __webpack_require__(28);
-const ExpressionPrinter_1 = __webpack_require__(38);
-const graphUtils = __webpack_require__(26);
-const definitions_1 = __webpack_require__(37);
+const graph_1 = __webpack_require__(29);
+const ExpressionPrinter_1 = __webpack_require__(40);
+const graphUtils = __webpack_require__(27);
+const definitions_1 = __webpack_require__(38);
 function print(functions, printer, script) {
     functions.forEach((func, i) => {
         const offset = (0, graph_1.getOffset)(func);
@@ -167,14 +167,14 @@ exports.GLOBAL_OPTIONS = GLOBAL_OPTIONS;
 if (browser_or_node_1.isNode) {
     program
         .usage('<inputfile> [options]')
-        .version((__webpack_require__(24).version), '-v, --version')
+        .version((__webpack_require__(25).version), '-v, --version')
         .option('-d, --debug', 'enable the debug mode')
         .option('-p, --print', 'print the assembly')
         .option('-g, --game <game>', 'target game: gta3, vc, sa', (arg) => {
         if (!gameMap.hasOwnProperty(arg)) {
             throw log_1.default.error(errors_1.default.UNKNOWN_GAME, arg);
         }
-        return arg;
+        return gameMap[arg];
     })
         .parse(process.argv);
     const cli = program.opts();
@@ -4426,8 +4426,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.bufferFromHex = exports.emptyBuffer = exports.readBinaryStream = exports.loadJson = exports.loadText = void 0;
-const promises_1 = __webpack_require__(23);
+exports.bufferFromHex = exports.emptyBuffer = exports.readBinaryStream = exports.saveToFile = exports.fileExists = exports.loadJson = exports.loadText = void 0;
+const fs_1 = __webpack_require__(23);
+const promises_1 = __webpack_require__(24);
 function loadText(fileName, encoding = 'utf8') {
     return __awaiter(this, void 0, void 0, function* () {
         const buf = yield (0, promises_1.readFile)(fileName, { encoding });
@@ -4442,6 +4443,14 @@ function loadJson(fileName) {
     });
 }
 exports.loadJson = loadJson;
+function fileExists(fileName) {
+    return (0, fs_1.existsSync)(fileName);
+}
+exports.fileExists = fileExists;
+function saveToFile(fileName, content) {
+    (0, fs_1.writeFileSync)(fileName, content, { encoding: 'utf8' });
+}
+exports.saveToFile = saveToFile;
 function readBinaryStream(stream) {
     return __awaiter(this, void 0, void 0, function* () {
         return new Promise((resolve, reject) => {
@@ -4481,26 +4490,32 @@ exports.bufferFromHex = bufferFromHex;
 
 /***/ }),
 /* 24 */
-/***/ ((module) => {
+/***/ (() => {
 
-"use strict";
-module.exports = JSON.parse('{"name":"scout","version":"0.5.0","description":"Scout Decompiler","main":"scout.js","repository":{"type":"git","url":"https://github.com/x87/scout.git"},"scripts":{"lint":"eslint ./src","build":"webpack --config webpack.node.config.js","build-web":"webpack --config webpack.web.config.js","dev":"npm run build -- --watch","test":"jest"},"keywords":[],"author":"Seemann","license":"MIT","devDependencies":{"@types/jest":"29.4.0","@types/node":"18.14.6","@typescript-eslint/eslint-plugin":"^5.54.0","@typescript-eslint/parser":"^5.54.0","eslint":"^8.35.0","jest":"29.4.3","jest-extended":"3.2.4","ts-jest":"29.0.5","ts-loader":"9.4.2","ts-node":"10.9.1","typescript":"4.9.5","webpack":"^5.76.2","webpack-cli":"5.0.1"},"dependencies":{"browser-or-node":"^2.1.1","commander":"10.0.0","eol":"0.9.1","format":"^0.2.2"}}');
+/* (ignored) */
 
 /***/ }),
 /* 25 */
+/***/ ((module) => {
+
+"use strict";
+module.exports = JSON.parse('{"name":"scout","version":"0.5.0","description":"Scout Decompiler","main":"scout.js","repository":{"type":"git","url":"https://github.com/x87/scout.git"},"scripts":{"lint":"eslint ./src","build":"webpack --config webpack.node.config.js","build-web":"webpack --config webpack.web.config.js","dev":"npm run build -- --watch","test":"jest"},"keywords":[],"author":"Seemann","license":"MIT","devDependencies":{"@types/jest":"29.4.0","@types/node":"18.14.6","@typescript-eslint/eslint-plugin":"^5.54.0","@typescript-eslint/parser":"^5.54.0","eslint":"^8.35.0","jest":"29.4.3","jest-extended":"3.2.4","ts-jest":"29.0.5","ts-loader":"9.4.2","ts-node":"10.9.1","typescript":"4.9.5","webpack":"^5.76.2","webpack-cli":"5.0.1"},"dependencies":{"browser-or-node":"^2.1.1","commander":"10.0.0","eol":"0.9.1","format":"^0.2.2","node-fetch":"^3.3.1"}}');
+
+/***/ }),
+/* 26 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.structure = exports.getIfType = void 0;
-const graphUtils = __webpack_require__(26);
-const graph_1 = __webpack_require__(28);
+const graphUtils = __webpack_require__(27);
+const graph_1 = __webpack_require__(29);
 const enums_1 = __webpack_require__(19);
 const log_1 = __webpack_require__(20);
 const errors_1 = __webpack_require__(18);
-const index_1 = __webpack_require__(29);
-const instructions_1 = __webpack_require__(30);
+const index_1 = __webpack_require__(30);
+const instructions_1 = __webpack_require__(31);
 function getIfType(graph, ifHeader, followNode) {
     const headerSuccessors = graph.getImmSuccessors(ifHeader);
     return headerSuccessors.includes(followNode)
@@ -4649,15 +4664,15 @@ function getIfCondNumber(res, header) {
 
 
 /***/ }),
-/* 26 */
+/* 27 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.transpose = exports.findIPDom = exports.findSPDom = exports.findPDom = exports.findIDom = exports.findSDom = exports.findDom = exports.from = exports.reversePostOrder = exports.split = void 0;
-const utils = __webpack_require__(27);
-const graph_1 = __webpack_require__(28);
+const utils = __webpack_require__(28);
+const graph_1 = __webpack_require__(29);
 function split(graph) {
     if (graph.nodes.length < 1) {
         return [];
@@ -4857,7 +4872,7 @@ exports.transpose = transpose;
 
 
 /***/ }),
-/* 27 */
+/* 28 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -4928,14 +4943,14 @@ exports.hexToOpcode = hexToOpcode;
 
 
 /***/ }),
-/* 28 */
+/* 29 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.LoopGraph = exports.IfGraph = exports.getOffset = exports.Graph = void 0;
-const utils_1 = __webpack_require__(27);
+const utils_1 = __webpack_require__(28);
 const arguments_1 = __webpack_require__(2);
 const log_1 = __webpack_require__(20);
 class Graph {
@@ -5117,7 +5132,7 @@ exports.LoopGraph = LoopGraph;
 
 
 /***/ }),
-/* 29 */
+/* 30 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -5127,9 +5142,9 @@ exports.OP_IF = exports.OP_NAME = exports.OP_JF = exports.OP_JMP = void 0;
 const log_1 = __webpack_require__(20);
 const arguments_1 = __webpack_require__(2);
 const errors_1 = __webpack_require__(18);
-const graph_1 = __webpack_require__(28);
-const Instruction = __webpack_require__(30);
-const graphUtils = __webpack_require__(26);
+const graph_1 = __webpack_require__(29);
+const Instruction = __webpack_require__(31);
+const graphUtils = __webpack_require__(27);
 const enums_1 = __webpack_require__(19);
 exports.OP_JMP = 0x0002;
 const OP_JT = 0x004c;
@@ -5380,7 +5395,7 @@ exports["default"] = CFG;
 
 
 /***/ }),
-/* 30 */
+/* 31 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -5415,17 +5430,17 @@ exports.getString8Param = getString8Param;
 
 
 /***/ }),
-/* 31 */
+/* 32 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.structure = exports.findFollowNode = exports.getLoopType = void 0;
-const graphUtils = __webpack_require__(26);
-const graph_1 = __webpack_require__(28);
+const graphUtils = __webpack_require__(27);
+const graph_1 = __webpack_require__(29);
 const enums_1 = __webpack_require__(19);
-const conditions_utils_1 = __webpack_require__(25);
+const conditions_utils_1 = __webpack_require__(26);
 const log_1 = __webpack_require__(20);
 function getLoopType(graph, loop, loopHeader, latchingNode) {
     const headerSuccessors = graph.getImmSuccessors(loopHeader);
@@ -5610,7 +5625,7 @@ exports.structure = structure;
 
 
 /***/ }),
-/* 32 */
+/* 33 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -5626,8 +5641,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const log_1 = __webpack_require__(20);
-const ScriptFile_1 = __webpack_require__(33);
-const ScriptMultifile_1 = __webpack_require__(34);
+const ScriptFile_1 = __webpack_require__(34);
+const ScriptMultifile_1 = __webpack_require__(35);
 const errors_1 = __webpack_require__(18);
 const enums_1 = __webpack_require__(19);
 class Loader {
@@ -5655,7 +5670,7 @@ exports["default"] = Loader;
 
 
 /***/ }),
-/* 33 */
+/* 34 */
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -5674,15 +5689,15 @@ exports["default"] = ScriptFile;
 
 
 /***/ }),
-/* 34 */
+/* 35 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const enums_1 = __webpack_require__(19);
-const ScriptFile_1 = __webpack_require__(33);
-const MultifileMeta_1 = __webpack_require__(35);
+const ScriptFile_1 = __webpack_require__(34);
+const MultifileMeta_1 = __webpack_require__(36);
 class ScriptMultifile extends ScriptFile_1.default {
     constructor(data) {
         super(data, enums_1.eScriptType.MAIN);
@@ -5704,13 +5719,13 @@ exports["default"] = ScriptMultifile;
 
 
 /***/ }),
-/* 35 */
+/* 36 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const utils = __webpack_require__(27);
+const utils = __webpack_require__(28);
 const arguments_1 = __webpack_require__(2);
 const errors_1 = __webpack_require__(18);
 const log_1 = __webpack_require__(20);
@@ -5821,21 +5836,21 @@ exports["default"] = MultifileMetadata;
 
 
 /***/ }),
-/* 36 */
+/* 37 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PARAM_LABEL = exports.PARAM_ARGUMENTS = exports.PARAM_ANY = void 0;
-const utils = __webpack_require__(27);
+const utils = __webpack_require__(28);
 const log_1 = __webpack_require__(20);
 const errors_1 = __webpack_require__(18);
-const ScriptMultifile_1 = __webpack_require__(34);
+const ScriptMultifile_1 = __webpack_require__(35);
 const enums_1 = __webpack_require__(19);
-const instructions_1 = __webpack_require__(30);
-const cfg_1 = __webpack_require__(29);
-const definitions_1 = __webpack_require__(37);
+const instructions_1 = __webpack_require__(31);
+const cfg_1 = __webpack_require__(30);
+const definitions_1 = __webpack_require__(38);
 exports.PARAM_ANY = definitions_1.PrimitiveType.any;
 exports.PARAM_ARGUMENTS = definitions_1.PrimitiveType.arguments;
 exports.PARAM_LABEL = definitions_1.PrimitiveType.label;
@@ -6144,7 +6159,7 @@ exports["default"] = Parser;
 
 
 /***/ }),
-/* 37 */
+/* 38 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -6163,10 +6178,11 @@ exports.getDefinitions = exports.CommandAttributes = exports.PrimitiveType = voi
 const arguments_1 = __webpack_require__(2);
 const enums_1 = __webpack_require__(19);
 const file = __webpack_require__(22);
-const utils = __webpack_require__(27);
+const utils = __webpack_require__(28);
 const errors_1 = __webpack_require__(18);
 const log_1 = __webpack_require__(20);
 const browser_or_node_1 = __webpack_require__(5);
+const node_fetch_1 = __webpack_require__(39);
 var PrimitiveType;
 (function (PrimitiveType) {
     PrimitiveType["any"] = "any";
@@ -6220,7 +6236,14 @@ function getDefinitions() {
                 data = yield response.json();
             }
             else {
-                data = yield file.loadJson(definitionFile);
+                if (file.fileExists(definitionFile)) {
+                    data = yield file.loadJson(definitionFile);
+                }
+                else {
+                    const response = yield (0, node_fetch_1.default)(definitionMapSBL[arguments_1.GLOBAL_OPTIONS.game]);
+                    data = (yield response.json());
+                    file.saveToFile(definitionFile, JSON.stringify(data, null, 2));
+                }
             }
             const map = new Map();
             data.extensions.forEach((extension) => {
@@ -6243,16 +6266,23 @@ exports.getDefinitions = getDefinitions;
 
 
 /***/ }),
-/* 38 */
+/* 39 */
+/***/ ((module) => {
+
+"use strict";
+module.exports = undefined;
+
+/***/ }),
+/* 40 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const SimplePrinter_1 = __webpack_require__(39);
-const utils = __webpack_require__(27);
+const SimplePrinter_1 = __webpack_require__(41);
+const utils = __webpack_require__(28);
 const log_1 = __webpack_require__(20);
-const cfg_1 = __webpack_require__(29);
+const cfg_1 = __webpack_require__(30);
 const arguments_1 = __webpack_require__(2);
 const enums_1 = __webpack_require__(19);
 class ExpressionPrinter extends SimplePrinter_1.default {
@@ -6343,13 +6373,13 @@ exports["default"] = ExpressionPrinter;
 
 
 /***/ }),
-/* 39 */
+/* 41 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const utils = __webpack_require__(27);
+const utils = __webpack_require__(28);
 const log_1 = __webpack_require__(20);
 const enums_1 = __webpack_require__(19);
 class SimplePrinter {
