@@ -120,12 +120,26 @@ export function structure<Node>(graph: Graph<Node>): Graph<Node> {
   // now it is time to find exit nodes and identify them as Break, Continue or Unstructured jumps
   // todo: Continue is not implemented yet
 
-  // ONE_WAY exit nodes are BREAKs;
-  // TWO_WAY exit nodes depend on the type of the loop:
-  // - POST_TESTED && node is last: jf->header; make it the loop condition and delete from the loop
-  // - PRE_TESTED && node is first: jf->exit; make it the loop condition and delete from the loop
+  // ONE_WAY -> exit are BREAKs;
+  // ONE_WAY -> last node or header are CONTINUEs;
+  // TWO_WAY exit nodes:
+  // - loop is POST_TESTED && node is last: jf->header; make it the loop condition and delete from the loop
+  // - loop is PRE_TESTED && node is first: jf->exit; make it the loop condition and delete from the loop
   // - else: abnormal exit, should not be structured as if block; change to UNSTRUCTURED
+  if (loop.type === eLoopType.PRE_TESTED) {
+    loop.condition = loop.root as Node;
+    (loop.root as IBasicBlock).type = eBasicBlockType.LOOP_COND;
+  }
+  if (loop.type === eLoopType.POST_TESTED) {
+    loop.condition = lastNode as Node;
+    (lastNode as IBasicBlock).type = eBasicBlockType.LOOP_COND;
+  }
+
   for (const node of loop.nodes) {
+    
+    if ((node as IBasicBlock).type === eBasicBlockType.LOOP_COND) {
+      continue;
+    }
     const successors = graph.getImmSuccessors(node);
 
     if (successors.includes(loop.followNode)) {
@@ -133,17 +147,16 @@ export function structure<Node>(graph: Graph<Node>): Graph<Node> {
         (node as IBasicBlock).type = eBasicBlockType.BREAK;
         continue;
       }
-      if (node === loop.root && loop.type === eLoopType.PRE_TESTED) {
-        loop.condition = node as Node;
-        (node as IBasicBlock).type = eBasicBlockType.LOOP_COND;
-        continue;
-      }
-      if (node === lastNode && loop.type === eLoopType.POST_TESTED) {
-        loop.condition = node as Node;
-        (node as IBasicBlock).type = eBasicBlockType.LOOP_COND;
-        continue;
-      }
+
       (node as IBasicBlock).type = eBasicBlockType.UNSTRUCTURED;
+    } else if (
+      (node as IBasicBlock).type === eBasicBlockType.ONE_WAY &&
+      (successors.includes(loop.root) || successors.includes(lastNode))
+    ) {
+      if (node !== lastNode) {
+        (node as IBasicBlock).type = eBasicBlockType.CONTINUE;
+      }
+      continue;
     }
   }
 
