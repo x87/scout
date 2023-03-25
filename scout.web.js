@@ -5528,29 +5528,38 @@ function structure(graph) {
     loop.followNode = findFollowNode(graph, loop, reducible.root, lastNode);
     // now it is time to find exit nodes and identify them as Break, Continue or Unstructured jumps
     // todo: Continue is not implemented yet
-    // ONE_WAY exit nodes are BREAKs;
-    // TWO_WAY exit nodes depend on the type of the loop:
-    // - POST_TESTED && node is last: jf->header; make it the loop condition and delete from the loop
-    // - PRE_TESTED && node is first: jf->exit; make it the loop condition and delete from the loop
+    // ONE_WAY -> exit are BREAKs;
+    // ONE_WAY -> last node or header are CONTINUEs;
+    // TWO_WAY exit nodes:
+    // - loop is POST_TESTED && node is last: jf->header; make it the loop condition and delete from the loop
+    // - loop is PRE_TESTED && node is first: jf->exit; make it the loop condition and delete from the loop
     // - else: abnormal exit, should not be structured as if block; change to UNSTRUCTURED
+    if (loop.type === enums_1.eLoopType.PRE_TESTED) {
+        loop.condition = loop.root;
+        loop.root.type = enums_1.eBasicBlockType.LOOP_COND;
+    }
+    if (loop.type === enums_1.eLoopType.POST_TESTED) {
+        loop.condition = lastNode;
+        lastNode.type = enums_1.eBasicBlockType.LOOP_COND;
+    }
     for (const node of loop.nodes) {
+        if (node.type === enums_1.eBasicBlockType.LOOP_COND) {
+            continue;
+        }
         const successors = graph.getImmSuccessors(node);
         if (successors.includes(loop.followNode)) {
             if (node.type === enums_1.eBasicBlockType.ONE_WAY) {
                 node.type = enums_1.eBasicBlockType.BREAK;
                 continue;
             }
-            if (node === loop.root && loop.type === enums_1.eLoopType.PRE_TESTED) {
-                loop.condition = node;
-                node.type = enums_1.eBasicBlockType.LOOP_COND;
-                continue;
-            }
-            if (node === lastNode && loop.type === enums_1.eLoopType.POST_TESTED) {
-                loop.condition = node;
-                node.type = enums_1.eBasicBlockType.LOOP_COND;
-                continue;
-            }
             node.type = enums_1.eBasicBlockType.UNSTRUCTURED;
+        }
+        else if (node.type === enums_1.eBasicBlockType.ONE_WAY &&
+            (successors.includes(loop.root) || successors.includes(lastNode))) {
+            if (node !== lastNode) {
+                node.type = enums_1.eBasicBlockType.CONTINUE;
+            }
+            continue;
         }
     }
     // todo: refactor this mess
@@ -6300,10 +6309,6 @@ class ExpressionPrinter extends SimplePrinter_1.default {
         var _a;
         let output = '';
         const append = (format, ...args) => (output += log_1.default.format(format, ...args));
-        if (bb.type === enums_1.eBasicBlockType.BREAK) {
-            this.printLine('break');
-            return;
-        }
         if (printComments && bb.instructions.length) {
             const offset = utils.strPadLeft((_a = bb.instructions[0]) === null || _a === void 0 ? void 0 : _a.offset.toString(), 6);
             // append(`// %s:%s\n`, offset, eBasicBlockType[bb.type]);
@@ -6335,6 +6340,12 @@ class ExpressionPrinter extends SimplePrinter_1.default {
             this.printLine(output);
             output = '';
         });
+        if (bb.type === enums_1.eBasicBlockType.BREAK) {
+            this.printLine('break');
+        }
+        if (bb.type === enums_1.eBasicBlockType.CONTINUE) {
+            this.printLine('continue');
+        }
     }
     stringifyCondition(bb) {
         this.indent++;

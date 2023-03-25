@@ -21,9 +21,7 @@
         file
           .arrayBuffer()
           .then((buffer) => new DataView(buffer))
-          .then((file) => {
-            return decompile(file);
-          })
+          .then((file) => decompile(file))
           .catch((e) => {
             errorBlock.innerText = e;
             console.error(e);
