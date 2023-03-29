@@ -18,7 +18,7 @@ import ExpressionPrinter from './utils/printer/ExpressionPrinter';
 import * as graphUtils from 'frontend/cfg/graph-utils';
 import { getDefinitions } from './definitions';
 
-function print(
+export function print(
   functions: Graph<IBasicBlock>[],
   printer: ExpressionPrinter,
   script: IScript

@@ -15,18 +15,15 @@ export function getLoopType<Node>(
   const latchingNodeSuccessors = graph.getImmSuccessors(latchingNode);
 
   if (latchingNodeSuccessors.length === 2) {
-    if (headerSuccessors.length === 2) {
-      if (
-        !loop.hasNode(headerSuccessors[0]) ||
-        !loop.hasNode(headerSuccessors[1])
-      ) {
-        return eLoopType.PRE_TESTED;
-      }
-    }
     return eLoopType.POST_TESTED;
   }
   if (headerSuccessors.length === 2) {
-    return eLoopType.PRE_TESTED;
+    if (
+      !loop.hasNode(headerSuccessors[0]) ||
+      !loop.hasNode(headerSuccessors[1])
+    ) {
+      return eLoopType.PRE_TESTED;
+    }
   }
   return eLoopType.ENDLESS;
 }
@@ -43,7 +40,9 @@ export function findFollowNode<Node>(
       return headerSuccessors[1];
     }
     return headerSuccessors[0];
-  } else if (loop.type === eLoopType.POST_TESTED) {
+  }
+
+  if (loop.type === eLoopType.POST_TESTED) {
     const latchingNodeSuccessors = graph.getImmSuccessors(
       latchingNode
     ) as Node[];
@@ -51,7 +50,9 @@ export function findFollowNode<Node>(
       return latchingNodeSuccessors[1];
     }
     return latchingNodeSuccessors[0];
-  } else {
+  }
+
+  if (loop.type === eLoopType.ENDLESS) {
     const loopNodes = loop.nodes as Node[];
     let minIndex = graph.nodes.length;
     const headerIndex = graph.getNodeIndex(loopHeader);
@@ -136,7 +137,6 @@ export function structure<Node>(graph: Graph<Node>): Graph<Node> {
   }
 
   for (const node of loop.nodes) {
-    
     if ((node as IBasicBlock).type === eBasicBlockType.LOOP_COND) {
       continue;
     }
@@ -212,7 +212,7 @@ export function structure<Node>(graph: Graph<Node>): Graph<Node> {
         // when there is an unstructured jump from the loop we must add it,
         // otherwise the nodes that the jump is pointing to could become unreachable
         // todo: rethink RPO algo to iterate over all nodes and create multiple disjoint graphs
-        // reduced.addEdge(loop, edge.to);
+        reduced.addEdge(loop, edge.to);
       }
 
       // if another edge originates from the loop, it is either BREAK or CONTINUE
