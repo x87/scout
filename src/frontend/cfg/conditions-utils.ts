@@ -1,11 +1,12 @@
 import * as graphUtils from './graph-utils';
-import { getOffset, Graph, GraphNode, IfGraph } from './graph';
+import { Graph, GraphNode, IfGraph } from './graph';
 import { eBasicBlockType, eIfType } from 'common/enums';
-import Log from '../../utils/log';
-import AppError from '../../common/errors';
+import { Log } from '../../utils/log';
+import { AppError } from '../../common/errors';
 import { IBasicBlock } from 'common/interfaces';
-import { OP_IF } from './index';
+import { OP_IF } from './cfg';
 import { getNumericParam } from 'common/instructions';
+import { getOffset } from './graph-utils';
 
 export function getIfType<Node>(
   graph: Graph<Node>,
@@ -18,7 +19,7 @@ export function getIfType<Node>(
     : eIfType.IF_THEN_ELSE;
 }
 
-export function structure<Node>(graph: Graph<Node>): Graph<GraphNode<Node>> {
+export function findIfs<Node>(graph: Graph<Node>): Graph<GraphNode<Node>> {
   const twoWayNodes = graph.nodes.filter((node) => {
     if (node instanceof Graph) return false;
     // const successors = graph.getImmSuccessors(node);
@@ -158,7 +159,7 @@ export function structure<Node>(graph: Graph<Node>): Graph<GraphNode<Node>> {
   );
 
   // recursively structure until no more 2-way nodes are found
-  return structure(res);
+  return findIfs(res);
 }
 
 function getIfCondNumber<Node>(res: Graph<Node>, header: Node) {

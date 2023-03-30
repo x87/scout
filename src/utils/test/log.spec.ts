@@ -1,5 +1,5 @@
-import AppError from 'common/errors';
-import Log from '../log';
+import { AppError } from 'common/errors';
+import { Log } from '../log';
 
 describe('log spec', () => {
   it('should return errors object with formatted message', () => {

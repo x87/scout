@@ -954,3 +954,665 @@ exports[`sample input 3 should produce a decompiled source 1`] = `
     RETURN
 "
 `;
+
+exports[`sample input 4 should produce a decompiled source 1`] = `
+"
+:MEAT1
+    SCRIPT_NAME MEAT1
+    GOSUB -46
+    if 
+        HAS_DEATHARREST_BEEN_EXECUTED
+    then
+        GOSUB -4365
+    end
+    GOSUB -4440
+    TERMINATE_THIS_SCRIPT
+
+:MEAT1_4365
+    PRINT_BIG M_FAIL 5000 1
+    RETURN
+
+:MEAT1_4440
+    SET_VAR_INT 828 0
+    SET_VAR_INT 976 0
+    REMOVE_CHAR_ELEGANTLY 5936
+    MARK_MODEL_AS_NO_LONGER_NEEDED 59
+    MARK_MODEL_AS_NO_LONGER_NEEDED 94
+    REMOVE_BLIP 5944
+    REMOVE_BLIP 5940
+    REMOVE_BLIP 5956
+    REMOVE_BLIP 5948
+    MISSION_HAS_FINISHED
+    RETURN
+
+:MEAT1_46
+    SET_VAR_INT 828 1
+    SET_VAR_INT 976 1
+    REGISTER_MISSION_GIVEN
+    WAIT 0
+    SET_VAR_INT 5952 0
+    SET_VAR_INT 5960 0
+    SET_VAR_INT 5964 0
+    SET_VAR_INT 5968 0
+    SET_VAR_INT 5972 0
+    SET_VAR_INT 5976 0
+    SET_VAR_INT 40 1
+    SET_VAR_INT 5980 0
+    SET_VAR_INT 5984 0
+    SET_PED_DENSITY_MULTIPLIER 0
+    CLEAR_AREA_OF_CHARS 1164.25 -888.8125 10 1291.75 -811.6875 20
+    LOAD_CUTSCENE MT_PH1
+    SET_CUTSCENE_OFFSET 1223.875 -839.375 13.9375
+    CREATE_CUTSCENE_OBJECT 0 600
+    SET_CUTSCENE_ANIM 600 PLAYER
+    DO_FADE 1500 1
+    SWITCH_STREAMING 1
+    START_CUTSCENE
+    GET_CUTSCENE_TIME 596
+    
+    while IS_NUMBER_GREATER_THAN_INT_VAR 2000 596
+        WAIT 0
+        GET_CUTSCENE_TIME 596
+    end
+    
+    PRINT_NOW MEA1_B 10000 1
+    
+    while IS_NUMBER_GREATER_THAN_INT_VAR 4424 596
+        WAIT 0
+        GET_CUTSCENE_TIME 596
+    end
+    
+    PRINT_NOW MEA1_C 10000 1
+    
+    while IS_NUMBER_GREATER_THAN_INT_VAR 7668 596
+        WAIT 0
+        GET_CUTSCENE_TIME 596
+    end
+    
+    PRINT_NOW MEA1_D 10000 1
+    
+    while IS_NUMBER_GREATER_THAN_INT_VAR 9604 596
+        WAIT 0
+        GET_CUTSCENE_TIME 596
+    end
+    
+    PRINT_NOW MEA1_E 10000 1
+    
+    while IS_NUMBER_GREATER_THAN_INT_VAR 12652 596
+        WAIT 0
+        GET_CUTSCENE_TIME 596
+    end
+    
+    PRINT_NOW MEA1_F 10000 1
+    
+    while IS_NUMBER_GREATER_THAN_INT_VAR 17740 596
+        WAIT 0
+        GET_CUTSCENE_TIME 596
+    end
+    
+    PRINT_NOW MEA1_G 10000 1
+    
+    while IS_NUMBER_GREATER_THAN_INT_VAR 21290 596
+        WAIT 0
+        GET_CUTSCENE_TIME 596
+    end
+    
+    PRINT_NOW MEA1_H 10000 1
+    
+    while IS_NUMBER_GREATER_THAN_INT_VAR 24535 596
+        WAIT 0
+        GET_CUTSCENE_TIME 596
+    end
+    
+    CLEAR_THIS_PRINT MEA1_H
+    
+    while IS_NUMBER_GREATER_THAN_INT_VAR 25666 596
+        WAIT 0
+        GET_CUTSCENE_TIME 596
+    end
+    
+    DO_FADE 1500 0
+    
+    while NOT HAS_CUTSCENE_FINISHED
+        WAIT 0
+    end
+    
+    CLEAR_PRINTS
+    
+    while GET_FADING_STATUS
+        WAIT 0
+    end
+    
+    CLEAR_CUTSCENE
+    WAIT 500
+    DO_FADE 1500 1
+    SET_PED_DENSITY_MULTIPLIER 1
+    REQUEST_MODEL 59
+    REQUEST_MODEL 94
+    LOAD_MISSION_AUDIO MF1_A
+    
+    while NOT HAS_MODEL_LOADED 59
+        NOT HAS_MODEL_LOADED 94
+        NOT HAS_MISSION_AUDIO_LOADED
+        WAIT 0
+    end
+    
+    CREATE_CAR 94 1190 -796 13.75 5932
+    SET_CAR_HEADING 5932 300
+    ADD_BLIP_FOR_CAR 5932 5940
+    
+    while NOT IS_PLAYER_IN_CAR 528 5932
+        WAIT 0
+        if 
+            IS_CAR_DEAD 5932
+        then
+            PRINT_NOW WRECKED 5000 1
+            GOTO -4365
+        end
+        if 1
+            IS_CAR_UPSIDEDOWN 5932
+            IS_CAR_STOPPED 5932
+        then
+            PRINT_NOW UPSIDE 5000 1
+            GOTO -4365
+        end
+    end
+    
+    REMOVE_BLIP 5940
+    PRINT_NOW MEA1_B3 7000 1
+    CREATE_CHAR 4 59 1039 -695 13.875 5936
+    CLEAR_CHAR_THREAT_SEARCH 5936
+    TURN_CHAR_TO_FACE_COORD 5936 1042 -695 -100
+    ADD_BLIP_FOR_CHAR 5936 5944
+    SET_CHAR_CANT_BE_DRAGGED_OUT 5936 1
+    
+    while NOT LOCATE_PLAYER_IN_CAR_CHAR_2D 528 5936 8 8 0
+        NOT IS_PLAYER_IN_CAR 528 5932
+        WAIT 0
+        if 
+            IS_CAR_DEAD 5932
+        then
+            PRINT_NOW WRECKED 5000 1
+            GOTO -4365
+        end
+        if 1
+            IS_CAR_UPSIDEDOWN 5932
+            IS_CAR_STOPPED 5932
+        then
+            PRINT_NOW UPSIDE 5000 1
+            GOTO -4365
+        end
+        if 
+            IS_CHAR_DEAD 5936
+        then
+            PRINT_NOW MEA1_1 5000 1
+            GOTO -4365
+        end
+        if 1
+            NOT IS_PLAYER_IN_CAR 528 5932
+            IS_INT_VAR_EQUAL_TO_NUMBER 5952 0
+        then
+            PRINT_NOW IN_VEH 5000 1
+            ADD_BLIP_FOR_CAR 5932 5940
+            REMOVE_BLIP 5944
+            SET_VAR_INT 5952 1
+            SET_VAR_INT 40 0
+        end
+        if 1
+            IS_PLAYER_IN_CAR 528 5932
+            IS_INT_VAR_EQUAL_TO_NUMBER 5952 1
+        then
+            REMOVE_BLIP 5940
+            ADD_BLIP_FOR_CHAR 5936 5944
+            SET_VAR_INT 5952 0
+            SET_VAR_INT 40 1
+        end
+    end
+    
+    SET_CHAR_OBJ_ENTER_CAR_AS_PASSENGER 5936 5932
+    
+    while NOT IS_CHAR_IN_CAR 5936 5932
+        NOT IS_PLAYER_IN_CAR 528 5932
+        WAIT 0
+        if 
+            IS_CAR_DEAD 5932
+        then
+            if 
+                IS_CHAR_DEAD 5936
+            then
+                PRINT_NOW MEA1_1 5000 1
+                GOTO -4365
+            end
+            PRINT_NOW WRECKED 5000 1
+            GOTO -4365
+        end
+        if 1
+            IS_CAR_UPSIDEDOWN 5932
+            IS_CAR_STOPPED 5932
+        then
+            PRINT_NOW UPSIDE 5000 1
+            GOTO -4365
+        end
+        if 
+            IS_CHAR_DEAD 5936
+        then
+            PRINT_NOW MEA1_1 5000 1
+            GOTO -4365
+        end
+        if 
+            NOT LOCATE_PLAYER_ANY_MEANS_CHAR_3D 528 5936 30 30 30 0
+        then
+            PRINT_NOW MEA1_4 5000 1
+            GOTO -4365
+        end
+        if 1
+            NOT IS_PLAYER_IN_CAR 528 5932
+            IS_INT_VAR_EQUAL_TO_NUMBER 5952 0
+        then
+            PRINT_NOW IN_VEH 5000 1
+            ADD_BLIP_FOR_CAR 5932 5940
+            REMOVE_BLIP 5944
+            SET_VAR_INT 5952 1
+            SET_VAR_INT 40 0
+        end
+        if 1
+            IS_PLAYER_IN_CAR 528 5932
+            IS_INT_VAR_EQUAL_TO_NUMBER 5952 1
+        then
+            REMOVE_BLIP 5940
+            ADD_BLIP_FOR_CHAR 5936 5944
+            SET_VAR_INT 5952 0
+            SET_VAR_INT 40 1
+        end
+    end
+    
+    REMOVE_BLIP 5944
+    PLAY_MISSION_AUDIO
+    PRINT_NOW MEA1_B4 7000 1
+    ADD_BLIP_FOR_COORD 1205.6875 -789.1875 -100 5956
+    if 
+        HAS_MISSION_AUDIO_FINISHED
+    then
+        CLEAR_THIS_PRINT MEA1_B4
+    end
+    SET_VAR_INT 40 1
+    
+    while NOT LOCATE_STOPPED_CHAR_IN_CAR_3D 5936 1205.6875 -789.1875 14.75 4 4 6 40
+        NOT IS_CHAR_IN_CAR 5936 5932
+        WAIT 0
+        if 
+            HAS_MISSION_AUDIO_FINISHED
+        then
+            CLEAR_THIS_PRINT MEA1_B4
+        end
+        if 
+            IS_CAR_DEAD 5932
+        then
+            if 
+                IS_CHAR_DEAD 5936
+            then
+                CLEAR_MISSION_AUDIO
+                PRINT_NOW MEA1_1 5000 1
+                GOTO -4365
+            end
+            PRINT_NOW WRECKED 5000 1
+            GOTO -4365
+        end
+        if 1
+            IS_CAR_UPSIDEDOWN 5932
+            IS_CAR_STOPPED 5932
+        then
+            PRINT_NOW UPSIDE 5000 1
+            GOTO -4365
+        end
+        if 
+            IS_CHAR_DEAD 5936
+        then
+            CLEAR_MISSION_AUDIO
+            PRINT_NOW MEA1_1 5000 1
+            GOTO -4365
+        end
+        if 
+            NOT LOCATE_PLAYER_ANY_MEANS_CHAR_3D 528 5936 30 30 30 0
+        then
+            PRINT_NOW MEA1_4 5000 1
+            GOTO -4365
+        end
+        if 1
+            NOT IS_PLAYER_IN_CAR 528 5932
+            IS_INT_VAR_EQUAL_TO_NUMBER 5952 0
+        then
+            PRINT_NOW IN_VEH 5000 1
+            ADD_BLIP_FOR_CAR 5932 5940
+            REMOVE_BLIP 5956
+            SET_VAR_INT 5952 1
+            SET_VAR_INT 40 0
+        end
+        if 1
+            IS_PLAYER_IN_CAR 528 5932
+            IS_INT_VAR_EQUAL_TO_NUMBER 5952 1
+        then
+            REMOVE_BLIP 5940
+            ADD_BLIP_FOR_COORD 1205.6875 -789.1875 -100 5956
+            SET_VAR_INT 5952 0
+            SET_VAR_INT 40 1
+        end
+    end
+    
+    REMOVE_BLIP 5956
+    SWITCH_WIDESCREEN 1
+    SET_PLAYER_CONTROL 528 0
+    CLEAR_AREA 1201.75 -799.6875 13.75 5 1
+    SET_POLICE_IGNORE_PLAYER 528 1
+    SET_CHAR_CANT_BE_DRAGGED_OUT 5936 0
+    SET_CHAR_OBJ_LEAVE_CAR 5936 5932
+    
+    while IS_CHAR_IN_CAR 5936 5932
+        WAIT 0
+        if 
+            IS_CAR_DEAD 5932
+        then
+            if 
+                IS_CHAR_DEAD 5936
+            then
+                PRINT_NOW MEA1_1 5000 1
+                GOTO -4365
+            end
+            PRINT_NOW WRECKED 5000 1
+            GOTO -4365
+        end
+        if 1
+            IS_CAR_UPSIDEDOWN 5932
+            IS_CAR_STOPPED 5932
+        then
+            PRINT_NOW UPSIDE 5000 1
+            GOTO -4365
+        end
+        if 
+            IS_CHAR_DEAD 5936
+        then
+            PRINT_NOW MEA1_1 5000 1
+            GOTO -4365
+        end
+    end
+    
+    SET_CHAR_OBJ_GOTO_COORD_ON_FOOT 5936 1204.1875 -801.875
+    SET_FIXED_CAMERA_POSITION 1201.75 -784.6875 17 0 0 0
+    POINT_CAMERA_AT_POINT 1204.375 -802.6875 15 2
+    CLEAR_AREA 1200.75 -799.25 14 10 1
+    SET_LVAR_INT 17 0
+    
+    while NOT IS_INT_VAR_EQUAL_TO_NUMBER 5960 1
+        WAIT 0
+        if 
+            IS_CHAR_DEAD 5936
+        then
+            PRINT_NOW MEA1_1 5000 1
+            GOTO -4365
+        end
+        if 
+            IS_CAR_DEAD 5932
+        then
+            PRINT_NOW WRECKED 5000 1
+            GOTO -4365
+        end
+        if 1
+            IS_CAR_UPSIDEDOWN 5932
+            IS_CAR_STOPPED 5932
+        then
+            PRINT_NOW UPSIDE 5000 1
+            GOTO -4365
+        end
+        if 
+            IS_INT_VAR_EQUAL_TO_NUMBER 5960 0
+        then
+            if 
+                LOCATE_CHAR_ON_FOOT_2D 5936 1204.1875 -801.875 0.5 0.5 0
+            then
+                SET_VAR_INT 5960 1
+            end
+        end
+        if 
+            IS_INT_VAR_EQUAL_TO_NUMBER 5984 0
+        then
+            if 
+                IS_INT_LVAR_GREATER_OR_EQUAL_TO_NUMBER 17 20000
+            then
+                SET_CHAR_COORDINATES 5936 1204.1875 -801.875 13.6875
+                SET_VAR_INT 5984 1
+            end
+        end
+    end
+    
+    
+    while NOT ROTATE_OBJECT 64 135 5 0
+        WAIT 0
+        if 
+            IS_CHAR_DEAD 5936
+        then
+            PRINT_NOW MEA1_1 5000 1
+            GOTO -4365
+        end
+        if 
+            IS_CAR_DEAD 5932
+        then
+            PRINT_NOW WRECKED 5000 1
+            GOTO -4365
+        end
+        if 1
+            IS_CAR_UPSIDEDOWN 5932
+            IS_CAR_STOPPED 5932
+        then
+            PRINT_NOW UPSIDE 5000 1
+            GOTO -4365
+        end
+    end
+    
+    SET_CHAR_OBJ_GOTO_COORD_ON_FOOT 5936 1205.875 -805.75
+    SET_LVAR_INT 17 0
+    
+    while NOT LOCATE_CHAR_ON_FOOT_3D 5936 1205.875 -805.75 14 1 1 1 0
+        WAIT 0
+        if 
+            IS_CHAR_DEAD 5936
+        then
+            PRINT_NOW MEA1_1 5000 1
+            GOTO -4365
+        end
+        if 
+            IS_CAR_DEAD 5932
+        then
+            PRINT_NOW WRECKED 5000 1
+            GOTO -4365
+        end
+        if 
+            IS_INT_LVAR_GREATER_OR_EQUAL_TO_NUMBER 17 20000
+        then
+            if 
+                NOT LOCATE_CHAR_ON_FOOT_3D 5936 1205.875 -805.75 14 1 1 1 0
+            then
+                REMOVE_CHAR_ELEGANTLY 5936
+                break
+            end
+        end
+        if 1
+            IS_CAR_UPSIDEDOWN 5932
+            IS_CAR_STOPPED 5932
+        then
+            PRINT_NOW UPSIDE 5000 1
+            GOTO -4365
+        end
+    end
+    
+    LOAD_MISSION_AUDIO MF4_A
+    
+    while NOT ROTATE_OBJECT 64 45 5 0
+        NOT HAS_MISSION_AUDIO_LOADED
+        WAIT 0
+        if 
+            IS_CHAR_DEAD 5936
+        then
+            PRINT_NOW MEA1_1 5000 1
+            GOTO -4365
+        end
+        if 
+            IS_CAR_DEAD 5932
+        then
+            PRINT_NOW WRECKED 5000 1
+            GOTO -4365
+        end
+        if 1
+            IS_CAR_UPSIDEDOWN 5932
+            IS_CAR_STOPPED 5932
+        then
+            PRINT_NOW UPSIDE 5000 1
+            GOTO -4365
+        end
+    end
+    
+    RESTORE_CAMERA_JUMPCUT
+    REMOVE_CHAR_ELEGANTLY 5936
+    PLAY_MISSION_AUDIO
+    
+    while NOT HAS_MISSION_AUDIO_FINISHED
+        WAIT 0
+        if 
+            IS_CAR_DEAD 5932
+        then
+            PRINT_NOW WRECKED 5000 1
+            GOTO -4365
+        end
+        if 1
+            IS_CAR_UPSIDEDOWN 5932
+            IS_CAR_STOPPED 5932
+        then
+            PRINT_NOW UPSIDE 5000 1
+            GOTO -4365
+        end
+    end
+    
+    SWITCH_WIDESCREEN 0
+    SET_PLAYER_CONTROL 528 1
+    SET_POLICE_IGNORE_PLAYER 528 0
+    PRINT_SOON MEA1_B6 5000 1
+    ADD_BLIP_FOR_COORD 1138 52 -100 5948
+    SET_VAR_INT 40 1
+    
+    while NOT IS_CAR_STOPPED_IN_AREA_3D 5932 1135.75 55.5 -1 1149.75 46.25 9 40
+        WAIT 0
+        if 
+            IS_CAR_DEAD 5932
+        then
+            PRINT_NOW MEA1_2 5000 1
+            GOTO -4365
+        end
+        if 
+            IS_CAR_STOPPED_IN_AREA_3D 5932 1135.75 55.5 -1 1149.75 46.25 9 0
+        then
+            SET_VAR_INT 5976 1
+            if 
+                IS_INT_VAR_EQUAL_TO_NUMBER 5972 0
+            then
+                PRINT_NOW MEA1_3 5000 1
+                SET_VAR_INT 5972 1
+            end
+        else
+            SET_VAR_INT 5972 0
+            SET_VAR_INT 5976 0
+        end
+        if 
+            IS_INT_VAR_EQUAL_TO_NUMBER 5976 0
+        then
+            if 1
+                NOT IS_PLAYER_IN_CAR 528 5932
+                IS_INT_VAR_EQUAL_TO_NUMBER 5952 0
+            then
+                PRINT_NOW IN_VEH 5000 1
+                ADD_BLIP_FOR_CAR 5932 5940
+                REMOVE_BLIP 5948
+                SET_VAR_INT 5952 1
+                SET_VAR_INT 40 0
+            end
+            if 1
+                IS_PLAYER_IN_CAR 528 5932
+                IS_INT_VAR_EQUAL_TO_NUMBER 5952 1
+            then
+                REMOVE_BLIP 5940
+                ADD_BLIP_FOR_COORD 1138 52 -100 5948
+                SET_VAR_INT 5952 0
+                SET_VAR_INT 40 1
+            end
+        end
+        if 
+            IS_INT_VAR_EQUAL_TO_NUMBER 5980 0
+        then
+            if 1
+                LOCATE_PLAYER_ANY_MEANS_2D 528 1140.25 50.0625 20 20 0
+                IS_PLAYER_IN_CAR 528 5932
+            then
+                PRINT_HELP CRUSH
+                SET_VAR_INT 5980 1
+            end
+        end
+        if 1
+            IS_CAR_UPSIDEDOWN 5932
+            IS_CAR_STOPPED 5932
+        then
+            PRINT_NOW UPSIDE 5000 1
+            GOTO -4365
+        end
+    end
+    
+    SET_VAR_INT 40 1
+    
+    while NOT IS_CRANE_LIFTING_CAR 1120 46 5932
+        WAIT 0
+        if 
+            IS_CAR_DEAD 5932
+        then
+            PRINT_NOW MEA1_2 5000 1
+            GOTO -4365
+        end
+        if 
+            IS_CAR_STOPPED_IN_AREA_3D 5932 1135.75 55.5 -1 1149.75 46.25 20 40
+        then
+            SET_VAR_INT 5968 1
+        else
+            SET_VAR_INT 5968 0
+        end
+        if 
+            IS_INT_VAR_EQUAL_TO_NUMBER 5968 0
+        then
+            if 1
+                NOT IS_PLAYER_IN_CAR 528 5932
+                IS_INT_VAR_EQUAL_TO_NUMBER 5952 0
+            then
+                PRINT_NOW IN_VEH 5000 1
+                ADD_BLIP_FOR_CAR 5932 5940
+                REMOVE_BLIP 5948
+                SET_VAR_INT 5952 1
+                SET_VAR_INT 40 0
+            end
+            if 1
+                IS_PLAYER_IN_CAR 528 5932
+                IS_INT_VAR_EQUAL_TO_NUMBER 5952 1
+            then
+                REMOVE_BLIP 5940
+                ADD_BLIP_FOR_COORD 1138 52 -100 5948
+                SET_VAR_INT 5952 0
+                SET_VAR_INT 40 1
+            end
+        end
+        if 1
+            IS_CAR_UPSIDEDOWN 5932
+            IS_CAR_STOPPED 5932
+        then
+            PRINT_NOW UPSIDE 5000 1
+            GOTO -4365
+        end
+    end
+    
+    REMOVE_BLIP 5948
+    IS_INT_VAR_EQUAL_TO_NUMBER 5964 0
+"
+`;

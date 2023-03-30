@@ -1,17 +1,17 @@
-import Log from 'utils/log';
-import ScriptFile from 'frontend/script/ScriptFile';
-import ScriptMultifile from 'frontend/script/ScriptMultifile';
-import AppError from 'common/errors';
+import { Log } from 'utils/log';
+import { ScriptFile } from 'frontend/script/ScriptFile';
+import { ScriptMultifile } from 'frontend/script/ScriptMultifile';
+import { AppError } from 'common/errors';
 import { eScriptType } from 'common/enums';
 
-export default class Loader {
+export class Loader {
   async loadScript(stream: Promise<DataView>): Promise<ScriptFile> {
     try {
       const buffer = await stream;
       return this.isHeaderPresent(buffer)
         ? new ScriptMultifile(buffer)
         : new ScriptFile(buffer, eScriptType.CLEO);
-    } catch (e){
+    } catch (e) {
       console.log(e);
       throw Log.error(AppError.INVALID_INPUT_FILE);
     }

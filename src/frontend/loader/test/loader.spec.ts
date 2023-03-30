@@ -1,8 +1,9 @@
-import Loader from '../';
-import ScriptFile from 'frontend/script/ScriptFile';
-import ScriptMultifile from 'frontend/script/ScriptMultifile';
-import sample1 from 'samples/1_wait';
+import { Loader } from '../index';
+import { ScriptFile } from 'frontend/script/ScriptFile';
+import { ScriptMultifile } from 'frontend/script/ScriptMultifile';
 import { bufferFromHex } from 'utils/file';
+
+import sample1 from 'samples/1_wait';
 
 describe(Loader.name, () => {
   let loader: Loader;

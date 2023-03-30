@@ -3,9 +3,9 @@ import * as path from 'path';
 import { isNode } from 'browser-or-node';
 import { Command } from 'commander';
 
-import AppError from './errors';
+import { AppError } from './errors';
 import { eGame } from './enums';
-import Log from 'utils/log';
+import {Log} from 'utils/log';
 import { emptyBuffer, readBinaryStream } from 'utils/file';
 
 const program = new Command();

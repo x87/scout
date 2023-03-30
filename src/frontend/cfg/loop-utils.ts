@@ -1,9 +1,10 @@
 import * as graphUtils from './graph-utils';
-import { getOffset, Graph, GraphNode, LoopGraph } from './graph';
+import { Graph, GraphNode, LoopGraph } from './graph';
 import { eBasicBlockType, eLoopType } from 'common/enums';
-import { structure as ifStructure } from './conditions-utils';
+import { findIfs as ifStructure } from './conditions-utils';
 import { IBasicBlock } from 'common/interfaces';
-import Log from 'utils/log';
+import {Log} from 'utils/log';
+import { getOffset } from './graph-utils';
 
 export function getLoopType<Node>(
   graph: Graph<Node>,
@@ -74,7 +75,7 @@ export function findFollowNode<Node>(
   }
 }
 
-export function structure<Node>(graph: Graph<Node>): Graph<Node> {
+export function findLoops<Node>(graph: Graph<Node>): Graph<Node> {
   graph.print('Finding loops in this graph:');
   const intervals = graphUtils.split(graph);
   Log.debug(
@@ -236,5 +237,5 @@ export function structure<Node>(graph: Graph<Node>): Graph<Node> {
   const loopBody = ifStructure(loop);
   loop.nodes = loopBody.nodes as Array<GraphNode<Node>>;
 
-  return structure(reduced);
+  return findLoops(reduced);
 }

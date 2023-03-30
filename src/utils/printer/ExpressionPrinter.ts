@@ -1,13 +1,13 @@
-import SimplePrinter from './SimplePrinter';
+import { SimplePrinter } from './SimplePrinter';
 import * as utils from '../index';
 import { DefinitionMap, IBasicBlock } from 'common/interfaces';
 import { IInstructionParamArray } from 'common/instructions';
-import Log from '../log';
-import { OP_IF, OP_JF, OP_JMP } from 'frontend/cfg';
+import {Log} from '../log';
+import { OP_IF, OP_JF, OP_JMP } from 'frontend/cfg/cfg';
 import { GLOBAL_OPTIONS } from 'common/arguments';
 import { eBasicBlockType } from 'common/enums';
 
-export default class ExpressionPrinter extends SimplePrinter {
+export class ExpressionPrinter extends SimplePrinter {
   indent: number;
 
   constructor(definitionMap: DefinitionMap) {

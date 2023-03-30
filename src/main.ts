@@ -1,21 +1,20 @@
 import { GLOBAL_OPTIONS } from './common/arguments';
-
-import * as conditionUtils from './frontend/cfg/conditions-utils';
-import * as loopUtils from './frontend/cfg/loop-utils';
-import CFG from './frontend/cfg';
-import Loader from './frontend/loader';
-import Parser from './frontend/parser';
+import { Loader } from './frontend/loader';
+import { Parser } from './frontend/parser';
 import { eLoopType } from './common/enums';
 import { IBasicBlock, IScript } from './common/interfaces';
 import {
+  CFG,
+  findLoops,
+  findIfs,
   getOffset,
   Graph,
   GraphNode,
   IfGraph,
   LoopGraph,
-} from './frontend/cfg/graph';
-import ExpressionPrinter from './utils/printer/ExpressionPrinter';
-import * as graphUtils from 'frontend/cfg/graph-utils';
+  from
+} from './frontend/cfg';
+import { ExpressionPrinter } from './utils/printer/ExpressionPrinter';
 import { getDefinitions } from './definitions';
 
 export function print(
@@ -45,7 +44,7 @@ export function print(
                 `while ${printer.stringifyCondition(bb.condition)}`
               );
               printer.indent++;
-              const g = graphUtils.from(bb);
+              const g = from(bb);
               g.nodes.splice(0, 1);
               printGraph(g);
               printer.indent--;
@@ -55,7 +54,7 @@ export function print(
             case eLoopType.POST_TESTED: {
               printer.printLine(`repeat`);
               printer.indent++;
-              const g = graphUtils.from(bb);
+              const g = from(bb);
               g.nodes.splice(g.nodes.length - 1, 1);
               printGraph(g);
               printer.indent--;
@@ -95,8 +94,8 @@ export function print(
       }
     };
     try {
-      const loopGraph = loopUtils.structure(func);
-      const ifGraph = conditionUtils.structure(loopGraph);
+      const loopGraph = findLoops(func);
+      const ifGraph = findIfs(loopGraph);
       printGraph(ifGraph);
     } catch (e) {
       console.log(e);

@@ -1,5 +1,5 @@
-import Parser from '../';
-import ScriptFile from 'frontend/script/ScriptFile';
+import { Parser } from '../index';
+import { ScriptFile } from 'frontend/script/ScriptFile';
 import { DefinitionMap } from 'common/interfaces';
 import { eParamType, eScriptType } from 'common/enums';
 import { IInstruction } from 'common/instructions';
