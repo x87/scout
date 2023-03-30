@@ -116,11 +116,24 @@ export class CFG {
             entries.includes(targetOffsetAbs) &&
             bb.start !== targetOffsetAbs
           ) {
-            bb.type = eBasicBlockType.UNSTRUCTURED; // jump into another function
-            break;
+            if (bb.type === eBasicBlockType.ONE_WAY) {
+              bb.type = eBasicBlockType.UNSTRUCTURED; // jump into another function
+              break;
+            } else {
+              // insert an intermediate return block as destination for this edge
+              // this guarantees that the node is 2-way, yet does not fall into the function
+              const empty = this.createBasicBlock(
+                [],
+                eBasicBlockType.RETURN,
+                startOffset
+              );
+              graph.addNode(empty);
+              graph.addEdge(bb, empty);
+            }
+          } else {
+            graph.addEdge(bb, basicBlocks[targetIndex]);
+            traverse(targetIndex);
           }
-          graph.addEdge(bb, basicBlocks[targetIndex]);
-          traverse(targetIndex);
           if (bb.type === eBasicBlockType.ONE_WAY) break; // else fallthrough
         }
         case eBasicBlockType.FALL:
@@ -255,9 +268,10 @@ export class CFG {
 
   private createBasicBlock(
     instructions: IInstruction[],
-    type: eBasicBlockType = eBasicBlockType.UNDEFINED
+    type: eBasicBlockType = eBasicBlockType.UNDEFINED,
+    start?: number
   ): IBasicBlock {
-    return { type, instructions, start: undefined };
+    return { type, instructions, start };
   }
 
   private findBasicBlockIndex(

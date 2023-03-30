@@ -1613,6 +1613,29 @@ exports[`sample input 4 should produce a decompiled source 1`] = `
     end
     
     REMOVE_BLIP 5948
-    IS_INT_VAR_EQUAL_TO_NUMBER 5964 0
+    
+    while IS_INT_VAR_EQUAL_TO_NUMBER 5964 0
+        WAIT 0
+        if 
+            IS_CAR_CRUSHED 5932
+        then
+            SET_VAR_INT 5964 1
+            PRINT_WITH_NUMBER_BIG M_PASS 1000 5000 1
+            REGISTER_MISSION_PASSED MEA1
+            PLAYER_MADE_PROGRESS 1
+            PLAY_MISSION_PASSED_TUNE 1
+            ADD_SCORE 528 1000
+            SET_VAR_INT 1156 1
+            CLEAR_WANTED_LEVEL 528
+            RETURN
+        end
+        if 
+            IS_CAR_DEAD 5932
+        then
+            PRINT_NOW MEA1_2 5000 1
+            GOTO -4365
+        end
+    end
+    
 "
 `;
