@@ -16,21 +16,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.main = void 0;
+exports.main = exports.print = void 0;
 const arguments_1 = __webpack_require__(2);
-const conditionUtils = __webpack_require__(26);
-const loopUtils = __webpack_require__(32);
-const cfg_1 = __webpack_require__(30);
-const loader_1 = __webpack_require__(33);
-const parser_1 = __webpack_require__(37);
+const loader_1 = __webpack_require__(26);
+const parser_1 = __webpack_require__(31);
 const enums_1 = __webpack_require__(19);
-const graph_1 = __webpack_require__(29);
-const ExpressionPrinter_1 = __webpack_require__(40);
-const graphUtils = __webpack_require__(27);
-const definitions_1 = __webpack_require__(38);
+const cfg_1 = __webpack_require__(38);
+const ExpressionPrinter_1 = __webpack_require__(41);
+const definitions_1 = __webpack_require__(36);
 function print(functions, printer, script) {
     functions.forEach((func, i) => {
-        const offset = (0, graph_1.getOffset)(func);
+        const offset = (0, cfg_1.getOffset)(func);
         const name = offset === 0 ? script.name : `${script.name}_${offset}`;
         printer.printLine(`\n:${name.toUpperCase()}`);
         printer.indent++;
@@ -41,13 +37,13 @@ function print(functions, printer, script) {
         }
         const printGraph = (graph) => {
             for (const bb of graph.nodes) {
-                if (bb instanceof graph_1.LoopGraph) {
+                if (bb instanceof cfg_1.LoopGraph) {
                     printer.printLine('');
                     switch (bb.type) {
                         case enums_1.eLoopType.PRE_TESTED: {
                             printer.printLine(`while ${printer.stringifyCondition(bb.condition)}`);
                             printer.indent++;
-                            const g = graphUtils.from(bb);
+                            const g = (0, cfg_1.from)(bb);
                             g.nodes.splice(0, 1);
                             printGraph(g);
                             printer.indent--;
@@ -57,7 +53,7 @@ function print(functions, printer, script) {
                         case enums_1.eLoopType.POST_TESTED: {
                             printer.printLine(`repeat`);
                             printer.indent++;
-                            const g = graphUtils.from(bb);
+                            const g = (0, cfg_1.from)(bb);
                             g.nodes.splice(g.nodes.length - 1, 1);
                             printGraph(g);
                             printer.indent--;
@@ -74,7 +70,7 @@ function print(functions, printer, script) {
                     }
                     printer.printLine('');
                 }
-                else if (bb instanceof graph_1.IfGraph) {
+                else if (bb instanceof cfg_1.IfGraph) {
                     printer.printLine(`if ${bb.ifNumber || ''}`);
                     printer.indent++;
                     printer.print(bb.nodes[0]);
@@ -97,8 +93,8 @@ function print(functions, printer, script) {
             }
         };
         try {
-            const loopGraph = loopUtils.structure(func);
-            const ifGraph = conditionUtils.structure(loopGraph);
+            const loopGraph = (0, cfg_1.findLoops)(func);
+            const ifGraph = (0, cfg_1.findIfs)(loopGraph);
             printGraph(ifGraph);
         }
         catch (e) {
@@ -113,18 +109,19 @@ function print(functions, printer, script) {
         printer.indent--;
     });
 }
+exports.print = print;
 function main(inputFile) {
     return __awaiter(this, void 0, void 0, function* () {
-        const loader = new loader_1.default();
+        const loader = new loader_1.Loader();
         const scriptFile = yield loader.loadScript(inputFile);
         const definitionMap = yield (0, definitions_1.getDefinitions)();
-        const parser = new parser_1.default(definitionMap);
+        const parser = new parser_1.Parser(definitionMap);
         const scripts = yield parser.parse(scriptFile);
-        const printer = new ExpressionPrinter_1.default(definitionMap);
+        const printer = new ExpressionPrinter_1.ExpressionPrinter(definitionMap);
         scripts.forEach((script) => {
-            const cfg = new cfg_1.default();
+            const cfg = new cfg_1.CFG();
             const functions = cfg.getCallGraphs(script, scripts).sort((a, b) => {
-                return (0, graph_1.getOffset)(a) - (0, graph_1.getOffset)(b);
+                return (0, cfg_1.getOffset)(a) - (0, cfg_1.getOffset)(b);
             });
             print(functions, printer, script);
         });
@@ -165,26 +162,26 @@ let GLOBAL_OPTIONS = {
 };
 exports.GLOBAL_OPTIONS = GLOBAL_OPTIONS;
 if (browser_or_node_1.isNode) {
-    program
-        .usage('<inputfile> [options]')
-        .version((__webpack_require__(25).version), '-v, --version')
-        .option('-d, --debug', 'enable the debug mode')
-        .option('-p, --print', 'print the assembly')
-        .option('-g, --game <game>', 'target game: gta3, vc, sa', (arg) => {
-        if (!gameMap.hasOwnProperty(arg)) {
-            throw log_1.default.error(errors_1.default.UNKNOWN_GAME, arg);
-        }
-        return gameMap[arg];
-    })
-        .parse(process.argv);
-    const cli = program.opts();
-    updateArguments({
-        game: cli.game,
-        inputFile: cli.inputFile,
-        printAssembly: cli.print,
-        debugMode: cli.debug,
-    });
     if (process.env.NODE_ENV !== 'test') {
+        program
+            .usage('<inputfile> [options]')
+            .version((__webpack_require__(25).version), '-v, --version')
+            .option('-d, --debug', 'enable the debug mode')
+            .option('-p, --print', 'print the assembly')
+            .option('-g, --game <game>', 'target game: gta3, vc, sa', (arg) => {
+            if (!gameMap.hasOwnProperty(arg)) {
+                throw log_1.Log.error(errors_1.AppError.UNKNOWN_GAME, arg);
+            }
+            return gameMap[arg];
+        })
+            .parse(process.argv);
+        const cli = program.opts();
+        updateArguments({
+            game: cli.game,
+            inputFile: cli.inputFile,
+            printAssembly: cli.print,
+            debugMode: cli.debug,
+        });
         let stream;
         if (process.stdin instanceof fs.ReadStream && !process.stdin.isTTY) {
             stream = process.stdin;
@@ -4134,6 +4131,7 @@ exports.suggestSimilar = suggestSimilar;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.AppError = void 0;
 var AppError;
 (function (AppError) {
     AppError["INVALID_INPUT_FILE"] = "Can not read from input file, file is either broken or its format is not supported";
@@ -4153,8 +4151,7 @@ var AppError;
     AppError["INVALID_BB_TYPE"] = "Invalid block type %s";
     AppError["NODE_NOT_FOUND"] = "Internal error: node not found";
     AppError["NO_IF_PREDICATE"] = "No IF instruction found for the condition at %s";
-})(AppError || (AppError = {}));
-exports["default"] = AppError;
+})(AppError = exports.AppError || (exports.AppError = {}));
 
 
 /***/ }),
@@ -4248,10 +4245,11 @@ var eIfType;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Log = void 0;
 const format_1 = __webpack_require__(21);
 const browser_or_node_1 = __webpack_require__(5);
 const arguments_1 = __webpack_require__(2);
-class default_1 {
+class Log {
     static error(error, ...args) {
         return new Error((0, format_1.vsprintf)(error, ...args));
     }
@@ -4276,7 +4274,7 @@ class default_1 {
         return (0, format_1.vsprintf)(format, ...args);
     }
 }
-exports["default"] = default_1;
+exports.Log = Log;
 
 
 /***/ }),
@@ -4499,180 +4497,1077 @@ exports.bufferFromHex = bufferFromHex;
 /***/ ((module) => {
 
 "use strict";
-module.exports = JSON.parse('{"name":"scout","version":"0.5.0","description":"Scout Decompiler","main":"scout.js","repository":{"type":"git","url":"https://github.com/x87/scout.git"},"scripts":{"lint":"eslint ./src","build":"webpack --config webpack.node.config.js","build-web":"webpack --config webpack.web.config.js","dev":"npm run build -- --watch","test":"jest"},"keywords":[],"author":"Seemann","license":"MIT","devDependencies":{"@types/jest":"29.4.0","@types/node":"18.14.6","@typescript-eslint/eslint-plugin":"^5.54.0","@typescript-eslint/parser":"^5.54.0","eslint":"^8.35.0","jest":"29.4.3","jest-extended":"3.2.4","ts-jest":"29.0.5","ts-loader":"9.4.2","ts-node":"10.9.1","typescript":"4.9.5","webpack":"^5.76.2","webpack-cli":"5.0.1"},"dependencies":{"browser-or-node":"^2.1.1","commander":"10.0.0","eol":"0.9.1","format":"^0.2.2","node-fetch":"^3.3.1"}}');
+module.exports = JSON.parse('{"name":"scout","version":"0.5.1","description":"Scout Decompiler","main":"scout.js","repository":{"type":"git","url":"https://github.com/x87/scout.git"},"scripts":{"lint":"eslint ./src","build":"webpack --config webpack.node.config.js","build-web":"webpack --config webpack.web.config.js","dev":"npm run build -- --watch","test":"jest"},"keywords":[],"author":"Seemann","license":"MIT","devDependencies":{"@types/jest":"29.4.0","@types/node":"18.14.6","@typescript-eslint/eslint-plugin":"^5.54.0","@typescript-eslint/parser":"^5.54.0","eslint":"^8.35.0","jest":"29.4.3","jest-extended":"3.2.4","ts-jest":"29.0.5","ts-loader":"9.4.2","ts-node":"10.9.1","typescript":"4.9.5","webpack":"^5.76.2","webpack-cli":"5.0.1"},"dependencies":{"browser-or-node":"^2.1.1","commander":"10.0.0","eol":"0.9.1","format":"^0.2.2","node-fetch":"2.6.9"}}');
 
 /***/ }),
 /* 26 */
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
 
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.structure = exports.getIfType = void 0;
-const graphUtils = __webpack_require__(27);
-const graph_1 = __webpack_require__(29);
-const enums_1 = __webpack_require__(19);
-const log_1 = __webpack_require__(20);
-const errors_1 = __webpack_require__(18);
-const index_1 = __webpack_require__(30);
-const instructions_1 = __webpack_require__(31);
-function getIfType(graph, ifHeader, followNode) {
-    const headerSuccessors = graph.getImmSuccessors(ifHeader);
-    return headerSuccessors.includes(followNode)
-        ? enums_1.eIfType.IF_THEN
-        : enums_1.eIfType.IF_THEN_ELSE;
-}
-exports.getIfType = getIfType;
-function structure(graph) {
-    const twoWayNodes = graph.nodes.filter((node) => {
-        if (node instanceof graph_1.Graph)
-            return false;
-        // const successors = graph.getImmSuccessors(node);
-        // return successors.length === 2;
-        return node.type === enums_1.eBasicBlockType.TWO_WAY;
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
-    if (twoWayNodes.length === 0) {
-        log_1.default.debug('No 2-way nodes found. Stopping.');
-        return graph;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Loader = void 0;
+const log_1 = __webpack_require__(20);
+const ScriptFile_1 = __webpack_require__(27);
+const ScriptMultifile_1 = __webpack_require__(28);
+const errors_1 = __webpack_require__(18);
+const enums_1 = __webpack_require__(19);
+class Loader {
+    loadScript(stream) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const buffer = yield stream;
+                return this.isHeaderPresent(buffer)
+                    ? new ScriptMultifile_1.ScriptMultifile(buffer)
+                    : new ScriptFile_1.ScriptFile(buffer, enums_1.eScriptType.CLEO);
+            }
+            catch (e) {
+                console.log(e);
+                throw log_1.Log.error(errors_1.AppError.INVALID_INPUT_FILE);
+            }
+        });
     }
-    let res = graphUtils.from(graph);
-    const findFollowNode = (header) => {
-        const pdom = graphUtils.findIPDom(res);
-        const index = res.getNodeIndex(header);
-        if (pdom[index])
-            return pdom[index];
-        /*
-                once we reach this point we must have found a IF..THEN construct
-                and the flow graph has an exit node in its THEN clause
-    
-                if (cond) {
-                    exit
-                }
-    
-                the follow node must be determined as the target of the JF instruction
-    
-                IF..THEN..ELSE.. construct could not be there as
-                the compiler must put a JMP instruction between THEN and ELSE clauses
-                meaning the flow won't interrupt here
-    
-                it could be possible a follow node is not found
-                when IF is the last instruction of a script
-                but this is a malformed script and not covered by the decompiler yet
-    
-            */
-        const succ = res.getImmSuccessors(header);
-        return succ[0];
-    };
-    const replaceIf = (header, followNode) => {
-        var _a, _b, _c;
-        const ifHeaderSuccessors = res.getImmSuccessors(header);
-        const ifGraph = new graph_1.IfGraph();
-        ifGraph.followNode = followNode;
-        const followIndex = res.getNodeIndex(followNode);
-        const ifType = getIfType(res, header, followNode);
-        ifGraph.type = ifType;
-        ifGraph.ifNumber = getIfCondNumber(res, header);
-        ifGraph.print(`New IF graph`);
-        if (ifType === enums_1.eIfType.IF_THEN) {
-            const thenHeader = ifHeaderSuccessors.at(-1);
-            const thenIndex = res.getNodeIndex(thenHeader);
-            ifGraph.thenNode = new graph_1.Graph();
-            for (let i = thenIndex; i < followIndex; i++) {
-                const node = res.nodes[i];
-                ifGraph.thenNode.nodes.push(node);
-            }
-        }
-        else {
-            const [elseHeader, thenHeader] = ifHeaderSuccessors;
-            ifGraph.thenNode = new graph_1.Graph();
-            ifGraph.elseNode = new graph_1.Graph();
-            const thenIndex = res.getNodeIndex(thenHeader);
-            const elseIndex = res.getNodeIndex(elseHeader);
-            for (let i = thenIndex; i < elseIndex; i++) {
-                const node = res.nodes[i];
-                ifGraph.thenNode.nodes.push(node);
-            }
-            for (let i = elseIndex; i < followIndex; i++) {
-                const node = res.nodes[i];
-                ifGraph.elseNode.nodes.push(node);
-            }
-        }
-        ifGraph.addNode(header);
-        const reduced = new graph_1.Graph();
-        for (const node of res.nodes) {
-            if (!ifGraph.thenNode.hasNode(node) &&
-                !((_a = ifGraph.elseNode) === null || _a === void 0 ? void 0 : _a.hasNode(node)) &&
-                node !== header) {
-                reduced.addNode(node);
-            }
-            if (node == header) {
-                reduced.addNode(ifGraph);
-            }
-        }
-        reduced.addEdge(ifGraph, ifGraph.followNode);
-        for (const edge of graph.edges) {
-            if (ifGraph.thenNode.hasNode(edge.from) ||
-                ((_b = ifGraph.elseNode) === null || _b === void 0 ? void 0 : _b.hasNode(edge.from))) {
-                if (edge.from.type === enums_1.eBasicBlockType.UNSTRUCTURED) {
-                    reduced.addEdge(ifGraph, edge.to);
-                }
-                // if another edge originates from the loop, it is either BREAK or CONTINUE
-                // we don't need to add it to the new graph
-                continue;
-            }
-            if (!ifGraph.thenNode.hasEdge(edge.from, edge.to) &&
-                !((_c = ifGraph.elseNode) === null || _c === void 0 ? void 0 : _c.hasEdge(edge.from, edge.to)) &&
-                edge.from !== header) {
-                if (edge.to === header) {
-                    edge.to = ifGraph;
-                }
-                reduced.addEdge(edge.from, edge.to);
-            }
-        }
-        return reduced;
-    };
-    const head = twoWayNodes.at(-1);
-    const tail = findFollowNode(head);
-    if (!tail) {
-        throw log_1.default.error(errors_1.default.NODE_NOT_FOUND);
+    isHeaderPresent(buf) {
+        // todo: count jumps
+        const firstOp = buf.getInt16(0, true);
+        return firstOp === 2;
     }
-    // res.print("Structure graph before replacing IF node");
-    res = replaceIf(head, tail);
-    res.print(`New graph after replacing IF node (${twoWayNodes.length - 1} left)`);
-    // recursively structure until no more 2-way nodes are found
-    return structure(res);
 }
-exports.structure = structure;
-function getIfCondNumber(res, header) {
-    // const pred = res.getImmPredecessors(header);
-    // if (
-    //   pred.length === 1 &&
-    //   (pred[0] as IBasicBlock).type === eBasicBlockType.FALL
-    // ) {
-    //   const { instructions } = pred[0] as IBasicBlock;
-    //   if (instructions.length === 1 && instructions[0].opcode === OP_IF) {
-    //     return getNumericParam(instructions[0]);
-    //   }
-    // }
-    const { instructions } = header;
-    if (instructions.length > 1 && instructions[0].opcode === index_1.OP_IF) {
-        return (0, instructions_1.getNumericParam)(instructions[0]);
-    }
-    log_1.default.warn(errors_1.default.NO_IF_PREDICATE, (0, graph_1.getOffset)(header));
-    return 0;
-}
+exports.Loader = Loader;
 
 
 /***/ }),
 /* 27 */
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ScriptFile = void 0;
+class ScriptFile {
+    constructor(buffer, type) {
+        this.buffer = buffer;
+        this.type = type;
+    }
+    get baseOffset() {
+        return 0;
+    }
+}
+exports.ScriptFile = ScriptFile;
+
+
+/***/ }),
+/* 28 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.transpose = exports.findIPDom = exports.findSPDom = exports.findPDom = exports.findIDom = exports.findSDom = exports.findDom = exports.from = exports.reversePostOrder = exports.split = void 0;
-const utils = __webpack_require__(28);
-const graph_1 = __webpack_require__(29);
+exports.ScriptMultifile = void 0;
+const enums_1 = __webpack_require__(19);
+const ScriptFile_1 = __webpack_require__(27);
+const MultifileMeta_1 = __webpack_require__(29);
+class ScriptMultifile extends ScriptFile_1.ScriptFile {
+    constructor(data) {
+        super(data, enums_1.eScriptType.MAIN);
+        this.meta = new MultifileMeta_1.MultifileMeta(data);
+        this.buffer = new DataView(data.buffer.slice(this.baseOffset, this.meta.mainSize));
+        const len = this.meta.missions.length;
+        const missions = this.meta.missions.map((offset, i, arr) => {
+            const nextMissionOffset = i === len - 1 ? data.byteLength : arr[i + 1];
+            return new ScriptFile_1.ScriptFile(new DataView(data.buffer.slice(offset, nextMissionOffset)), enums_1.eScriptType.MISSION);
+        });
+        // todo: externals
+        this.scripts = missions;
+    }
+    get baseOffset() {
+        return this.meta.size;
+    }
+}
+exports.ScriptMultifile = ScriptMultifile;
+
+
+/***/ }),
+/* 29 */
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.MultifileMeta = void 0;
+const utils = __webpack_require__(30);
+const arguments_1 = __webpack_require__(2);
+const errors_1 = __webpack_require__(18);
+const log_1 = __webpack_require__(20);
+const enums_1 = __webpack_require__(19);
+const MultifileHeaderMap = {
+    [enums_1.eGame.GTA3]: {
+        [enums_1.eScriptFileSegments.GLOBAL_VARS]: 0,
+        [enums_1.eScriptFileSegments.MODELS]: 1,
+        [enums_1.eScriptFileSegments.MISSIONS]: 2,
+        [enums_1.eScriptFileSegments.MAIN]: 3,
+    },
+    [enums_1.eGame.GTAVC]: {
+        [enums_1.eScriptFileSegments.GLOBAL_VARS]: 0,
+        [enums_1.eScriptFileSegments.MODELS]: 1,
+        [enums_1.eScriptFileSegments.MISSIONS]: 2,
+        [enums_1.eScriptFileSegments.MAIN]: 3,
+    },
+    [enums_1.eGame.GTASA]: {
+        [enums_1.eScriptFileSegments.GLOBAL_VARS]: 0,
+        [enums_1.eScriptFileSegments.MODELS]: 1,
+        [enums_1.eScriptFileSegments.MISSIONS]: 2,
+        [enums_1.eScriptFileSegments.EXTERNALS]: 3,
+        [enums_1.eScriptFileSegments.SASEG5]: 4,
+        [enums_1.eScriptFileSegments.SASEG6]: 5,
+        [enums_1.eScriptFileSegments.MAIN]: 6,
+    },
+};
+class MultifileMeta {
+    constructor(data) {
+        if (data.byteLength === 0) {
+            throw log_1.Log.error(errors_1.AppError.EMPTY_SCM);
+        }
+        this.loadModelSegment(data);
+        this.loadMissionSegment(data);
+        if (utils.isGameSA()) {
+            this.loadExternalSegment(data);
+        }
+        const segmentId = MultifileHeaderMap[arguments_1.GLOBAL_OPTIONS.game][enums_1.eScriptFileSegments.MAIN];
+        this.size = this.getSegmentOffset(data, segmentId, false);
+    }
+    loadModelSegment(data) {
+        const segmentId = MultifileHeaderMap[arguments_1.GLOBAL_OPTIONS.game][enums_1.eScriptFileSegments.MODELS];
+        this.offset = this.getSegmentOffset(data, segmentId);
+        const numModels = this.read32Bit(data);
+        this.modelIds = [];
+        this.offset += 24; // skip first model (empty)
+        for (let i = 1; i < numModels; i += 1) {
+            this.modelIds.push(this.readString(data, 24));
+        }
+    }
+    loadMissionSegment(data) {
+        const segmentId = MultifileHeaderMap[arguments_1.GLOBAL_OPTIONS.game][enums_1.eScriptFileSegments.MISSIONS];
+        this.offset = this.getSegmentOffset(data, segmentId);
+        this.mainSize = this.read32Bit(data);
+        this.largestMission = this.read32Bit(data);
+        const numMissions = this.read16Bit(data);
+        this.numExclusiveMissions = this.read16Bit(data);
+        if (utils.isGameSA()) {
+            this.highestLocalInMission = this.read32Bit(data);
+        }
+        this.missions = [];
+        for (let i = 0; i < numMissions; i += 1) {
+            this.missions.push(this.read32Bit(data));
+        }
+    }
+    loadExternalSegment(data) {
+        const segmentId = MultifileHeaderMap[arguments_1.GLOBAL_OPTIONS.game][enums_1.eScriptFileSegments.EXTERNALS];
+        this.offset = this.getSegmentOffset(data, segmentId);
+        this.largestExternalSize = this.read32Bit(data);
+        const numExternals = this.read32Bit(data);
+        this.externals = [];
+        for (let i = 0; i < numExternals; i += 1) {
+            this.externals.push({
+                name: this.readString(data, 20),
+                offset: this.read32Bit(data),
+                size: this.read32Bit(data),
+            });
+        }
+    }
+    getSegmentOffset(data, segmentId, skipJumpOpcode = true) {
+        let result = 0;
+        while (segmentId--) {
+            result = data.getInt32(result + 3, true);
+        }
+        return result + (skipJumpOpcode ? 8 : 0);
+    }
+    readString(data, len) {
+        let s = '';
+        for (let i = 0; i < len; i++) {
+            const char = data.getUint8(this.offset + i);
+            if (char == 0)
+                break;
+            s += String.fromCharCode(char);
+        }
+        this.offset += len;
+        return s;
+    }
+    read32Bit(data) {
+        this.offset += 4;
+        return data.getInt32(this.offset - 4, true);
+    }
+    read16Bit(data) {
+        this.offset += 2;
+        return data.getInt16(this.offset - 2, true);
+    }
+}
+exports.MultifileMeta = MultifileMeta;
+
+
+/***/ }),
+/* 30 */
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.hexToOpcode = exports.opcodeToHex = exports.strPadLeft = exports.checkArrayIncludeItemFromArray = exports.checkArrayIncludesArray = exports.getArrayIntersection = exports.removeFromArray = exports.isEqual = exports.isArrayParam = exports.isGameSA = exports.isGameVC = exports.isGameGTA3 = void 0;
+const arguments_1 = __webpack_require__(2);
+const enums_1 = __webpack_require__(19);
+const isGameGTA3 = () => arguments_1.GLOBAL_OPTIONS.game === enums_1.eGame.GTA3;
+exports.isGameGTA3 = isGameGTA3;
+const isGameVC = () => arguments_1.GLOBAL_OPTIONS.game === enums_1.eGame.GTAVC;
+exports.isGameVC = isGameVC;
+const isGameSA = () => arguments_1.GLOBAL_OPTIONS.game === enums_1.eGame.GTASA;
+exports.isGameSA = isGameSA;
+const isArrayParam = (param) => [
+    enums_1.eParamType.GARRSTR8,
+    enums_1.eParamType.LARRSTR8,
+    enums_1.eParamType.GARRSTR16,
+    enums_1.eParamType.LARRSTR16,
+    enums_1.eParamType.GARRNUM32,
+    enums_1.eParamType.LARRNUM32,
+].includes(param);
+exports.isArrayParam = isArrayParam;
+const isEqual = (a1, a2) => {
+    return a1.length === a2.length && (0, exports.checkArrayIncludesArray)(a1, a2);
+};
+exports.isEqual = isEqual;
+const removeFromArray = (a1, iteratee) => {
+    const indexes = [];
+    const removed = a1.filter((item, i) => iteratee(item) && indexes.push(i));
+    for (let i = indexes.length - 1; i >= 0; i--) {
+        a1.splice(indexes[i], 1);
+    }
+    return removed;
+};
+exports.removeFromArray = removeFromArray;
+const getArrayIntersection = (...arrays) => {
+    if (arrays.length === 0) {
+        return [];
+    }
+    if (arrays.length === 1) {
+        return arrays[0];
+    }
+    const others = arrays.slice(1);
+    return arrays[0].filter((item) => others.every((arr) => arr.includes(item)));
+};
+exports.getArrayIntersection = getArrayIntersection;
+const checkArrayIncludesArray = (a1, a2) => {
+    return (0, exports.getArrayIntersection)(a2, a1).length === a2.length;
+};
+exports.checkArrayIncludesArray = checkArrayIncludesArray;
+const checkArrayIncludeItemFromArray = (a1, a2) => {
+    return !!(0, exports.getArrayIntersection)(a2, a1).length;
+};
+exports.checkArrayIncludeItemFromArray = checkArrayIncludeItemFromArray;
+const strPadLeft = (str, length, char = '0') => {
+    return str.padStart(length, char);
+};
+exports.strPadLeft = strPadLeft;
+const opcodeToHex = (opcode) => {
+    return (0, exports.strPadLeft)(opcode.toString(16).toUpperCase(), 4);
+};
+exports.opcodeToHex = opcodeToHex;
+const hexToOpcode = (id) => {
+    return parseInt(id, 16);
+};
+exports.hexToOpcode = hexToOpcode;
+
+
+/***/ }),
+/* 31 */
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Parser = exports.PARAM_LABEL = exports.PARAM_ARGUMENTS = exports.PARAM_ANY = void 0;
+const utils = __webpack_require__(30);
+const log_1 = __webpack_require__(20);
+const errors_1 = __webpack_require__(18);
+const ScriptMultifile_1 = __webpack_require__(28);
+const enums_1 = __webpack_require__(19);
+const instructions_1 = __webpack_require__(32);
+const cfg_1 = __webpack_require__(33);
+const definitions_1 = __webpack_require__(36);
+exports.PARAM_ANY = definitions_1.PrimitiveType.any;
+exports.PARAM_ARGUMENTS = definitions_1.PrimitiveType.arguments;
+exports.PARAM_LABEL = definitions_1.PrimitiveType.label;
+class Parser {
+    constructor(definitionMap) {
+        this.nonameCounter = 0;
+        this.definitionMap = definitionMap;
+        this.paramValuesHandlers = {
+            [enums_1.eParamType.NUM8]: () => this.nextInt8(),
+            [enums_1.eParamType.NUM16]: () => this.nextInt16(),
+            [enums_1.eParamType.NUM32]: () => this.nextInt32(),
+            [enums_1.eParamType.FLOAT]: () => this.getFloat(),
+            [enums_1.eParamType.STR]: () => this.getString(this.nextUInt8()),
+            [enums_1.eParamType.STR8]: () => this.getString(8),
+            [enums_1.eParamType.STR16]: () => this.getString(16),
+            [enums_1.eParamType.STR128]: () => this.getString(128),
+            [enums_1.eParamType.GVARNUM32]: () => this.nextUInt16(),
+            [enums_1.eParamType.LVARNUM32]: () => this.nextUInt16(),
+            [enums_1.eParamType.GVARSTR8]: () => this.nextUInt16(),
+            [enums_1.eParamType.LVARSTR8]: () => this.nextUInt16(),
+            [enums_1.eParamType.GVARSTR16]: () => this.nextUInt16(),
+            [enums_1.eParamType.LVARSTR16]: () => this.nextUInt16(),
+            [enums_1.eParamType.GARRNUM32]: () => this.getArray(),
+            [enums_1.eParamType.LARRNUM32]: () => this.getArray(),
+            [enums_1.eParamType.GARRSTR8]: () => this.getArray(),
+            [enums_1.eParamType.LARRSTR8]: () => this.getArray(),
+            [enums_1.eParamType.GARRSTR16]: () => this.getArray(),
+            [enums_1.eParamType.LARRSTR16]: () => this.getArray(),
+        };
+        this.paramTypesHandlers = [...Array(256)].map((v, i) => {
+            switch (i) {
+                case 0:
+                    return () => enums_1.eParamType.EOL;
+                case 1:
+                    return () => enums_1.eParamType.NUM32;
+                case 2:
+                    return () => enums_1.eParamType.GVARNUM32;
+                case 3:
+                    return () => enums_1.eParamType.LVARNUM32;
+                case 4:
+                    return () => enums_1.eParamType.NUM8;
+                case 5:
+                    return () => enums_1.eParamType.NUM16;
+                case 6:
+                    return () => enums_1.eParamType.FLOAT;
+                case 7:
+                    if (utils.isGameSA()) {
+                        return () => enums_1.eParamType.GARRNUM32;
+                    }
+                case 8:
+                    if (utils.isGameSA()) {
+                        return () => enums_1.eParamType.LARRNUM32;
+                    }
+                case 9:
+                    if (utils.isGameSA()) {
+                        return () => enums_1.eParamType.STR8;
+                    }
+                case 0xa:
+                    if (utils.isGameSA()) {
+                        return () => enums_1.eParamType.GVARSTR8;
+                    }
+                case 0xb:
+                    if (utils.isGameSA()) {
+                        return () => enums_1.eParamType.LVARSTR8;
+                    }
+                case 0xc:
+                    if (utils.isGameSA()) {
+                        return () => enums_1.eParamType.GARRSTR8;
+                    }
+                case 0xd:
+                    if (utils.isGameSA()) {
+                        return () => enums_1.eParamType.LARRSTR8;
+                    }
+                case 0xe:
+                    if (utils.isGameSA()) {
+                        return () => enums_1.eParamType.STR;
+                    }
+                case 0xf:
+                    if (utils.isGameSA()) {
+                        return () => enums_1.eParamType.STR16;
+                    }
+                case 0x10:
+                    if (utils.isGameSA()) {
+                        return () => enums_1.eParamType.GVARSTR16;
+                    }
+                case 0x11:
+                    if (utils.isGameSA()) {
+                        return () => enums_1.eParamType.LVARSTR16;
+                    }
+                case 0x12:
+                    if (utils.isGameSA()) {
+                        return () => enums_1.eParamType.GARRSTR16;
+                    }
+                case 0x13:
+                    if (utils.isGameSA()) {
+                        return () => enums_1.eParamType.LARRSTR16;
+                    }
+                default:
+                    if (utils.isGameSA()) {
+                        return () => {
+                            this.offset--;
+                            return enums_1.eParamType.STR128;
+                        };
+                    }
+                    return () => {
+                        this.offset--;
+                        return enums_1.eParamType.STR8;
+                    };
+            }
+        });
+    }
+    parse(scriptFile) {
+        const main = {
+            instructionMap: this.getInstructions(scriptFile),
+            type: scriptFile.type,
+            name: scriptFile.name || 'noname_' + this.nonameCounter++,
+        };
+        const scripts = [main];
+        if (scriptFile instanceof ScriptMultifile_1.ScriptMultifile) {
+            for (const script of scriptFile.scripts) {
+                scripts.push(this.parse(script)[0]);
+            }
+        }
+        return scripts;
+    }
+    getInstructions(scriptFile) {
+        var _a;
+        const map = new Map();
+        this.offset = 0;
+        this.data = scriptFile.buffer;
+        for (const instruction of this) {
+            instruction.offset += scriptFile.baseOffset;
+            map.set(instruction.offset, instruction);
+            if (instruction.opcode === cfg_1.OP_NAME) {
+                (_a = scriptFile.name) !== null && _a !== void 0 ? _a : (scriptFile.name = (0, instructions_1.getString8Param)(instruction));
+            }
+        }
+        return map;
+    }
+    [Symbol.iterator]() {
+        const self = this;
+        return {
+            next() {
+                if (self.offset >= self.data.byteLength) {
+                    return { value: undefined, done: true };
+                }
+                return {
+                    value: self.getInstruction(),
+                    done: false,
+                };
+            },
+        };
+    }
+    nextUInt8() {
+        let result;
+        try {
+            result = this.data.getUint8(this.offset);
+            this.offset += 1;
+        }
+        catch (_a) {
+            throw log_1.Log.error(errors_1.AppError.END_OF_BUFFER, 1);
+        }
+        return result;
+    }
+    nextInt8() {
+        let result;
+        try {
+            result = this.data.getInt8(this.offset);
+            this.offset += 1;
+        }
+        catch (_a) {
+            throw log_1.Log.error(errors_1.AppError.END_OF_BUFFER, 1);
+        }
+        return result;
+    }
+    nextUInt16() {
+        let result;
+        try {
+            result = this.data.getUint16(this.offset, true);
+            this.offset += 2;
+        }
+        catch (_a) {
+            throw log_1.Log.error(errors_1.AppError.END_OF_BUFFER, 2);
+        }
+        return result;
+    }
+    nextInt16() {
+        let result;
+        try {
+            result = this.data.getInt16(this.offset, true);
+            this.offset += 2;
+        }
+        catch (_a) {
+            throw log_1.Log.error(errors_1.AppError.END_OF_BUFFER, 2);
+        }
+        return result;
+    }
+    nextUInt32() {
+        let result;
+        try {
+            result = this.data.getUint32(this.offset, true);
+            this.offset += 4;
+        }
+        catch (_a) {
+            throw log_1.Log.error(errors_1.AppError.END_OF_BUFFER, 4);
+        }
+        return result;
+    }
+    nextInt32() {
+        let result;
+        try {
+            result = this.data.getInt32(this.offset, true);
+            this.offset += 4;
+        }
+        catch (_a) {
+            throw log_1.Log.error(errors_1.AppError.END_OF_BUFFER, 4);
+        }
+        return result;
+    }
+    nextFloat() {
+        let result;
+        try {
+            result = this.data.getFloat32(this.offset, true);
+            this.offset += 4;
+        }
+        catch (_a) {
+            throw log_1.Log.error(errors_1.AppError.END_OF_BUFFER, 4);
+        }
+        return result;
+    }
+    getFloat() {
+        if (utils.isGameGTA3()) {
+            const val = this.nextInt16();
+            return val / 16.0;
+        }
+        return this.nextFloat();
+    }
+    getString(length) {
+        try {
+            let s = '';
+            for (let i = 0; i < length; i++) {
+                const char = this.data.getUint8(this.offset + i);
+                if (char == 0)
+                    break;
+                s += String.fromCharCode(char);
+            }
+            this.offset += length;
+            return s;
+        }
+        catch (_a) {
+            throw log_1.Log.error(errors_1.AppError.END_OF_BUFFER, length);
+        }
+    }
+    getArray() {
+        return {
+            offset: this.nextUInt16(),
+            varIndex: this.nextUInt16(),
+            size: this.nextUInt8(),
+            props: this.nextUInt8(),
+        };
+    }
+    getInstruction() {
+        const offset = this.offset;
+        const opcode = this.nextUInt16();
+        return {
+            opcode,
+            offset,
+            params: this.getInstructionParams(opcode),
+        };
+    }
+    getParamType() {
+        const dataType = this.nextUInt8();
+        return this.paramTypesHandlers[dataType]();
+    }
+    getInstructionParams(opcode) {
+        const params = [];
+        const definition = this.definitionMap.get(opcode & 0x7fff);
+        if (!definition || !definition.params) {
+            throw log_1.Log.error(errors_1.AppError.NO_PARAM, definition, this.offset);
+        }
+        definition.params.forEach((opcodeParam) => {
+            while (true) {
+                const paramType = this.getParamType();
+                if (paramType === enums_1.eParamType.EOL) {
+                    if (opcodeParam.type !== exports.PARAM_ARGUMENTS) {
+                        throw log_1.Log.error(errors_1.AppError.UNKNOWN_PARAM, paramType, this.offset);
+                    }
+                    return params;
+                }
+                params.push(this.getParam(paramType));
+                if (opcodeParam.type !== exports.PARAM_ARGUMENTS) {
+                    break;
+                }
+            }
+        });
+        return params;
+    }
+    getParam(paramType) {
+        return {
+            type: paramType,
+            value: this.paramValuesHandlers[paramType](),
+        };
+    }
+}
+exports.Parser = Parser;
+
+
+/***/ }),
+/* 32 */
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getString8Param = exports.getNumericParam = exports.isString8 = exports.isNumeric = void 0;
+const enums_1 = __webpack_require__(19);
+const log_1 = __webpack_require__(20);
+const errors_1 = __webpack_require__(18);
+const isNumeric = (instruction) => {
+    return [enums_1.eParamType.NUM32, enums_1.eParamType.NUM16, enums_1.eParamType.NUM8].includes(instruction.params[0].type);
+};
+exports.isNumeric = isNumeric;
+const isString8 = (instruction) => {
+    return [enums_1.eParamType.STR8].includes(instruction.params[0].type);
+};
+exports.isString8 = isString8;
+const getNumericParam = (instruction) => {
+    if (!(0, exports.isNumeric)(instruction)) {
+        throw log_1.Log.error(errors_1.AppError.NOT_NUMERIC_INSTRUCTION, instruction.offset);
+    }
+    return Number(instruction.params[0].value);
+};
+exports.getNumericParam = getNumericParam;
+const getString8Param = (instruction) => {
+    if (!(0, exports.isString8)(instruction)) {
+        throw log_1.Log.error(errors_1.AppError.NOT_STRING_INSTRUCTION, instruction.offset);
+    }
+    return instruction.params[0].value;
+};
+exports.getString8Param = getString8Param;
+
+
+/***/ }),
+/* 33 */
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.CFG = exports.OP_IF = exports.OP_NAME = exports.OP_JF = exports.OP_JMP = void 0;
+const log_1 = __webpack_require__(20);
+const arguments_1 = __webpack_require__(2);
+const errors_1 = __webpack_require__(18);
+const graph_1 = __webpack_require__(34);
+const Instruction = __webpack_require__(32);
+const graphUtils = __webpack_require__(35);
+const enums_1 = __webpack_require__(19);
+exports.OP_JMP = 0x0002;
+const OP_JT = 0x004c;
+exports.OP_JF = 0x004d;
+const OP_END = 0x004e;
+const OP_CLEO_END = 0x0a93;
+const OP_CALL = 0x004f;
+const OP_GOSUB = 0x0050;
+const OP_RETURN = 0x0051;
+exports.OP_NAME = 0x03a4;
+exports.OP_IF = 0x00d6;
+const blockEndOpcodes = [OP_END, OP_CLEO_END, OP_RETURN];
+const callOpcodes = [OP_GOSUB, OP_CALL];
+const branchOpcodesMap = {
+    [enums_1.eGame.GTA3]: {
+        [exports.OP_JMP]: enums_1.eBasicBlockType.ONE_WAY,
+        [exports.OP_IF]: enums_1.eBasicBlockType.FALL,
+        [exports.OP_JF]: enums_1.eBasicBlockType.TWO_WAY,
+        // [OP_JT]: eBasicBlockType.TWO_WAY, // todo: different order of successor nodes
+    },
+    [enums_1.eGame.GTAVC]: {
+        [exports.OP_JMP]: enums_1.eBasicBlockType.ONE_WAY,
+        [exports.OP_IF]: enums_1.eBasicBlockType.FALL,
+        [exports.OP_JF]: enums_1.eBasicBlockType.TWO_WAY,
+    },
+    [enums_1.eGame.GTASA]: {
+        [exports.OP_JMP]: enums_1.eBasicBlockType.ONE_WAY,
+        [exports.OP_IF]: enums_1.eBasicBlockType.FALL,
+        [exports.OP_JF]: enums_1.eBasicBlockType.TWO_WAY,
+    },
+};
+class CFG {
+    getCallGraphs(script, allScripts) {
+        const functions = [
+            script.instructionMap.keys().next().value,
+            ...this.findFunctions(script),
+        ];
+        if (script.type === enums_1.eScriptType.MAIN) {
+            // some functions in MAIN are referenced only by missions/externals
+            allScripts.forEach((s) => {
+                if (s.type !== enums_1.eScriptType.MAIN) {
+                    functions.push(...this.findGlobalFunctions(s, script));
+                }
+            });
+        }
+        const entries = [...new Set(functions)].sort();
+        const basicBlocks = this.findBasicBlocks(script, entries);
+        return entries.map((offset) => {
+            return this.buildGraph(basicBlocks, offset, entries);
+        });
+    }
+    buildGraph(basicBlocks, startOffset, entries) {
+        const graph = new graph_1.Graph();
+        const visited = [];
+        const startIndex = this.findBasicBlockIndex(basicBlocks, startOffset);
+        if (startIndex === -1) {
+            log_1.Log.warn(errors_1.AppError.NO_BRANCH, startOffset);
+            return;
+        }
+        const traverse = (index) => {
+            if (visited[index])
+                return;
+            visited[index] = true;
+            const bb = basicBlocks[index];
+            bb.start = startOffset;
+            graph.addNode(bb);
+            const lastInstruction = bb.instructions[bb.instructions.length - 1];
+            bb.type = this.getBasicBlockType(lastInstruction);
+            switch (bb.type) {
+                case enums_1.eBasicBlockType.RETURN:
+                    break;
+                case enums_1.eBasicBlockType.TWO_WAY:
+                case enums_1.eBasicBlockType.ONE_WAY: {
+                    // todo: argument could be a variable
+                    const targetOffset = Instruction.getNumericParam(lastInstruction);
+                    const targetOffsetAbs = Math.abs(targetOffset);
+                    const targetIndex = this.findBasicBlockIndex(basicBlocks, targetOffsetAbs);
+                    if (targetIndex === -1) {
+                        log_1.Log.warn(errors_1.AppError.NO_BRANCH, targetOffset);
+                        return;
+                    }
+                    if (entries.includes(targetOffsetAbs) &&
+                        bb.start !== targetOffsetAbs) {
+                        // one-way jump into another function is always an unstructured jump
+                        // two-way jump into another function could however be legit if the IF statement is the last block of the function that naturally falls into the next function
+                        // todo: unstructured jf to another function
+                        if (bb.type === enums_1.eBasicBlockType.ONE_WAY) {
+                            bb.type = enums_1.eBasicBlockType.UNSTRUCTURED; // jump into another function
+                            break;
+                        }
+                        else {
+                            // insert an intermediate return block as destination for this edge
+                            // this guarantees that the node is 2-way, yet does not fall into the function
+                            const empty = this.createBasicBlock([], enums_1.eBasicBlockType.RETURN, startOffset);
+                            graph.addNode(empty);
+                            graph.addEdge(bb, empty);
+                        }
+                    }
+                    else {
+                        graph.addEdge(bb, basicBlocks[targetIndex]);
+                        traverse(targetIndex);
+                    }
+                    if (bb.type === enums_1.eBasicBlockType.ONE_WAY)
+                        break; // else fallthrough
+                }
+                case enums_1.eBasicBlockType.FALL:
+                    graph.addEdge(bb, basicBlocks[index + 1]);
+                    traverse(index + 1);
+                    break;
+                default:
+                    log_1.Log.warn(`${bb.type} is not implemented`);
+            }
+        };
+        traverse(startIndex);
+        // todo: add unvisited nodes as separate entries
+        return this.patchSelfLoops(graphUtils.reversePostOrder(graph));
+    }
+    findBasicBlocks(script, entries) {
+        let currentLeader = null;
+        let instructions = [];
+        const result = [];
+        const leaderOffsets = [
+            ...new Set(entries.concat(this.findLeaderOffsets(script))),
+        ].sort((a, b) => a - b);
+        if (leaderOffsets.length) {
+            for (const [offset, instruction] of script.instructionMap) {
+                if (leaderOffsets.includes(offset)) {
+                    if (currentLeader) {
+                        result.push(this.createBasicBlock(instructions));
+                    }
+                    currentLeader = instruction;
+                    instructions = [];
+                }
+                instructions.push(instruction);
+            }
+        }
+        // add last bb in the file
+        result.push(this.createBasicBlock(instructions));
+        return result;
+    }
+    findGlobalFunctions(innerScript, mainScript) {
+        const res = [];
+        for (const [offset, instruction] of innerScript.instructionMap) {
+            if (callOpcodes.includes(instruction.opcode)) {
+                const targetOffset = Instruction.getNumericParam(instruction);
+                if (targetOffset >= 0) {
+                    const target = mainScript.instructionMap.get(targetOffset);
+                    if (!target) {
+                        log_1.Log.warn(errors_1.AppError.NO_TARGET, targetOffset, offset);
+                        continue;
+                    }
+                    res.push(targetOffset);
+                }
+            }
+        }
+        return res;
+    }
+    findFunctions(script) {
+        const res = [];
+        for (const [offset, instruction] of script.instructionMap) {
+            if (callOpcodes.includes(instruction.opcode)) {
+                const targetOffset = Instruction.getNumericParam(instruction);
+                if (targetOffset >= 0) {
+                    if (script.type !== enums_1.eScriptType.MAIN) {
+                        continue;
+                    }
+                }
+                else {
+                    if (script.type === enums_1.eScriptType.MAIN) {
+                        log_1.Log.warn(errors_1.AppError.INVALID_REL_OFFSET, offset);
+                        continue;
+                    }
+                }
+                const absTargetOffset = Math.abs(targetOffset);
+                const target = script.instructionMap.get(absTargetOffset);
+                if (!target) {
+                    log_1.Log.warn(errors_1.AppError.NO_TARGET, targetOffset, offset);
+                    continue;
+                }
+                res.push(absTargetOffset);
+            }
+        }
+        return res;
+    }
+    findLeaderOffsets(script) {
+        let doesThisFollowBranchInstruction = false;
+        const offsets = [];
+        for (const [offset, instruction] of script.instructionMap) {
+            if (doesThisFollowBranchInstruction || offsets.length === 0) {
+                offsets.push(offset);
+            }
+            if (blockEndOpcodes.includes(instruction.opcode)) {
+                doesThisFollowBranchInstruction = true;
+                continue;
+            }
+            doesThisFollowBranchInstruction = false;
+            const branchType = this.getBranchType(instruction);
+            if (!branchType) {
+                continue;
+            }
+            if (branchType === enums_1.eBasicBlockType.FALL) {
+                offsets.push(offset);
+                // doesThisFollowBranchInstruction = true;
+                continue;
+            }
+            const targetOffset = Instruction.getNumericParam(instruction);
+            const absTargetOffset = Math.abs(targetOffset);
+            const target = script.instructionMap.get(absTargetOffset);
+            if (!target) {
+                log_1.Log.warn(errors_1.AppError.NO_TARGET, targetOffset, offset);
+                continue;
+            }
+            offsets.push(absTargetOffset);
+            doesThisFollowBranchInstruction = true;
+        }
+        return offsets;
+    }
+    createBasicBlock(instructions, type = enums_1.eBasicBlockType.UNDEFINED, start) {
+        return { type, instructions, start };
+    }
+    findBasicBlockIndex(basicBlocks, offset) {
+        return basicBlocks.findIndex((bb) => bb.instructions[0].offset === offset);
+    }
+    getBranchType(instruction) {
+        return branchOpcodesMap[arguments_1.GLOBAL_OPTIONS.game][instruction.opcode];
+    }
+    getBasicBlockType(instruction) {
+        const type = this.getBranchType(instruction);
+        if (type) {
+            return type;
+        }
+        if (blockEndOpcodes.includes(instruction.opcode)) {
+            return enums_1.eBasicBlockType.RETURN;
+        }
+        return enums_1.eBasicBlockType.FALL;
+    }
+    // split self-loop blocks on two blocks to provide better analysis of the CFG
+    patchSelfLoops(graph) {
+        const selfLoopNodes = graph.nodes.filter((node) => {
+            const successors = graph.getImmSuccessors(node);
+            return successors.includes(node);
+        });
+        if (!selfLoopNodes.length)
+            return graph;
+        const newGraph = graphUtils.from(graph);
+        selfLoopNodes.forEach((node) => {
+            const newNode = this.createBasicBlock(node.instructions.slice(1), node.type);
+            node.type = enums_1.eBasicBlockType.FALL;
+            node.instructions = [node.instructions[0]];
+            const index = newGraph.getNodeIndex(node);
+            newGraph.nodes.splice(index + 1, 0, newNode);
+            newGraph.edges.forEach((edge) => {
+                if (edge.from === node)
+                    edge.from = newNode;
+            });
+            newGraph.addEdge(node, newNode);
+        });
+        return newGraph;
+    }
+}
+exports.CFG = CFG;
+
+
+/***/ }),
+/* 34 */
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.LoopGraph = exports.IfGraph = exports.Graph = void 0;
+const arguments_1 = __webpack_require__(2);
+const log_1 = __webpack_require__(20);
+const graph_utils_1 = __webpack_require__(35);
+class Graph {
+    constructor() {
+        this.nodes = [];
+        this.edges = [];
+    }
+    addNode(...nodes) {
+        nodes.forEach((node) => {
+            if (!this.hasNode(node))
+                this.nodes.push(node);
+        });
+    }
+    removeNode(node) {
+        this.nodes = this.nodes.filter((n) => n !== node);
+        this.edges = this.edges.filter((edge) => edge.from !== node && edge.to !== node);
+    }
+    hasNode(node) {
+        return this.nodes.includes(node);
+    }
+    hasEdge(from, to) {
+        return this.edges.some((edge) => edge.from === from && edge.to === to);
+    }
+    addEdge(from, to) {
+        if (!this.hasEdge(from, to))
+            this.edges.push({ from, to });
+    }
+    getImmPredecessors(to) {
+        const edges = this.edges.filter((edge) => edge.to === to);
+        return edges.map((edge) => edge.from);
+    }
+    getImmSuccessors(from) {
+        const edges = this.edges.filter((edge) => edge.from === from);
+        return edges.map((edge) => edge.to);
+    }
+    getNodeIndex(node) {
+        return this.nodes.findIndex((n) => n === node);
+    }
+    get hasLoop() {
+        return this.latchingNodes.length > 0;
+    }
+    get root() {
+        // todo: think of a definition of the root node
+        // given graph G(N), root(G) = n in N && getImmPredecessors(n) = []
+        // or given graph G(N), root(G) = n in N && n.offset = 0
+        return this.nodes[0];
+    }
+    get latchingNodes() {
+        const header = this.root;
+        return this.nodes.filter((node) => {
+            return (!(node instanceof Graph) && this.getImmSuccessors(node).includes(header));
+        });
+    }
+    print(header = '') {
+        if (!arguments_1.GLOBAL_OPTIONS.debugMode) {
+            return;
+        }
+        console.group(header);
+        try {
+            if (this instanceof LoopGraph) {
+                log_1.Log.debug('Loop type:', this.type);
+                log_1.Log.debug('Follow node:');
+                if (this.followNode) {
+                    (0, graph_utils_1.printNode)(this.followNode, 0);
+                }
+                else {
+                    log_1.Log.debug('undefined');
+                }
+                if (this.condition) {
+                    log_1.Log.debug('Condition:');
+                    (0, graph_utils_1.printNode)(this.condition, 0);
+                }
+            }
+            if (this instanceof IfGraph) {
+                log_1.Log.debug(`${this.type} with follow node at ${(0, graph_utils_1.getOffset)(this.followNode)}`);
+                // this.thenNode.print('thenNode:');
+                // this.elseNode?.print('elseNode:');
+            }
+            if (this.nodes.length) {
+                console.group('Nodes: ');
+            }
+            for (let i = 0; i < this.nodes.length; i++) {
+                const node = this.nodes[i];
+                (0, graph_utils_1.printNode)(node, i);
+            }
+            if (this.nodes.length) {
+                console.groupEnd();
+            }
+            if (this.edges.length) {
+                console.group('Edges: ');
+            }
+            const edgesSorted = [...this.edges].sort((a, b) => {
+                const aFrom = this.getNodeIndex(a.from);
+                const bFrom = this.getNodeIndex(b.from);
+                const aTo = this.getNodeIndex(a.to);
+                const bTo = this.getNodeIndex(b.to);
+                if (aFrom === bFrom)
+                    return aTo - bTo;
+                return aFrom - bFrom;
+            });
+            for (let i = 0; i < edgesSorted.length; i++) {
+                const edge = edgesSorted[i];
+                log_1.Log.debug(`${i}: [${(0, graph_utils_1.nodeType)(edge.from)}] ${this.getNodeIndex(edge.from)} -> ${this.getNodeIndex(edge.to)}`);
+            }
+            if (this.edges.length) {
+                console.groupEnd();
+            }
+        }
+        catch (e) {
+            console.error(e);
+        }
+        console.groupEnd();
+    }
+}
+exports.Graph = Graph;
+class IfGraph extends Graph {
+    constructor() {
+        super(...arguments);
+        this.ifNumber = 0;
+    }
+}
+exports.IfGraph = IfGraph;
+class LoopGraph extends Graph {
+}
+exports.LoopGraph = LoopGraph;
+
+
+/***/ }),
+/* 35 */
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.nodeType = exports.printNode = exports.getOffset = exports.transpose = exports.findIPDom = exports.findSPDom = exports.findPDom = exports.findIDom = exports.findSDom = exports.findDom = exports.from = exports.reversePostOrder = exports.split = void 0;
+const utils = __webpack_require__(30);
+const utils_1 = __webpack_require__(30);
+const log_1 = __webpack_require__(20);
+const graph_1 = __webpack_require__(34);
 function split(graph) {
     if (graph.nodes.length < 1) {
         return [];
@@ -4869,219 +5764,34 @@ function transpose(graph) {
     return res;
 }
 exports.transpose = transpose;
-
-
-/***/ }),
-/* 28 */
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.hexToOpcode = exports.opcodeToHex = exports.strPadLeft = exports.checkArrayIncludeItemFromArray = exports.checkArrayIncludesArray = exports.getArrayIntersection = exports.removeFromArray = exports.isEqual = exports.isArrayParam = exports.isGameSA = exports.isGameVC = exports.isGameGTA3 = void 0;
-const arguments_1 = __webpack_require__(2);
-const enums_1 = __webpack_require__(19);
-const isGameGTA3 = () => arguments_1.GLOBAL_OPTIONS.game === enums_1.eGame.GTA3;
-exports.isGameGTA3 = isGameGTA3;
-const isGameVC = () => arguments_1.GLOBAL_OPTIONS.game === enums_1.eGame.GTAVC;
-exports.isGameVC = isGameVC;
-const isGameSA = () => arguments_1.GLOBAL_OPTIONS.game === enums_1.eGame.GTASA;
-exports.isGameSA = isGameSA;
-const isArrayParam = (param) => [
-    enums_1.eParamType.GARRSTR8,
-    enums_1.eParamType.LARRSTR8,
-    enums_1.eParamType.GARRSTR16,
-    enums_1.eParamType.LARRSTR16,
-    enums_1.eParamType.GARRNUM32,
-    enums_1.eParamType.LARRNUM32,
-].includes(param);
-exports.isArrayParam = isArrayParam;
-const isEqual = (a1, a2) => {
-    return a1.length === a2.length && (0, exports.checkArrayIncludesArray)(a1, a2);
-};
-exports.isEqual = isEqual;
-const removeFromArray = (a1, iteratee) => {
-    const indexes = [];
-    const removed = a1.filter((item, i) => iteratee(item) && indexes.push(i));
-    for (let i = indexes.length - 1; i >= 0; i--) {
-        a1.splice(indexes[i], 1);
-    }
-    return removed;
-};
-exports.removeFromArray = removeFromArray;
-const getArrayIntersection = (...arrays) => {
-    if (arrays.length === 0) {
-        return [];
-    }
-    if (arrays.length === 1) {
-        return arrays[0];
-    }
-    const others = arrays.slice(1);
-    return arrays[0].filter((item) => others.every((arr) => arr.includes(item)));
-};
-exports.getArrayIntersection = getArrayIntersection;
-const checkArrayIncludesArray = (a1, a2) => {
-    return (0, exports.getArrayIntersection)(a2, a1).length === a2.length;
-};
-exports.checkArrayIncludesArray = checkArrayIncludesArray;
-const checkArrayIncludeItemFromArray = (a1, a2) => {
-    return !!(0, exports.getArrayIntersection)(a2, a1).length;
-};
-exports.checkArrayIncludeItemFromArray = checkArrayIncludeItemFromArray;
-const strPadLeft = (str, length, char = '0') => {
-    return str.padStart(length, char);
-};
-exports.strPadLeft = strPadLeft;
-const opcodeToHex = (opcode) => {
-    return (0, exports.strPadLeft)(opcode.toString(16).toUpperCase(), 4);
-};
-exports.opcodeToHex = opcodeToHex;
-const hexToOpcode = (id) => {
-    return parseInt(id, 16);
-};
-exports.hexToOpcode = hexToOpcode;
-
-
-/***/ }),
-/* 29 */
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.LoopGraph = exports.IfGraph = exports.getOffset = exports.Graph = void 0;
-const utils_1 = __webpack_require__(28);
-const arguments_1 = __webpack_require__(2);
-const log_1 = __webpack_require__(20);
-class Graph {
-    constructor() {
-        this.nodes = [];
-        this.edges = [];
-    }
-    addNode(...nodes) {
-        nodes.forEach((node) => {
-            if (!this.hasNode(node))
-                this.nodes.push(node);
-        });
-    }
-    removeNode(node) {
-        this.nodes = this.nodes.filter((n) => n !== node);
-        this.edges = this.edges.filter((edge) => edge.from !== node && edge.to !== node);
-    }
-    hasNode(node) {
-        return this.nodes.includes(node);
-    }
-    hasEdge(from, to) {
-        return this.edges.some((edge) => edge.from === from && edge.to === to);
-    }
-    addEdge(from, to) {
-        if (!this.hasEdge(from, to))
-            this.edges.push({ from, to });
-    }
-    getImmPredecessors(to) {
-        const edges = this.edges.filter((edge) => edge.to === to);
-        return edges.map((edge) => edge.from);
-    }
-    getImmSuccessors(from) {
-        const edges = this.edges.filter((edge) => edge.from === from);
-        return edges.map((edge) => edge.to);
-    }
-    getNodeIndex(node) {
-        return this.nodes.findIndex((n) => n === node);
-    }
-    get hasLoop() {
-        return this.latchingNodes.length > 0;
-    }
-    get root() {
-        // todo: think of a definition of the root node
-        // given graph G(N), root(G) = n in N && getImmPredecessors(n) = []
-        // or given graph G(N), root(G) = n in N && n.offset = 0
-        return this.nodes[0];
-    }
-    get latchingNodes() {
-        const header = this.root;
-        return this.nodes.filter((node) => {
-            return (!(node instanceof Graph) && this.getImmSuccessors(node).includes(header));
-        });
-    }
-    print(header = '') {
-        if (!arguments_1.GLOBAL_OPTIONS.debugMode) {
-            return;
+function getOffset(node) {
+    var _a, _b;
+    if (node instanceof graph_1.Graph) {
+        if (node.nodes.length) {
+            return getOffset(node.nodes[0]);
         }
-        console.group(header);
-        try {
-            if (this instanceof LoopGraph) {
-                log_1.default.debug('Loop type:', this.type);
-                log_1.default.debug('Follow node:');
-                if (this.followNode) {
-                    printNode(this.followNode, 0);
-                }
-                else {
-                    log_1.default.debug('undefined');
-                }
-                if (this.condition) {
-                    log_1.default.debug('Condition:');
-                    printNode(this.condition, 0);
-                }
-            }
-            if (this instanceof IfGraph) {
-                log_1.default.debug(`${this.type} with follow node at ${getOffset(this.followNode)}`);
-                // this.thenNode.print('thenNode:');
-                // this.elseNode?.print('elseNode:');
-            }
-            if (this.nodes.length) {
-                console.group('Nodes: ');
-            }
-            for (let i = 0; i < this.nodes.length; i++) {
-                const node = this.nodes[i];
-                printNode(node, i);
-            }
-            if (this.nodes.length) {
-                console.groupEnd();
-            }
-            if (this.edges.length) {
-                console.group('Edges: ');
-            }
-            const edgesSorted = [...this.edges].sort((a, b) => {
-                const aFrom = this.getNodeIndex(a.from);
-                const bFrom = this.getNodeIndex(b.from);
-                const aTo = this.getNodeIndex(a.to);
-                const bTo = this.getNodeIndex(b.to);
-                if (aFrom === bFrom)
-                    return aTo - bTo;
-                return aFrom - bFrom;
-            });
-            for (let i = 0; i < edgesSorted.length; i++) {
-                const edge = edgesSorted[i];
-                log_1.default.debug(`${i}: [${nodeType(edge.from)}] ${this.getNodeIndex(edge.from)} -> ${this.getNodeIndex(edge.to)}`);
-            }
-            if (this.edges.length) {
-                console.groupEnd();
-            }
-        }
-        catch (e) {
-            console.error(e);
-        }
-        console.groupEnd();
+        return -1;
     }
+    return (_b = (_a = node.instructions[0]) === null || _a === void 0 ? void 0 : _a.offset) !== null && _b !== void 0 ? _b : -1;
 }
-exports.Graph = Graph;
+exports.getOffset = getOffset;
 function printNode(node, index) {
     var _a, _b, _c;
-    if (node instanceof Graph) {
-        log_1.default.debug(`${index}: [${getOffset(node)}] ${nodeType(node)}`);
+    if (node instanceof graph_1.Graph) {
+        log_1.Log.debug(`${index}: [${getOffset(node)}] ${nodeType(node)}`);
     }
     else {
         const type = nodeType(node);
         const { instructions } = node;
         const { offset, opcode } = (_a = instructions[0]) !== null && _a !== void 0 ? _a : { offset: -1, opcode: -1 };
-        log_1.default.debug(`${index}: [${offset}] ${type}. ${(0, utils_1.opcodeToHex)(opcode)}...${(0, utils_1.opcodeToHex)((_c = (_b = instructions.at(-1)) === null || _b === void 0 ? void 0 : _b.opcode) !== null && _c !== void 0 ? _c : -1)}`);
+        log_1.Log.debug(`${index}: [${offset}] ${type}. ${(0, utils_1.opcodeToHex)(opcode)}...${(0, utils_1.opcodeToHex)((_c = (_b = instructions.at(-1)) === null || _b === void 0 ? void 0 : _b.opcode) !== null && _c !== void 0 ? _c : -1)}`);
     }
 }
+exports.printNode = printNode;
 function nodeType(node) {
-    if (node instanceof LoopGraph)
+    if (node instanceof graph_1.LoopGraph)
         return 'LOOP';
-    if (node instanceof IfGraph)
+    if (node instanceof graph_1.IfGraph)
         return 'IF';
     switch (node.type) {
         case 0:
@@ -5102,1073 +5812,15 @@ function nodeType(node) {
             return 'CONTINUE';
         case 8:
             return 'UNSTRUCTURED';
-        case 9:
-            return 'LOOP_COND';
         default:
             return `UNKNOWN`;
     }
 }
-function getOffset(node) {
-    var _a, _b;
-    if (node instanceof Graph) {
-        if (node.nodes.length) {
-            return getOffset(node.nodes[0]);
-        }
-        return -1;
-    }
-    return (_b = (_a = node.instructions[0]) === null || _a === void 0 ? void 0 : _a.offset) !== null && _b !== void 0 ? _b : -1;
-}
-exports.getOffset = getOffset;
-class IfGraph extends Graph {
-    constructor() {
-        super(...arguments);
-        this.ifNumber = 0;
-    }
-}
-exports.IfGraph = IfGraph;
-class LoopGraph extends Graph {
-}
-exports.LoopGraph = LoopGraph;
-
-
-/***/ }),
-/* 30 */
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.OP_IF = exports.OP_NAME = exports.OP_JF = exports.OP_JMP = void 0;
-const log_1 = __webpack_require__(20);
-const arguments_1 = __webpack_require__(2);
-const errors_1 = __webpack_require__(18);
-const graph_1 = __webpack_require__(29);
-const Instruction = __webpack_require__(31);
-const graphUtils = __webpack_require__(27);
-const enums_1 = __webpack_require__(19);
-exports.OP_JMP = 0x0002;
-const OP_JT = 0x004c;
-exports.OP_JF = 0x004d;
-const OP_END = 0x004e;
-const OP_CLEO_END = 0x0a93;
-const OP_CALL = 0x004f;
-const OP_GOSUB = 0x0050;
-const OP_RETURN = 0x0051;
-exports.OP_NAME = 0x03a4;
-exports.OP_IF = 0x00d6;
-const blockEndOpcodes = [OP_END, OP_CLEO_END, OP_RETURN];
-const callOpcodes = [OP_GOSUB, OP_CALL];
-const branchOpcodesMap = {
-    [enums_1.eGame.GTA3]: {
-        [exports.OP_JMP]: enums_1.eBasicBlockType.ONE_WAY,
-        [exports.OP_IF]: enums_1.eBasicBlockType.FALL,
-        [exports.OP_JF]: enums_1.eBasicBlockType.TWO_WAY,
-        // [OP_JT]: eBasicBlockType.TWO_WAY, // todo: different order of successor nodes
-    },
-    [enums_1.eGame.GTAVC]: {
-        [exports.OP_JMP]: enums_1.eBasicBlockType.ONE_WAY,
-        [exports.OP_IF]: enums_1.eBasicBlockType.FALL,
-        [exports.OP_JF]: enums_1.eBasicBlockType.TWO_WAY,
-    },
-    [enums_1.eGame.GTASA]: {
-        [exports.OP_JMP]: enums_1.eBasicBlockType.ONE_WAY,
-        [exports.OP_IF]: enums_1.eBasicBlockType.FALL,
-        [exports.OP_JF]: enums_1.eBasicBlockType.TWO_WAY,
-    },
-};
-class CFG {
-    getCallGraphs(script, allScripts) {
-        const functions = [
-            script.instructionMap.keys().next().value,
-            ...this.findFunctions(script),
-        ];
-        if (script.type === enums_1.eScriptType.MAIN) {
-            // some functions in MAIN are referenced only by missions/externals
-            allScripts.forEach((s) => {
-                if (s.type !== enums_1.eScriptType.MAIN) {
-                    functions.push(...this.findGlobalFunctions(s, script));
-                }
-            });
-        }
-        const entries = [...new Set(functions)].sort();
-        const basicBlocks = this.findBasicBlocks(script, entries);
-        return entries.map((offset) => {
-            return this.buildGraph(basicBlocks, offset, entries);
-        });
-    }
-    buildGraph(basicBlocks, startOffset, entries) {
-        const graph = new graph_1.Graph();
-        const visited = [];
-        const startIndex = this.findBasicBlockIndex(basicBlocks, startOffset);
-        if (startIndex === -1) {
-            log_1.default.warn(errors_1.default.NO_BRANCH, startOffset);
-            return;
-        }
-        const traverse = (index) => {
-            if (visited[index])
-                return;
-            visited[index] = true;
-            const bb = basicBlocks[index];
-            bb.start = startOffset;
-            graph.addNode(bb);
-            const lastInstruction = bb.instructions[bb.instructions.length - 1];
-            bb.type = this.getBasicBlockType(lastInstruction);
-            switch (bb.type) {
-                case enums_1.eBasicBlockType.RETURN:
-                    break;
-                case enums_1.eBasicBlockType.TWO_WAY:
-                case enums_1.eBasicBlockType.ONE_WAY: {
-                    // todo: argument could be a variable
-                    const targetOffset = Instruction.getNumericParam(lastInstruction);
-                    const targetOffsetAbs = Math.abs(targetOffset);
-                    const targetIndex = this.findBasicBlockIndex(basicBlocks, targetOffsetAbs);
-                    if (targetIndex === -1) {
-                        log_1.default.warn(errors_1.default.NO_BRANCH, targetOffset);
-                        return;
-                    }
-                    if (entries.includes(targetOffsetAbs) &&
-                        bb.start !== targetOffsetAbs) {
-                        bb.type = enums_1.eBasicBlockType.UNSTRUCTURED; // jump into another function
-                        break;
-                    }
-                    graph.addEdge(bb, basicBlocks[targetIndex]);
-                    traverse(targetIndex);
-                    if (bb.type === enums_1.eBasicBlockType.ONE_WAY)
-                        break; // else fallthrough
-                }
-                case enums_1.eBasicBlockType.FALL:
-                    graph.addEdge(bb, basicBlocks[index + 1]);
-                    traverse(index + 1);
-                    break;
-                default:
-                    log_1.default.warn(`${bb.type} is not implemented`);
-            }
-        };
-        traverse(startIndex);
-        // todo: add unvisited nodes as separate entries
-        return this.patchSelfLoops(graphUtils.reversePostOrder(graph));
-    }
-    findBasicBlocks(script, entries) {
-        let currentLeader = null;
-        let instructions = [];
-        const result = [];
-        const leaderOffsets = [
-            ...new Set(entries.concat(this.findLeaderOffsets(script))),
-        ].sort((a, b) => a - b);
-        if (leaderOffsets.length) {
-            for (const [offset, instruction] of script.instructionMap) {
-                if (leaderOffsets.includes(offset)) {
-                    if (currentLeader) {
-                        result.push(this.createBasicBlock(instructions));
-                    }
-                    currentLeader = instruction;
-                    instructions = [];
-                }
-                instructions.push(instruction);
-            }
-        }
-        // add last bb in the file
-        result.push(this.createBasicBlock(instructions));
-        return result;
-    }
-    findGlobalFunctions(innerScript, mainScript) {
-        const res = [];
-        for (const [offset, instruction] of innerScript.instructionMap) {
-            if (callOpcodes.includes(instruction.opcode)) {
-                const targetOffset = Instruction.getNumericParam(instruction);
-                if (targetOffset >= 0) {
-                    const target = mainScript.instructionMap.get(targetOffset);
-                    if (!target) {
-                        log_1.default.warn(errors_1.default.NO_TARGET, targetOffset, offset);
-                        continue;
-                    }
-                    res.push(targetOffset);
-                }
-            }
-        }
-        return res;
-    }
-    findFunctions(script) {
-        const res = [];
-        for (const [offset, instruction] of script.instructionMap) {
-            if (callOpcodes.includes(instruction.opcode)) {
-                const targetOffset = Instruction.getNumericParam(instruction);
-                if (targetOffset >= 0) {
-                    if (script.type !== enums_1.eScriptType.MAIN) {
-                        continue;
-                    }
-                }
-                else {
-                    if (script.type === enums_1.eScriptType.MAIN) {
-                        log_1.default.warn(errors_1.default.INVALID_REL_OFFSET, offset);
-                        continue;
-                    }
-                }
-                const absTargetOffset = Math.abs(targetOffset);
-                const target = script.instructionMap.get(absTargetOffset);
-                if (!target) {
-                    log_1.default.warn(errors_1.default.NO_TARGET, targetOffset, offset);
-                    continue;
-                }
-                res.push(absTargetOffset);
-            }
-        }
-        return res;
-    }
-    findLeaderOffsets(script) {
-        let doesThisFollowBranchInstruction = false;
-        const offsets = [];
-        for (const [offset, instruction] of script.instructionMap) {
-            if (doesThisFollowBranchInstruction || offsets.length === 0) {
-                offsets.push(offset);
-            }
-            if (blockEndOpcodes.includes(instruction.opcode)) {
-                doesThisFollowBranchInstruction = true;
-                continue;
-            }
-            doesThisFollowBranchInstruction = false;
-            const branchType = this.getBranchType(instruction);
-            if (!branchType) {
-                continue;
-            }
-            if (branchType === enums_1.eBasicBlockType.FALL) {
-                offsets.push(offset);
-                // doesThisFollowBranchInstruction = true;
-                continue;
-            }
-            const targetOffset = Instruction.getNumericParam(instruction);
-            const absTargetOffset = Math.abs(targetOffset);
-            const target = script.instructionMap.get(absTargetOffset);
-            if (!target) {
-                log_1.default.warn(errors_1.default.NO_TARGET, targetOffset, offset);
-                continue;
-            }
-            offsets.push(absTargetOffset);
-            doesThisFollowBranchInstruction = true;
-        }
-        return offsets;
-    }
-    createBasicBlock(instructions, type = enums_1.eBasicBlockType.UNDEFINED) {
-        return { type, instructions, start: undefined };
-    }
-    findBasicBlockIndex(basicBlocks, offset) {
-        return basicBlocks.findIndex((bb) => bb.instructions[0].offset === offset);
-    }
-    getBranchType(instruction) {
-        return branchOpcodesMap[arguments_1.GLOBAL_OPTIONS.game][instruction.opcode];
-    }
-    getBasicBlockType(instruction) {
-        const type = this.getBranchType(instruction);
-        if (type) {
-            return type;
-        }
-        if (blockEndOpcodes.includes(instruction.opcode)) {
-            return enums_1.eBasicBlockType.RETURN;
-        }
-        return enums_1.eBasicBlockType.FALL;
-    }
-    // split self-loop blocks on two blocks to provide better analysis of the CFG
-    patchSelfLoops(graph) {
-        const selfLoopNodes = graph.nodes.filter((node) => {
-            const successors = graph.getImmSuccessors(node);
-            return successors.includes(node);
-        });
-        if (!selfLoopNodes.length)
-            return graph;
-        const newGraph = graphUtils.from(graph);
-        selfLoopNodes.forEach((node) => {
-            const newNode = this.createBasicBlock(node.instructions.slice(1), node.type);
-            node.type = enums_1.eBasicBlockType.FALL;
-            node.instructions = [node.instructions[0]];
-            const index = newGraph.getNodeIndex(node);
-            newGraph.nodes.splice(index + 1, 0, newNode);
-            newGraph.edges.forEach((edge) => {
-                if (edge.from === node)
-                    edge.from = newNode;
-            });
-            newGraph.addEdge(node, newNode);
-        });
-        return newGraph;
-    }
-}
-exports["default"] = CFG;
-
-
-/***/ }),
-/* 31 */
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getString8Param = exports.getNumericParam = exports.isString8 = exports.isNumeric = void 0;
-const enums_1 = __webpack_require__(19);
-const log_1 = __webpack_require__(20);
-const errors_1 = __webpack_require__(18);
-const isNumeric = (instruction) => {
-    return [enums_1.eParamType.NUM32, enums_1.eParamType.NUM16, enums_1.eParamType.NUM8].includes(instruction.params[0].type);
-};
-exports.isNumeric = isNumeric;
-const isString8 = (instruction) => {
-    return [enums_1.eParamType.STR8].includes(instruction.params[0].type);
-};
-exports.isString8 = isString8;
-const getNumericParam = (instruction) => {
-    if (!(0, exports.isNumeric)(instruction)) {
-        throw log_1.default.error(errors_1.default.NOT_NUMERIC_INSTRUCTION, instruction.offset);
-    }
-    return Number(instruction.params[0].value);
-};
-exports.getNumericParam = getNumericParam;
-const getString8Param = (instruction) => {
-    if (!(0, exports.isString8)(instruction)) {
-        throw log_1.default.error(errors_1.default.NOT_STRING_INSTRUCTION, instruction.offset);
-    }
-    return instruction.params[0].value;
-};
-exports.getString8Param = getString8Param;
-
-
-/***/ }),
-/* 32 */
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.structure = exports.findFollowNode = exports.getLoopType = void 0;
-const graphUtils = __webpack_require__(27);
-const graph_1 = __webpack_require__(29);
-const enums_1 = __webpack_require__(19);
-const conditions_utils_1 = __webpack_require__(26);
-const log_1 = __webpack_require__(20);
-function getLoopType(graph, loop, loopHeader, latchingNode) {
-    const headerSuccessors = graph.getImmSuccessors(loopHeader);
-    const latchingNodeSuccessors = graph.getImmSuccessors(latchingNode);
-    if (latchingNodeSuccessors.length === 2) {
-        if (headerSuccessors.length === 2) {
-            if (!loop.hasNode(headerSuccessors[0]) ||
-                !loop.hasNode(headerSuccessors[1])) {
-                return enums_1.eLoopType.PRE_TESTED;
-            }
-        }
-        return enums_1.eLoopType.POST_TESTED;
-    }
-    if (headerSuccessors.length === 2) {
-        return enums_1.eLoopType.PRE_TESTED;
-    }
-    return enums_1.eLoopType.ENDLESS;
-}
-exports.getLoopType = getLoopType;
-function findFollowNode(graph, loop, loopHeader, latchingNode) {
-    if (loop.type === enums_1.eLoopType.PRE_TESTED) {
-        const headerSuccessors = graph.getImmSuccessors(loopHeader);
-        if (loop.hasNode(headerSuccessors[0])) {
-            return headerSuccessors[1];
-        }
-        return headerSuccessors[0];
-    }
-    else if (loop.type === enums_1.eLoopType.POST_TESTED) {
-        const latchingNodeSuccessors = graph.getImmSuccessors(latchingNode);
-        if (loop.hasNode(latchingNodeSuccessors[0])) {
-            return latchingNodeSuccessors[1];
-        }
-        return latchingNodeSuccessors[0];
-    }
-    else {
-        const loopNodes = loop.nodes;
-        let minIndex = graph.nodes.length;
-        const headerIndex = graph.getNodeIndex(loopHeader);
-        for (const node of loopNodes) {
-            // find a closest node that is not in the loop
-            graph
-                .getImmSuccessors(node)
-                .filter((s) => !loop.hasNode(s))
-                .forEach((s) => {
-                const index = graph.getNodeIndex(s);
-                if (index > headerIndex) {
-                    minIndex = Math.min(minIndex, index);
-                }
-            });
-        }
-        if (minIndex !== graph.nodes.length) {
-            return graph.nodes[minIndex];
-        }
-    }
-}
-exports.findFollowNode = findFollowNode;
-function structure(graph) {
-    graph.print('Finding loops in this graph:');
-    const intervals = graphUtils.split(graph);
-    log_1.default.debug(`Found ${intervals.filter((i) => i.hasLoop).length} loop(s) in ${intervals.length} interval(s).`);
-    // for (let i = 0; i < intervals.length; i++) {
-    //   if (intervals[i].hasLoop) {
-    //     intervals[i].print(`LOOP INTERVAL ${i}:`);
-    //   }
-    // }
-    const index = intervals.findIndex((i) => i.hasLoop);
-    if (index === -1) {
-        // todo: should we run ifStructure there?
-        return graph;
-    }
-    const reducible = intervals[index];
-    reducible.print(`\nPicked interval ${index} for structuring.`);
-    // there could be multiple Continue statements referencing loop root
-    // therefore picking up the last latching node in the interval
-    const lastNode = reducible.latchingNodes.at(-1);
-    const lastNodeIndex = reducible.getNodeIndex(lastNode);
-    // populating loop with inner nodes and
-    // replacing nodes in the original graph with a single node
-    // producing a new graph for the next iteration
-    const loop = new graph_1.LoopGraph();
-    loop.nodes = reducible.nodes.filter((n, i) => i <= lastNodeIndex);
-    loop.edges = reducible.edges.filter((e) => loop.hasNode(e.from) //&& loop.hasNode(e.to)
-    );
-    loop.type = getLoopType(graph, loop, reducible.root, lastNode);
-    loop.followNode = findFollowNode(graph, loop, reducible.root, lastNode);
-    // now it is time to find exit nodes and identify them as Break, Continue or Unstructured jumps
-    // todo: Continue is not implemented yet
-    // ONE_WAY -> exit are BREAKs;
-    // ONE_WAY -> last node or header are CONTINUEs;
-    // TWO_WAY exit nodes:
-    // - loop is POST_TESTED && node is last: jf->header; make it the loop condition and delete from the loop
-    // - loop is PRE_TESTED && node is first: jf->exit; make it the loop condition and delete from the loop
-    // - else: abnormal exit, should not be structured as if block; change to UNSTRUCTURED
-    if (loop.type === enums_1.eLoopType.PRE_TESTED) {
-        loop.condition = loop.root;
-        loop.root.type = enums_1.eBasicBlockType.LOOP_COND;
-    }
-    if (loop.type === enums_1.eLoopType.POST_TESTED) {
-        loop.condition = lastNode;
-        lastNode.type = enums_1.eBasicBlockType.LOOP_COND;
-    }
-    for (const node of loop.nodes) {
-        if (node.type === enums_1.eBasicBlockType.LOOP_COND) {
-            continue;
-        }
-        const successors = graph.getImmSuccessors(node);
-        if (successors.includes(loop.followNode)) {
-            if (node.type === enums_1.eBasicBlockType.ONE_WAY) {
-                node.type = enums_1.eBasicBlockType.BREAK;
-                continue;
-            }
-            node.type = enums_1.eBasicBlockType.UNSTRUCTURED;
-        }
-        else if (node.type === enums_1.eBasicBlockType.ONE_WAY &&
-            (successors.includes(loop.root) || successors.includes(lastNode))) {
-            if (node !== lastNode) {
-                node.type = enums_1.eBasicBlockType.CONTINUE;
-            }
-            continue;
-        }
-    }
-    // todo: refactor this mess
-    loop.edges = loop.edges.filter((edge) => {
-        const from = edge.from;
-        if (from.type === enums_1.eBasicBlockType.ONE_WAY ||
-            from.type === enums_1.eBasicBlockType.TWO_WAY ||
-            from.type === enums_1.eBasicBlockType.UNSTRUCTURED ||
-            from.type === enums_1.eBasicBlockType.BREAK ||
-            from.type === enums_1.eBasicBlockType.LOOP_COND) {
-            if (!loop.hasNode(edge.to)) {
-                const fromOffset = (0, graph_1.getOffset)(edge.from);
-                const toOffset = (0, graph_1.getOffset)(edge.to);
-                if (edge.to === loop.followNode) {
-                    log_1.default.debug(`Found 'BREAK' at ${fromOffset}`);
-                    if (from.type === enums_1.eBasicBlockType.ONE_WAY ||
-                        from.type === enums_1.eBasicBlockType.TWO_WAY) {
-                        from.type = enums_1.eBasicBlockType.UNSTRUCTURED;
-                    }
-                    return false;
-                }
-                else {
-                    log_1.default.debug(`Found 'JUMP' from ${fromOffset} to ${toOffset}`);
-                    from.type = enums_1.eBasicBlockType.UNSTRUCTURED;
-                    return false;
-                }
-            }
-        }
-        return true;
-    });
-    loop.print('Creating a loop node');
-    let reduced = new graph_1.Graph();
-    for (const node of graph.nodes) {
-        if (!loop.hasNode(node)) {
-            reduced.addNode(node);
-        }
-        if (node === loop.root) {
-            reduced.addNode(loop);
-        }
-    }
-    // follow node could be undefined if the loop is the last node in the graph
-    if (loop.followNode) {
-        reduced.addEdge(loop, loop.followNode);
-    }
-    for (const edge of graph.edges) {
-        if (loop.hasNode(edge.from)) {
-            if (edge.from.type === enums_1.eBasicBlockType.UNSTRUCTURED) {
-                // when there is an unstructured jump from the loop we must add it,
-                // otherwise the nodes that the jump is pointing to could become unreachable
-                // todo: rethink RPO algo to iterate over all nodes and create multiple disjoint graphs
-                // reduced.addEdge(loop, edge.to);
-            }
-            // if another edge originates from the loop, it is either BREAK or CONTINUE
-            // we don't need to add it to the new graph
-            continue;
-        }
-        if (!loop.hasEdge(edge.from, edge.to)) {
-            if (edge.to === loop.root) {
-                edge.to = loop;
-            }
-            reduced.addEdge(edge.from, edge.to);
-        }
-    }
-    // sort nodes in the new graph in topological order
-    reduced = graphUtils.reversePostOrder(reduced);
-    reduced.print('Replacing loop with a single node. New graph:');
-    const loopBody = (0, conditions_utils_1.structure)(loop);
-    loop.nodes = loopBody.nodes;
-    return structure(reduced);
-}
-exports.structure = structure;
-
-
-/***/ }),
-/* 33 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-"use strict";
-
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-const log_1 = __webpack_require__(20);
-const ScriptFile_1 = __webpack_require__(34);
-const ScriptMultifile_1 = __webpack_require__(35);
-const errors_1 = __webpack_require__(18);
-const enums_1 = __webpack_require__(19);
-class Loader {
-    loadScript(stream) {
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                const buffer = yield stream;
-                return this.isHeaderPresent(buffer)
-                    ? new ScriptMultifile_1.default(buffer)
-                    : new ScriptFile_1.default(buffer, enums_1.eScriptType.CLEO);
-            }
-            catch (e) {
-                console.log(e);
-                throw log_1.default.error(errors_1.default.INVALID_INPUT_FILE);
-            }
-        });
-    }
-    isHeaderPresent(buf) {
-        // todo: count jumps
-        const firstOp = buf.getInt16(0, true);
-        return firstOp === 2;
-    }
-}
-exports["default"] = Loader;
-
-
-/***/ }),
-/* 34 */
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-class ScriptFile {
-    constructor(buffer, type) {
-        this.buffer = buffer;
-        this.type = type;
-    }
-    get baseOffset() {
-        return 0;
-    }
-}
-exports["default"] = ScriptFile;
-
-
-/***/ }),
-/* 35 */
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-const enums_1 = __webpack_require__(19);
-const ScriptFile_1 = __webpack_require__(34);
-const MultifileMeta_1 = __webpack_require__(36);
-class ScriptMultifile extends ScriptFile_1.default {
-    constructor(data) {
-        super(data, enums_1.eScriptType.MAIN);
-        this.meta = new MultifileMeta_1.default(data);
-        this.buffer = new DataView(data.buffer.slice(this.baseOffset, this.meta.mainSize));
-        const len = this.meta.missions.length;
-        const missions = this.meta.missions.map((offset, i, arr) => {
-            const nextMissionOffset = i === len - 1 ? data.byteLength : arr[i + 1];
-            return new ScriptFile_1.default(new DataView(data.buffer.slice(offset, nextMissionOffset)), enums_1.eScriptType.MISSION);
-        });
-        // todo: externals
-        this.scripts = missions;
-    }
-    get baseOffset() {
-        return this.meta.size;
-    }
-}
-exports["default"] = ScriptMultifile;
+exports.nodeType = nodeType;
 
 
 /***/ }),
 /* 36 */
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-const utils = __webpack_require__(28);
-const arguments_1 = __webpack_require__(2);
-const errors_1 = __webpack_require__(18);
-const log_1 = __webpack_require__(20);
-const enums_1 = __webpack_require__(19);
-const MultifileHeaderMap = {
-    [enums_1.eGame.GTA3]: {
-        [enums_1.eScriptFileSegments.GLOBAL_VARS]: 0,
-        [enums_1.eScriptFileSegments.MODELS]: 1,
-        [enums_1.eScriptFileSegments.MISSIONS]: 2,
-        [enums_1.eScriptFileSegments.MAIN]: 3,
-    },
-    [enums_1.eGame.GTAVC]: {
-        [enums_1.eScriptFileSegments.GLOBAL_VARS]: 0,
-        [enums_1.eScriptFileSegments.MODELS]: 1,
-        [enums_1.eScriptFileSegments.MISSIONS]: 2,
-        [enums_1.eScriptFileSegments.MAIN]: 3,
-    },
-    [enums_1.eGame.GTASA]: {
-        [enums_1.eScriptFileSegments.GLOBAL_VARS]: 0,
-        [enums_1.eScriptFileSegments.MODELS]: 1,
-        [enums_1.eScriptFileSegments.MISSIONS]: 2,
-        [enums_1.eScriptFileSegments.EXTERNALS]: 3,
-        [enums_1.eScriptFileSegments.SASEG5]: 4,
-        [enums_1.eScriptFileSegments.SASEG6]: 5,
-        [enums_1.eScriptFileSegments.MAIN]: 6,
-    },
-};
-class MultifileMetadata {
-    constructor(data) {
-        if (data.byteLength === 0) {
-            throw log_1.default.error(errors_1.default.EMPTY_SCM);
-        }
-        this.loadModelSegment(data);
-        this.loadMissionSegment(data);
-        if (utils.isGameSA()) {
-            this.loadExternalSegment(data);
-        }
-        const segmentId = MultifileHeaderMap[arguments_1.GLOBAL_OPTIONS.game][enums_1.eScriptFileSegments.MAIN];
-        this.size = this.getSegmentOffset(data, segmentId, false);
-    }
-    loadModelSegment(data) {
-        const segmentId = MultifileHeaderMap[arguments_1.GLOBAL_OPTIONS.game][enums_1.eScriptFileSegments.MODELS];
-        this.offset = this.getSegmentOffset(data, segmentId);
-        const numModels = this.read32Bit(data);
-        this.modelIds = [];
-        this.offset += 24; // skip first model (empty)
-        for (let i = 1; i < numModels; i += 1) {
-            this.modelIds.push(this.readString(data, 24));
-        }
-    }
-    loadMissionSegment(data) {
-        const segmentId = MultifileHeaderMap[arguments_1.GLOBAL_OPTIONS.game][enums_1.eScriptFileSegments.MISSIONS];
-        this.offset = this.getSegmentOffset(data, segmentId);
-        this.mainSize = this.read32Bit(data);
-        this.largestMission = this.read32Bit(data);
-        const numMissions = this.read16Bit(data);
-        this.numExclusiveMissions = this.read16Bit(data);
-        if (utils.isGameSA()) {
-            this.highestLocalInMission = this.read32Bit(data);
-        }
-        this.missions = [];
-        for (let i = 0; i < numMissions; i += 1) {
-            this.missions.push(this.read32Bit(data));
-        }
-    }
-    loadExternalSegment(data) {
-        const segmentId = MultifileHeaderMap[arguments_1.GLOBAL_OPTIONS.game][enums_1.eScriptFileSegments.EXTERNALS];
-        this.offset = this.getSegmentOffset(data, segmentId);
-        this.largestExternalSize = this.read32Bit(data);
-        const numExternals = this.read32Bit(data);
-        this.externals = [];
-        for (let i = 0; i < numExternals; i += 1) {
-            this.externals.push({
-                name: this.readString(data, 20),
-                offset: this.read32Bit(data),
-                size: this.read32Bit(data),
-            });
-        }
-    }
-    getSegmentOffset(data, segmentId, skipJumpOpcode = true) {
-        let result = 0;
-        while (segmentId--) {
-            result = data.getInt32(result + 3, true);
-        }
-        return result + (skipJumpOpcode ? 8 : 0);
-    }
-    readString(data, len) {
-        let s = '';
-        for (let i = 0; i < len; i++) {
-            const char = data.getUint8(this.offset + i);
-            if (char == 0)
-                break;
-            s += String.fromCharCode(char);
-        }
-        this.offset += len;
-        return s;
-    }
-    read32Bit(data) {
-        this.offset += 4;
-        return data.getInt32(this.offset - 4, true);
-    }
-    read16Bit(data) {
-        this.offset += 2;
-        return data.getInt16(this.offset - 2, true);
-    }
-}
-exports["default"] = MultifileMetadata;
-
-
-/***/ }),
-/* 37 */
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.PARAM_LABEL = exports.PARAM_ARGUMENTS = exports.PARAM_ANY = void 0;
-const utils = __webpack_require__(28);
-const log_1 = __webpack_require__(20);
-const errors_1 = __webpack_require__(18);
-const ScriptMultifile_1 = __webpack_require__(35);
-const enums_1 = __webpack_require__(19);
-const instructions_1 = __webpack_require__(31);
-const cfg_1 = __webpack_require__(30);
-const definitions_1 = __webpack_require__(38);
-exports.PARAM_ANY = definitions_1.PrimitiveType.any;
-exports.PARAM_ARGUMENTS = definitions_1.PrimitiveType.arguments;
-exports.PARAM_LABEL = definitions_1.PrimitiveType.label;
-class Parser {
-    constructor(definitionMap) {
-        this.nonameCounter = 0;
-        this.definitionMap = definitionMap;
-        this.paramValuesHandlers = {
-            [enums_1.eParamType.NUM8]: () => this.nextInt8(),
-            [enums_1.eParamType.NUM16]: () => this.nextInt16(),
-            [enums_1.eParamType.NUM32]: () => this.nextInt32(),
-            [enums_1.eParamType.FLOAT]: () => this.getFloat(),
-            [enums_1.eParamType.STR]: () => this.getString(this.nextUInt8()),
-            [enums_1.eParamType.STR8]: () => this.getString(8),
-            [enums_1.eParamType.STR16]: () => this.getString(16),
-            [enums_1.eParamType.STR128]: () => this.getString(128),
-            [enums_1.eParamType.GVARNUM32]: () => this.nextUInt16(),
-            [enums_1.eParamType.LVARNUM32]: () => this.nextUInt16(),
-            [enums_1.eParamType.GVARSTR8]: () => this.nextUInt16(),
-            [enums_1.eParamType.LVARSTR8]: () => this.nextUInt16(),
-            [enums_1.eParamType.GVARSTR16]: () => this.nextUInt16(),
-            [enums_1.eParamType.LVARSTR16]: () => this.nextUInt16(),
-            [enums_1.eParamType.GARRNUM32]: () => this.getArray(),
-            [enums_1.eParamType.LARRNUM32]: () => this.getArray(),
-            [enums_1.eParamType.GARRSTR8]: () => this.getArray(),
-            [enums_1.eParamType.LARRSTR8]: () => this.getArray(),
-            [enums_1.eParamType.GARRSTR16]: () => this.getArray(),
-            [enums_1.eParamType.LARRSTR16]: () => this.getArray(),
-        };
-        this.paramTypesHandlers = [...Array(256)].map((v, i) => {
-            switch (i) {
-                case 0:
-                    return () => enums_1.eParamType.EOL;
-                case 1:
-                    return () => enums_1.eParamType.NUM32;
-                case 2:
-                    return () => enums_1.eParamType.GVARNUM32;
-                case 3:
-                    return () => enums_1.eParamType.LVARNUM32;
-                case 4:
-                    return () => enums_1.eParamType.NUM8;
-                case 5:
-                    return () => enums_1.eParamType.NUM16;
-                case 6:
-                    return () => enums_1.eParamType.FLOAT;
-                case 7:
-                    if (utils.isGameSA()) {
-                        return () => enums_1.eParamType.GARRNUM32;
-                    }
-                case 8:
-                    if (utils.isGameSA()) {
-                        return () => enums_1.eParamType.LARRNUM32;
-                    }
-                case 9:
-                    if (utils.isGameSA()) {
-                        return () => enums_1.eParamType.STR8;
-                    }
-                case 0xa:
-                    if (utils.isGameSA()) {
-                        return () => enums_1.eParamType.GVARSTR8;
-                    }
-                case 0xb:
-                    if (utils.isGameSA()) {
-                        return () => enums_1.eParamType.LVARSTR8;
-                    }
-                case 0xc:
-                    if (utils.isGameSA()) {
-                        return () => enums_1.eParamType.GARRSTR8;
-                    }
-                case 0xd:
-                    if (utils.isGameSA()) {
-                        return () => enums_1.eParamType.LARRSTR8;
-                    }
-                case 0xe:
-                    if (utils.isGameSA()) {
-                        return () => enums_1.eParamType.STR;
-                    }
-                case 0xf:
-                    if (utils.isGameSA()) {
-                        return () => enums_1.eParamType.STR16;
-                    }
-                case 0x10:
-                    if (utils.isGameSA()) {
-                        return () => enums_1.eParamType.GVARSTR16;
-                    }
-                case 0x11:
-                    if (utils.isGameSA()) {
-                        return () => enums_1.eParamType.LVARSTR16;
-                    }
-                case 0x12:
-                    if (utils.isGameSA()) {
-                        return () => enums_1.eParamType.GARRSTR16;
-                    }
-                case 0x13:
-                    if (utils.isGameSA()) {
-                        return () => enums_1.eParamType.LARRSTR16;
-                    }
-                default:
-                    if (utils.isGameSA()) {
-                        return () => {
-                            this.offset--;
-                            return enums_1.eParamType.STR128;
-                        };
-                    }
-                    return () => {
-                        this.offset--;
-                        return enums_1.eParamType.STR8;
-                    };
-            }
-        });
-    }
-    parse(scriptFile) {
-        const main = {
-            instructionMap: this.getInstructions(scriptFile),
-            type: scriptFile.type,
-            name: scriptFile.name || 'noname_' + this.nonameCounter++,
-        };
-        const scripts = [main];
-        if (scriptFile instanceof ScriptMultifile_1.default) {
-            for (const script of scriptFile.scripts) {
-                scripts.push(this.parse(script)[0]);
-            }
-        }
-        return scripts;
-    }
-    getInstructions(scriptFile) {
-        var _a;
-        const map = new Map();
-        this.offset = 0;
-        this.data = scriptFile.buffer;
-        for (const instruction of this) {
-            instruction.offset += scriptFile.baseOffset;
-            map.set(instruction.offset, instruction);
-            if (instruction.opcode === cfg_1.OP_NAME) {
-                (_a = scriptFile.name) !== null && _a !== void 0 ? _a : (scriptFile.name = (0, instructions_1.getString8Param)(instruction));
-            }
-        }
-        return map;
-    }
-    [Symbol.iterator]() {
-        const self = this;
-        return {
-            next() {
-                if (self.offset >= self.data.byteLength) {
-                    return { value: undefined, done: true };
-                }
-                return {
-                    value: self.getInstruction(),
-                    done: false,
-                };
-            },
-        };
-    }
-    nextUInt8() {
-        let result;
-        try {
-            result = this.data.getUint8(this.offset);
-            this.offset += 1;
-        }
-        catch (_a) {
-            throw log_1.default.error(errors_1.default.END_OF_BUFFER, 1);
-        }
-        return result;
-    }
-    nextInt8() {
-        let result;
-        try {
-            result = this.data.getInt8(this.offset);
-            this.offset += 1;
-        }
-        catch (_a) {
-            throw log_1.default.error(errors_1.default.END_OF_BUFFER, 1);
-        }
-        return result;
-    }
-    nextUInt16() {
-        let result;
-        try {
-            result = this.data.getUint16(this.offset, true);
-            this.offset += 2;
-        }
-        catch (_a) {
-            throw log_1.default.error(errors_1.default.END_OF_BUFFER, 2);
-        }
-        return result;
-    }
-    nextInt16() {
-        let result;
-        try {
-            result = this.data.getInt16(this.offset, true);
-            this.offset += 2;
-        }
-        catch (_a) {
-            throw log_1.default.error(errors_1.default.END_OF_BUFFER, 2);
-        }
-        return result;
-    }
-    nextUInt32() {
-        let result;
-        try {
-            result = this.data.getUint32(this.offset, true);
-            this.offset += 4;
-        }
-        catch (_a) {
-            throw log_1.default.error(errors_1.default.END_OF_BUFFER, 4);
-        }
-        return result;
-    }
-    nextInt32() {
-        let result;
-        try {
-            result = this.data.getInt32(this.offset, true);
-            this.offset += 4;
-        }
-        catch (_a) {
-            throw log_1.default.error(errors_1.default.END_OF_BUFFER, 4);
-        }
-        return result;
-    }
-    nextFloat() {
-        let result;
-        try {
-            result = this.data.getFloat32(this.offset, true);
-            this.offset += 4;
-        }
-        catch (_a) {
-            throw log_1.default.error(errors_1.default.END_OF_BUFFER, 4);
-        }
-        return result;
-    }
-    getFloat() {
-        if (utils.isGameGTA3()) {
-            const val = this.nextInt16();
-            return val / 16.0;
-        }
-        return this.nextFloat();
-    }
-    getString(length) {
-        try {
-            let s = '';
-            for (let i = 0; i < length; i++) {
-                const char = this.data.getUint8(this.offset + i);
-                if (char == 0)
-                    break;
-                s += String.fromCharCode(char);
-            }
-            this.offset += length;
-            return s;
-        }
-        catch (_a) {
-            throw log_1.default.error(errors_1.default.END_OF_BUFFER, length);
-        }
-    }
-    getArray() {
-        return {
-            offset: this.nextUInt16(),
-            varIndex: this.nextUInt16(),
-            size: this.nextUInt8(),
-            props: this.nextUInt8(),
-        };
-    }
-    getInstruction() {
-        const offset = this.offset;
-        const opcode = this.nextUInt16();
-        return {
-            opcode,
-            offset,
-            params: this.getInstructionParams(opcode),
-        };
-    }
-    getParamType() {
-        const dataType = this.nextUInt8();
-        return this.paramTypesHandlers[dataType]();
-    }
-    getInstructionParams(opcode) {
-        const params = [];
-        const definition = this.definitionMap.get(opcode & 0x7fff);
-        if (!definition || !definition.params) {
-            throw log_1.default.error(errors_1.default.NO_PARAM, definition, this.offset);
-        }
-        definition.params.forEach((opcodeParam) => {
-            while (true) {
-                const paramType = this.getParamType();
-                if (paramType === enums_1.eParamType.EOL) {
-                    if (opcodeParam.type !== exports.PARAM_ARGUMENTS) {
-                        throw log_1.default.error(errors_1.default.UNKNOWN_PARAM, paramType, this.offset);
-                    }
-                    return params;
-                }
-                params.push(this.getParam(paramType));
-                if (opcodeParam.type !== exports.PARAM_ARGUMENTS) {
-                    break;
-                }
-            }
-        });
-        return params;
-    }
-    getParam(paramType) {
-        return {
-            type: paramType,
-            value: this.paramValuesHandlers[paramType](),
-        };
-    }
-}
-exports["default"] = Parser;
-
-
-/***/ }),
-/* 38 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -6187,11 +5839,11 @@ exports.getDefinitions = exports.CommandAttributes = exports.PrimitiveType = voi
 const arguments_1 = __webpack_require__(2);
 const enums_1 = __webpack_require__(19);
 const file = __webpack_require__(22);
-const utils = __webpack_require__(28);
+const utils = __webpack_require__(30);
 const errors_1 = __webpack_require__(18);
 const log_1 = __webpack_require__(20);
 const browser_or_node_1 = __webpack_require__(5);
-const node_fetch_1 = __webpack_require__(39);
+const node_fetch_1 = __webpack_require__(37);
 var PrimitiveType;
 (function (PrimitiveType) {
     PrimitiveType["any"] = "any";
@@ -6267,7 +5919,7 @@ function getDefinitions() {
             return map;
         }
         catch (_a) {
-            throw log_1.default.error(errors_1.default.NO_OPCODE, definitionFile);
+            throw log_1.Log.error(errors_1.AppError.NO_OPCODE, definitionFile);
         }
     });
 }
@@ -6275,11 +5927,233 @@ exports.getDefinitions = getDefinitions;
 
 
 /***/ }),
-/* 39 */
-/***/ ((module) => {
+/* 37 */
+/***/ ((module, exports, __webpack_require__) => {
 
 "use strict";
-module.exports = undefined;
+
+
+// ref: https://github.com/tc39/proposal-global
+var getGlobal = function () {
+	// the only reliable means to get the global object is
+	// `Function('return this')()`
+	// However, this causes CSP violations in Chrome apps.
+	if (typeof self !== 'undefined') { return self; }
+	if (typeof window !== 'undefined') { return window; }
+	if (typeof __webpack_require__.g !== 'undefined') { return __webpack_require__.g; }
+	throw new Error('unable to locate global object');
+}
+
+var globalObject = getGlobal();
+
+module.exports = exports = globalObject.fetch;
+
+// Needed for TypeScript and Webpack.
+if (globalObject.fetch) {
+	exports["default"] = globalObject.fetch.bind(globalObject);
+}
+
+exports.Headers = globalObject.Headers;
+exports.Request = globalObject.Request;
+exports.Response = globalObject.Response;
+
+
+/***/ }),
+/* 38 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __exportStar = (this && this.__exportStar) || function(m, exports) {
+    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+__exportStar(__webpack_require__(33), exports);
+__exportStar(__webpack_require__(35), exports);
+__exportStar(__webpack_require__(39), exports);
+__exportStar(__webpack_require__(40), exports);
+__exportStar(__webpack_require__(34), exports);
+
+
+/***/ }),
+/* 39 */
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.findIfs = exports.getIfType = void 0;
+const graphUtils = __webpack_require__(35);
+const graph_1 = __webpack_require__(34);
+const enums_1 = __webpack_require__(19);
+const log_1 = __webpack_require__(20);
+const errors_1 = __webpack_require__(18);
+const cfg_1 = __webpack_require__(33);
+const instructions_1 = __webpack_require__(32);
+const graph_utils_1 = __webpack_require__(35);
+function getIfType(graph, ifHeader, followNode) {
+    const headerSuccessors = graph.getImmSuccessors(ifHeader);
+    return headerSuccessors.includes(followNode)
+        ? enums_1.eIfType.IF_THEN
+        : enums_1.eIfType.IF_THEN_ELSE;
+}
+exports.getIfType = getIfType;
+function findIfs(graph) {
+    const twoWayNodes = graph.nodes.filter((node) => {
+        if (node instanceof graph_1.Graph)
+            return false;
+        // const successors = graph.getImmSuccessors(node);
+        // return successors.length === 2;
+        return node.type === enums_1.eBasicBlockType.TWO_WAY;
+    });
+    if (twoWayNodes.length === 0) {
+        log_1.Log.debug('No 2-way nodes found. Stopping.');
+        return graph;
+    }
+    let res = graphUtils.from(graph);
+    const findFollowNode = (header) => {
+        const pdom = graphUtils.findIPDom(res);
+        const index = res.getNodeIndex(header);
+        if (pdom[index])
+            return pdom[index];
+        /*
+                once we reach this point we must have found a IF..THEN construct
+                and the flow graph has an exit node in its THEN clause
+    
+                if (cond) {
+                    exit
+                }
+    
+                the follow node must be determined as the target of the JF instruction
+    
+                IF..THEN..ELSE.. construct could not be there as
+                the compiler must put a JMP instruction between THEN and ELSE clauses
+                meaning the flow won't interrupt here
+    
+                it could be possible a follow node is not found
+                when IF is the last instruction of a script
+                but this is a malformed script and not covered by the decompiler yet
+    
+            */
+        const succ = res.getImmSuccessors(header);
+        return succ[0];
+    };
+    const replaceIf = (header, followNode) => {
+        var _a, _b, _c;
+        const ifHeaderSuccessors = res.getImmSuccessors(header);
+        const ifGraph = new graph_1.IfGraph();
+        ifGraph.followNode = followNode;
+        const followIndex = res.getNodeIndex(followNode);
+        const ifType = getIfType(res, header, followNode);
+        ifGraph.type = ifType;
+        ifGraph.ifNumber = getIfCondNumber(res, header);
+        ifGraph.print(`New IF graph`);
+        if (ifType === enums_1.eIfType.IF_THEN) {
+            const thenHeader = ifHeaderSuccessors.at(-1);
+            const thenIndex = res.getNodeIndex(thenHeader);
+            ifGraph.thenNode = new graph_1.Graph();
+            for (let i = thenIndex; i < followIndex; i++) {
+                ifGraph.thenNode.addNode(res.nodes[i]);
+            }
+            if (ifGraph.thenNode.nodes.length === 0) {
+                log_1.Log.warn(`IF..THEN construct without THEN clause`);
+            }
+        }
+        else {
+            const [elseHeader, thenHeader] = ifHeaderSuccessors;
+            ifGraph.thenNode = new graph_1.Graph();
+            ifGraph.elseNode = new graph_1.Graph();
+            const thenIndex = res.getNodeIndex(thenHeader);
+            const elseIndex = res.getNodeIndex(elseHeader);
+            for (let i = thenIndex; i < elseIndex; i++) {
+                ifGraph.thenNode.addNode(res.nodes[i]);
+            }
+            for (let i = elseIndex; i < followIndex; i++) {
+                ifGraph.elseNode.addNode(res.nodes[i]);
+            }
+            if (ifGraph.thenNode.nodes.length === 0) {
+                log_1.Log.warn(`IF..THEN construct without THEN clause`);
+            }
+            if (ifGraph.elseNode.nodes.length === 0) {
+                log_1.Log.warn(`IF..THEN construct without ELSE clause`);
+            }
+        }
+        ifGraph.addNode(header);
+        const reduced = new graph_1.Graph();
+        for (const node of res.nodes) {
+            if (!ifGraph.thenNode.hasNode(node) &&
+                !((_a = ifGraph.elseNode) === null || _a === void 0 ? void 0 : _a.hasNode(node)) &&
+                node !== header) {
+                reduced.addNode(node);
+            }
+            if (node == header) {
+                reduced.addNode(ifGraph);
+            }
+        }
+        reduced.addEdge(ifGraph, ifGraph.followNode);
+        for (const edge of graph.edges) {
+            if (ifGraph.thenNode.hasNode(edge.from) ||
+                ((_b = ifGraph.elseNode) === null || _b === void 0 ? void 0 : _b.hasNode(edge.from))) {
+                if (edge.from.type === enums_1.eBasicBlockType.UNSTRUCTURED) {
+                    reduced.addEdge(ifGraph, edge.to);
+                }
+                // if another edge originates from the loop, it is either BREAK or CONTINUE
+                // we don't need to add it to the new graph
+                continue;
+            }
+            if (!ifGraph.thenNode.hasEdge(edge.from, edge.to) &&
+                !((_c = ifGraph.elseNode) === null || _c === void 0 ? void 0 : _c.hasEdge(edge.from, edge.to)) &&
+                edge.from !== header) {
+                if (edge.to === header) {
+                    edge.to = ifGraph;
+                }
+                reduced.addEdge(edge.from, edge.to);
+            }
+        }
+        return reduced;
+    };
+    const head = twoWayNodes.at(-1);
+    const tail = findFollowNode(head);
+    if (!tail) {
+        throw log_1.Log.error(errors_1.AppError.NODE_NOT_FOUND);
+    }
+    // res.print("Structure graph before replacing IF node");
+    res = replaceIf(head, tail);
+    res.print(`New graph after replacing IF node (${twoWayNodes.length - 1} left)`);
+    // recursively structure until no more 2-way nodes are found
+    return findIfs(res);
+}
+exports.findIfs = findIfs;
+function getIfCondNumber(res, header) {
+    // const pred = res.getImmPredecessors(header);
+    // if (
+    //   pred.length === 1 &&
+    //   (pred[0] as IBasicBlock).type === eBasicBlockType.FALL
+    // ) {
+    //   const { instructions } = pred[0] as IBasicBlock;
+    //   if (instructions.length === 1 && instructions[0].opcode === OP_IF) {
+    //     return getNumericParam(instructions[0]);
+    //   }
+    // }
+    const { instructions } = header;
+    if (instructions.length > 1 && instructions[0].opcode === cfg_1.OP_IF) {
+        return (0, instructions_1.getNumericParam)(instructions[0]);
+    }
+    log_1.Log.warn(errors_1.AppError.NO_IF_PREDICATE, (0, graph_utils_1.getOffset)(header));
+    return 0;
+}
+
 
 /***/ }),
 /* 40 */
@@ -6288,13 +6162,194 @@ module.exports = undefined;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const SimplePrinter_1 = __webpack_require__(41);
-const utils = __webpack_require__(28);
+exports.findLoops = exports.findFollowNode = exports.getLoopType = void 0;
+const graphUtils = __webpack_require__(35);
+const graph_1 = __webpack_require__(34);
+const enums_1 = __webpack_require__(19);
+const conditions_utils_1 = __webpack_require__(39);
 const log_1 = __webpack_require__(20);
-const cfg_1 = __webpack_require__(30);
+const graph_utils_1 = __webpack_require__(35);
+function getLoopType(graph, loop, loopHeader, latchingNode) {
+    const headerSuccessors = graph.getImmSuccessors(loopHeader);
+    const latchingNodeSuccessors = graph.getImmSuccessors(latchingNode);
+    if (latchingNodeSuccessors.length === 2) {
+        return enums_1.eLoopType.POST_TESTED;
+    }
+    if (headerSuccessors.length === 2) {
+        if (!loop.hasNode(headerSuccessors[0]) ||
+            !loop.hasNode(headerSuccessors[1])) {
+            return enums_1.eLoopType.PRE_TESTED;
+        }
+    }
+    return enums_1.eLoopType.ENDLESS;
+}
+exports.getLoopType = getLoopType;
+function findFollowNode(graph, loop, loopHeader, latchingNode) {
+    if (loop.type === enums_1.eLoopType.PRE_TESTED) {
+        const headerSuccessors = graph.getImmSuccessors(loopHeader);
+        if (loop.hasNode(headerSuccessors[0])) {
+            return headerSuccessors[1];
+        }
+        return headerSuccessors[0];
+    }
+    if (loop.type === enums_1.eLoopType.POST_TESTED) {
+        const latchingNodeSuccessors = graph.getImmSuccessors(latchingNode);
+        if (loop.hasNode(latchingNodeSuccessors[0])) {
+            return latchingNodeSuccessors[1];
+        }
+        return latchingNodeSuccessors[0];
+    }
+    if (loop.type === enums_1.eLoopType.ENDLESS) {
+        const loopNodes = loop.nodes;
+        let minIndex = graph.nodes.length;
+        const headerIndex = graph.getNodeIndex(loopHeader);
+        for (const node of loopNodes) {
+            // find a closest node that is not in the loop
+            graph
+                .getImmSuccessors(node)
+                .filter((s) => !loop.hasNode(s))
+                .forEach((s) => {
+                const index = graph.getNodeIndex(s);
+                if (index > headerIndex) {
+                    minIndex = Math.min(minIndex, index);
+                }
+            });
+        }
+        if (minIndex !== graph.nodes.length) {
+            return graph.nodes[minIndex];
+        }
+    }
+}
+exports.findFollowNode = findFollowNode;
+function findLoops(graph) {
+    graph.print('Finding loops in this graph:');
+    const intervals = graphUtils.split(graph);
+    log_1.Log.debug(`Found ${intervals.filter((i) => i.hasLoop).length} loop(s) in ${intervals.length} interval(s).`);
+    // for (let i = 0; i < intervals.length; i++) {
+    //   if (intervals[i].hasLoop) {
+    //     intervals[i].print(`LOOP INTERVAL ${i}:`);
+    //   }
+    // }
+    const index = intervals.findIndex((i) => i.hasLoop);
+    if (index === -1) {
+        // todo: should we run ifStructure there?
+        return graph;
+    }
+    const reducible = intervals[index];
+    reducible.print(`\nPicked interval ${index} for structuring.`);
+    // there could be multiple latching nodes (Continue statements) referencing the loop root
+    // therefore picking up the last one
+    const lastNode = reducible.latchingNodes.at(-1);
+    const lastNodeIndex = reducible.getNodeIndex(lastNode);
+    // populating loop with inner nodes and
+    // replacing nodes in the original graph with a single node
+    // producing a new graph for the next iteration
+    const loop = new graph_1.LoopGraph();
+    loop.nodes = reducible.nodes.filter((n, i) => i <= lastNodeIndex);
+    loop.edges = reducible.edges.filter((e) => loop.hasNode(e.from) //&& loop.hasNode(e.to)
+    );
+    loop.type = getLoopType(graph, loop, reducible.root, lastNode);
+    loop.followNode = findFollowNode(graph, loop, reducible.root, lastNode);
+    // now it is time to find exit nodes and identify them as Break, Continue or Unstructured jumps
+    // ONE_WAY -> exit are BREAKs;
+    // ONE_WAY -> last node or header are CONTINUEs;
+    // TWO_WAY exit nodes:
+    // - loop is POST_TESTED && node is last: jf->header; make it the loop condition and delete from the loop
+    // - loop is PRE_TESTED && node is first: jf->exit; make it the loop condition and delete from the loop
+    // - else: abnormal exit, should not be structured as if block; change to UNSTRUCTURED
+    if (loop.type === enums_1.eLoopType.PRE_TESTED) {
+        loop.condition = loop.root;
+    }
+    if (loop.type === enums_1.eLoopType.POST_TESTED) {
+        loop.condition = lastNode;
+    }
+    for (const node of loop.nodes) {
+        if (node === loop.root || node === lastNode) {
+            continue;
+        }
+        if (node.type !== enums_1.eBasicBlockType.ONE_WAY) {
+            continue;
+        }
+        const successors = graph.getImmSuccessors(node);
+        const next = successors[0];
+        if (next === loop.followNode) {
+            log_1.Log.debug(`Found 'BREAK' at ${(0, graph_utils_1.getOffset)(node)}`);
+            node.type = enums_1.eBasicBlockType.BREAK;
+        }
+        else if (next === loop.root || next === lastNode) {
+            if (next === loop.root && loop.type === enums_1.eLoopType.POST_TESTED) {
+                log_1.Log.debug(`Found 'JUMP' from ${(0, graph_utils_1.getOffset)(node)} to ${(0, graph_utils_1.getOffset)(next)}`);
+                node.type = enums_1.eBasicBlockType.UNSTRUCTURED;
+            }
+            else {
+                log_1.Log.debug(`Found 'CONTINUE' at ${(0, graph_utils_1.getOffset)(node)}`);
+                node.type = enums_1.eBasicBlockType.CONTINUE;
+            }
+        }
+        else {
+            log_1.Log.debug(`Found 'JUMP' from ${(0, graph_utils_1.getOffset)(node)} to ${(0, graph_utils_1.getOffset)(next)}`);
+            node.type = enums_1.eBasicBlockType.UNSTRUCTURED;
+        }
+    }
+    // loop.edges = loop.edges.filter(({ to }) => loop.hasNode(to));
+    loop.print('Creating a loop node');
+    let reduced = new graph_1.Graph();
+    for (const node of graph.nodes) {
+        if (!loop.hasNode(node)) {
+            reduced.addNode(node);
+        }
+        if (node === loop.root) {
+            reduced.addNode(loop);
+        }
+    }
+    // follow node could be undefined if the loop is the last node in the graph
+    if (loop.followNode) {
+        reduced.addEdge(loop, loop.followNode);
+    }
+    for (const edge of graph.edges) {
+        if (loop.hasNode(edge.from) && !loop.hasNode(edge.to)) {
+            if (edge.from.type === enums_1.eBasicBlockType.UNSTRUCTURED) {
+                // when there is an unstructured jump from the loop we must add it,
+                // otherwise the nodes that the jump is pointing to could become unreachable
+                // todo: rethink RPO algo to iterate over all nodes and create multiple disjoint graphs
+                reduced.addEdge(loop, edge.to);
+            }
+            // if another edge originates from the loop, it is a BREAK
+            // we don't need to add it to the new graph
+            continue;
+        }
+        if (!loop.hasEdge(edge.from, edge.to)) {
+            if (edge.to === loop.root) {
+                edge.to = loop;
+            }
+            reduced.addEdge(edge.from, edge.to);
+        }
+    }
+    // sort nodes in the new graph in topological order
+    reduced = graphUtils.reversePostOrder(reduced);
+    reduced.print('Replacing loop with a single node. New graph:');
+    const loopBody = (0, conditions_utils_1.findIfs)(loop);
+    loop.nodes = loopBody.nodes;
+    return findLoops(reduced);
+}
+exports.findLoops = findLoops;
+
+
+/***/ }),
+/* 41 */
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ExpressionPrinter = void 0;
+const SimplePrinter_1 = __webpack_require__(42);
+const utils = __webpack_require__(30);
+const log_1 = __webpack_require__(20);
+const cfg_1 = __webpack_require__(33);
 const arguments_1 = __webpack_require__(2);
 const enums_1 = __webpack_require__(19);
-class ExpressionPrinter extends SimplePrinter_1.default {
+class ExpressionPrinter extends SimplePrinter_1.SimplePrinter {
     constructor(definitionMap) {
         super(definitionMap);
         this.indent = 0;
@@ -6303,12 +6358,12 @@ class ExpressionPrinter extends SimplePrinter_1.default {
         return utils.strPadLeft('', this.indent * 4, ' ');
     }
     printLine(line) {
-        log_1.default.msg(this.indentation + line);
+        log_1.Log.msg(this.indentation + line);
     }
     print(bb, printComments = false) {
         var _a;
         let output = '';
-        const append = (format, ...args) => (output += log_1.default.format(format, ...args));
+        const append = (format, ...args) => (output += log_1.Log.format(format, ...args));
         if (printComments && bb.instructions.length) {
             const offset = utils.strPadLeft((_a = bb.instructions[0]) === null || _a === void 0 ? void 0 : _a.offset.toString(), 6);
             // append(`// %s:%s\n`, offset, eBasicBlockType[bb.type]);
@@ -6352,7 +6407,7 @@ class ExpressionPrinter extends SimplePrinter_1.default {
         const result = bb.instructions
             .map(({ opcode, params }) => {
             let output = '';
-            const append = (format, ...args) => (output += log_1.default.format(format, ...args));
+            const append = (format, ...args) => (output += log_1.Log.format(format, ...args));
             const id = opcode;
             if (id > 0x7fff) {
                 append('NOT ');
@@ -6380,17 +6435,18 @@ class ExpressionPrinter extends SimplePrinter_1.default {
         return result;
     }
 }
-exports["default"] = ExpressionPrinter;
+exports.ExpressionPrinter = ExpressionPrinter;
 
 
 /***/ }),
-/* 41 */
+/* 42 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const utils = __webpack_require__(28);
+exports.SimplePrinter = void 0;
+const utils = __webpack_require__(30);
 const log_1 = __webpack_require__(20);
 const enums_1 = __webpack_require__(19);
 class SimplePrinter {
@@ -6398,11 +6454,11 @@ class SimplePrinter {
         this.definitionMap = definitionMap;
     }
     printLine(line) {
-        log_1.default.msg(line);
+        log_1.Log.msg(line);
     }
     print(bb, printComments = false) {
         let output = '';
-        const append = (format, ...args) => (output += log_1.default.format(format, ...args));
+        const append = (format, ...args) => (output += log_1.Log.format(format, ...args));
         if (printComments) {
             append(`// BB type: %s\n`, enums_1.eBasicBlockType[bb.type]);
         }
@@ -6434,7 +6490,7 @@ class SimplePrinter {
         this.printLine(output);
     }
 }
-exports["default"] = SimplePrinter;
+exports.SimplePrinter = SimplePrinter;
 
 
 /***/ })
@@ -6463,6 +6519,19 @@ exports["default"] = SimplePrinter;
 /******/ 		// Return the exports of the module
 /******/ 		return module.exports;
 /******/ 	}
+/******/ 	
+/************************************************************************/
+/******/ 	/* webpack/runtime/global */
+/******/ 	(() => {
+/******/ 		__webpack_require__.g = (function() {
+/******/ 			if (typeof globalThis === 'object') return globalThis;
+/******/ 			try {
+/******/ 				return this || new Function('return this')();
+/******/ 			} catch (e) {
+/******/ 				if (typeof window === 'object') return window;
+/******/ 			}
+/******/ 		})();
+/******/ 	})();
 /******/ 	
 /************************************************************************/
 var __webpack_exports__ = {};
