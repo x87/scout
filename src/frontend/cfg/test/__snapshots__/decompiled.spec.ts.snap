@@ -1516,6 +1516,7 @@ exports[`sample input 4 should produce a decompiled source 1`] = `
                 PRINT_NOW MEA1_3 5000 1
                 SET_VAR_INT 5972 1
             end
+            GOTO -3664
         else
             SET_VAR_INT 5972 0
             SET_VAR_INT 5976 0
@@ -1577,6 +1578,7 @@ exports[`sample input 4 should produce a decompiled source 1`] = `
             IS_CAR_STOPPED_IN_AREA_3D 5932 1135.75 55.5 -1 1149.75 46.25 20 40
         then
             SET_VAR_INT 5968 1
+            GOTO -4061
         else
             SET_VAR_INT 5968 0
         end
@@ -1620,6 +1622,7 @@ exports[`sample input 4 should produce a decompiled source 1`] = `
             IS_CAR_CRUSHED 5932
         then
             SET_VAR_INT 5964 1
+            GOTO -4382
             PRINT_WITH_NUMBER_BIG M_PASS 1000 5000 1
             REGISTER_MISSION_PASSED MEA1
             PLAYER_MADE_PROGRESS 1

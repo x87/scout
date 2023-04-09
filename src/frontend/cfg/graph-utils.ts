@@ -279,8 +279,6 @@ export function nodeType<T>(node: GraphNode<T>): string {
       return 'CONTINUE';
     case 8:
       return 'UNSTRUCTURED';
-    case 9:
-      return 'LOOP_COND';
     default:
       return `UNKNOWN`;
   }

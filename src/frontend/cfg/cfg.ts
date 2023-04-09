@@ -116,6 +116,9 @@ export class CFG {
             entries.includes(targetOffsetAbs) &&
             bb.start !== targetOffsetAbs
           ) {
+            // one-way jump into another function is always an unstructured jump
+            // two-way jump into another function could however be legit if the IF statement is the last block of the function that naturally falls into the next function
+            // todo: unstructured jf to another function
             if (bb.type === eBasicBlockType.ONE_WAY) {
               bb.type = eBasicBlockType.UNSTRUCTURED; // jump into another function
               break;

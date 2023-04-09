@@ -59,8 +59,13 @@ export function ifNestedInLoop(): Graph<IBasicBlock> {
   const [n1, n2, n3, n4, n5, n6, n7] = nodes(7);
 
   graph.addNode(n1, n2, n3, n4, n5, n6, n7);
+  n1.type = eBasicBlockType.FALL;
   n2.type = eBasicBlockType.TWO_WAY;
+  n3.type = eBasicBlockType.FALL;
   n4.type = eBasicBlockType.TWO_WAY;
+  n5.type = eBasicBlockType.FALL;
+  n6.type = eBasicBlockType.ONE_WAY;
+  n5.type = eBasicBlockType.RETURN;
 
   graph.addEdge(n2, n7);
   graph.addEdge(n6, n2);
