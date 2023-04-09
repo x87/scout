@@ -5,6 +5,8 @@ import loop3 from 'samples/loop3';
 import loop4 from 'samples/loop4';
 import wrong1 from 'samples/wrong';
 import yard2 from 'samples/yard2';
+import cat1 from 'samples/cat1';
+import loop5 from 'samples/loop5';
 import { bufferFromHex } from 'utils/file';
 import { ExpressionPrinter } from 'utils/printer/ExpressionPrinter';
 import { CFG } from '../cfg';
@@ -24,9 +26,22 @@ describe(`wrong 1`, () => {
   });
 });
 
-describe(`yard 2`, () => {
+describe(`yard2`, () => {
   it(`duplicates M_FAIL block`, async () => {
     expect(await decompile(yard2)).toMatchSnapshot();
+  });
+});
+
+describe(`cat1`, () => {
+  it(`does not find the (end credits) while loop because of GOTO -7180 in the middle of the loop`, async () => {
+    expect(await decompile(cat1)).toMatchSnapshot();
+  });
+});
+
+
+describe(`loop5`, () => {
+  it(`does not detect loop correctly as there is a jump in the middle of the loop`, async () => {
+    expect(await decompile(loop5)).toMatchSnapshot();
   });
 });
 

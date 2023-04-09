@@ -81,10 +81,11 @@ export function findIfs<Node>(graph: Graph<Node>): Graph<GraphNode<Node>> {
       const thenIndex = res.getNodeIndex(thenHeader);
 
       ifGraph.thenNode = new Graph<Node>();
-
       for (let i = thenIndex; i < followIndex; i++) {
-        const node = res.nodes[i];
-        ifGraph.thenNode.nodes.push(node);
+        ifGraph.thenNode.addNode(res.nodes[i]);
+      }
+      if (ifGraph.thenNode.nodes.length === 0) {
+        Log.warn(`IF..THEN construct without THEN clause` as AppError);
       }
     } else {
       const [elseHeader, thenHeader] = ifHeaderSuccessors;
@@ -94,12 +95,16 @@ export function findIfs<Node>(graph: Graph<Node>): Graph<GraphNode<Node>> {
       const elseIndex = res.getNodeIndex(elseHeader);
 
       for (let i = thenIndex; i < elseIndex; i++) {
-        const node = res.nodes[i];
-        ifGraph.thenNode.nodes.push(node);
+        ifGraph.thenNode.addNode(res.nodes[i]);
       }
       for (let i = elseIndex; i < followIndex; i++) {
-        const node = res.nodes[i];
-        ifGraph.elseNode.nodes.push(node);
+        ifGraph.elseNode.addNode(res.nodes[i]);
+      }
+      if (ifGraph.thenNode.nodes.length === 0) {
+        Log.warn(`IF..THEN construct without THEN clause` as AppError);
+      }
+      if (ifGraph.elseNode.nodes.length === 0) {
+        Log.warn(`IF..THEN construct without ELSE clause` as AppError);
       }
     }
     ifGraph.addNode(header);

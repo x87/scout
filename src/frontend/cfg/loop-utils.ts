@@ -148,8 +148,13 @@ export function findLoops<Node>(graph: Graph<Node>): Graph<Node> {
       Log.debug(`Found 'BREAK' at ${getOffset(node)}`);
       (node as IBasicBlock).type = eBasicBlockType.BREAK;
     } else if (next === loop.root || next === lastNode) {
-      Log.debug(`Found 'CONTINUE' at ${getOffset(node)}`);
-      (node as IBasicBlock).type = eBasicBlockType.CONTINUE;
+      if (next === loop.root && loop.type === eLoopType.POST_TESTED) {
+        Log.debug(`Found 'JUMP' from ${getOffset(node)} to ${getOffset(next)}`);
+        (node as IBasicBlock).type = eBasicBlockType.UNSTRUCTURED;
+      } else {
+        Log.debug(`Found 'CONTINUE' at ${getOffset(node)}`);
+        (node as IBasicBlock).type = eBasicBlockType.CONTINUE;
+      }
     } else {
       Log.debug(`Found 'JUMP' from ${getOffset(node)} to ${getOffset(next)}`);
       (node as IBasicBlock).type = eBasicBlockType.UNSTRUCTURED;
