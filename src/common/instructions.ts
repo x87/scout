@@ -1,6 +1,6 @@
 import { eParamType } from './enums';
-import Log from 'utils/log';
-import AppError from './errors';
+import { Log } from 'utils/log';
+import { AppError } from './errors';
 
 export interface IInstructionDefinition {
   name: string;

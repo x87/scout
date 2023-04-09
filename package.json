@@ -1,6 +1,6 @@
 {
   "name": "scout",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Scout Decompiler",
   "main": "scout.js",
   "repository": {
@@ -37,6 +37,6 @@
     "commander": "10.0.0",
     "eol": "0.9.1",
     "format": "^0.2.2",
-    "node-fetch": "^3.3.1"
+    "node-fetch": "2.6.9"
   }
 }

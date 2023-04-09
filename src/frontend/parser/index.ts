@@ -1,8 +1,8 @@
 import * as utils from 'utils';
-import Log from 'utils/log';
-import AppError from 'common/errors';
-import ScriptFile from 'frontend/script/ScriptFile';
-import ScriptMultifile from 'frontend/script/ScriptMultifile';
+import { Log } from 'utils/log';
+import { AppError } from 'common/errors';
+import {ScriptFile} from 'frontend/script/ScriptFile';
+import {ScriptMultifile} from 'frontend/script/ScriptMultifile';
 
 import { eParamType } from 'common/enums';
 import { DefinitionMap, IScript } from 'common/interfaces';
@@ -13,14 +13,14 @@ import {
   IInstructionParamArray,
   InstructionMap,
 } from 'common/instructions';
-import { OP_NAME } from 'frontend/cfg';
+import { OP_NAME } from 'frontend/cfg/cfg';
 import { PrimitiveType } from 'definitions';
 
 export const PARAM_ANY = PrimitiveType.any;
 export const PARAM_ARGUMENTS = PrimitiveType.arguments;
 export const PARAM_LABEL = PrimitiveType.label;
 
-export default class Parser {
+export class Parser {
   private data: DataView;
   private offset: number;
   private readonly definitionMap: DefinitionMap;

@@ -1,6 +1,6 @@
 import { eScriptType } from 'common/enums';
 
-export default class ScriptFile {
+export class ScriptFile {
   public name: string;
   constructor(public buffer: DataView, public type: eScriptType) {}
 

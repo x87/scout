@@ -3,9 +3,9 @@ import * as path from 'path';
 import { isNode } from 'browser-or-node';
 import { Command } from 'commander';
 
-import AppError from './errors';
+import { AppError } from './errors';
 import { eGame } from './enums';
-import Log from 'utils/log';
+import {Log} from 'utils/log';
 import { emptyBuffer, readBinaryStream } from 'utils/file';
 
 const program = new Command();
@@ -26,29 +26,29 @@ let GLOBAL_OPTIONS = {
 };
 
 if (isNode) {
-  program
-    .usage('<inputfile> [options]')
-    .version(require('../../package.json').version, '-v, --version')
-    .option('-d, --debug', 'enable the debug mode')
-    .option('-p, --print', 'print the assembly')
-    .option('-g, --game <game>', 'target game: gta3, vc, sa', (arg) => {
-      if (!gameMap.hasOwnProperty(arg)) {
-        throw Log.error(AppError.UNKNOWN_GAME, arg);
-      }
-      return gameMap[arg];
-    })
-    .parse(process.argv);
-
-  const cli = program.opts();
-
-  updateArguments({
-    game: cli.game,
-    inputFile: cli.inputFile,
-    printAssembly: cli.print,
-    debugMode: cli.debug,
-  });
-
   if (process.env.NODE_ENV !== 'test') {
+    program
+      .usage('<inputfile> [options]')
+      .version(require('../../package.json').version, '-v, --version')
+      .option('-d, --debug', 'enable the debug mode')
+      .option('-p, --print', 'print the assembly')
+      .option('-g, --game <game>', 'target game: gta3, vc, sa', (arg) => {
+        if (!gameMap.hasOwnProperty(arg)) {
+          throw Log.error(AppError.UNKNOWN_GAME, arg);
+        }
+        return gameMap[arg];
+      })
+      .parse(process.argv);
+
+    const cli = program.opts();
+
+    updateArguments({
+      game: cli.game,
+      inputFile: cli.inputFile,
+      printAssembly: cli.print,
+      debugMode: cli.debug,
+    });
+
     let stream: fs.ReadStream;
     if (process.stdin instanceof fs.ReadStream && !process.stdin.isTTY) {
       stream = process.stdin;

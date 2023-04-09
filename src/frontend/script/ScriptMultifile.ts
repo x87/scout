@@ -1,8 +1,8 @@
 import { eScriptType } from 'common/enums';
-import ScriptFile from './ScriptFile';
-import MultifileMeta from './MultifileMeta';
+import { ScriptFile } from './ScriptFile';
+import { MultifileMeta } from './MultifileMeta';
 
-export default class ScriptMultifile extends ScriptFile {
+export class ScriptMultifile extends ScriptFile {
   readonly scripts: ScriptFile[];
   meta: MultifileMeta;
 

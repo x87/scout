@@ -1,10 +1,10 @@
 import * as utils from 'utils';
-import {GLOBAL_OPTIONS} from 'common/arguments';
-import AppError from 'common/errors';
-import Log from 'utils/log';
+import { GLOBAL_OPTIONS } from 'common/arguments';
+import { AppError } from 'common/errors';
+import { Log } from 'utils/log';
 import { eGame, eScriptFileSegments } from 'common/enums';
 
-interface IMultifileMetadata {
+interface IMultifileMeta {
   modelIds: string[];
   mainSize: number;
   largestMission: number;
@@ -51,7 +51,7 @@ const MultifileHeaderMap: IMultifileHeader = {
   },
 };
 
-export default class MultifileMetadata implements IMultifileMetadata {
+export class MultifileMeta implements IMultifileMeta {
   readonly size: number;
   offset: number;
 

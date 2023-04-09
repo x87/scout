@@ -1,9 +1,9 @@
-import AppError from 'common/errors';
+import { AppError } from 'common/errors';
 import { vsprintf } from 'format';
 import { isBrowser } from 'browser-or-node';
 import { GLOBAL_OPTIONS } from 'common/arguments';
 
-export default class {
+export class Log {
   static error(error: AppError, ...args: any[]): Error {
     return new Error(vsprintf(error, ...args));
   }

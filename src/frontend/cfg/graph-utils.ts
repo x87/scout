@@ -1,5 +1,8 @@
+import { IBasicBlock } from 'common/interfaces';
 import * as utils from 'utils';
-import { Graph, GraphNode } from './graph';
+import { opcodeToHex } from 'utils';
+import { Log } from 'utils/log';
+import { Graph, GraphNode, IfGraph, LoopGraph } from './graph';
 
 export function split<Node>(graph: Graph<Node>): Array<Graph<Node>> {
   if (graph.nodes.length < 1) {
@@ -227,4 +230,56 @@ export function transpose<Node>(graph: Graph<Node>): Graph<Node> {
   traverse(graph.root);
   // res.nodes = res.nodes.reverse();
   return res;
+}
+
+export function getOffset<T>(node: GraphNode<T>) {
+  if (node instanceof Graph) {
+    if (node.nodes.length) {
+      return getOffset(node.nodes[0]);
+    }
+    return -1;
+  }
+  return (node as IBasicBlock).instructions[0]?.offset ?? -1;
+}
+
+export function printNode<T>(node: GraphNode<T>, index: number) {
+  if (node instanceof Graph) {
+    Log.debug(`${index}: [${getOffset(node)}] ${nodeType(node)}`);
+  } else {
+    const type = nodeType(node);
+    const { instructions } = node as IBasicBlock;
+    const { offset, opcode } = instructions[0] ?? { offset: -1, opcode: -1 };
+    Log.debug(
+      `${index}: [${offset}] ${type}. ${opcodeToHex(opcode)}...${opcodeToHex(
+        instructions.at(-1)?.opcode ?? -1
+      )}`
+    );
+  }
+}
+
+export function nodeType<T>(node: GraphNode<T>): string {
+  if (node instanceof LoopGraph) return 'LOOP';
+  if (node instanceof IfGraph) return 'IF';
+  switch ((node as IBasicBlock).type) {
+    case 0:
+      return 'UNDEFINED';
+    case 1:
+      return 'RETURN';
+    case 2:
+      return 'ONE_WAY';
+    case 3:
+      return 'TWO_WAY';
+    case 4:
+      return 'FALL';
+    case 5:
+      return 'N_WAY';
+    case 6:
+      return 'BREAK';
+    case 7:
+      return 'CONTINUE';
+    case 8:
+      return 'UNSTRUCTURED';
+    default:
+      return `UNKNOWN`;
+  }
 }

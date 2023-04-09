@@ -1,4 +1,4 @@
-enum AppError {
+export enum AppError {
   INVALID_INPUT_FILE = 'Can not read from input file, file is either broken or its format is not supported',
   EMPTY_SCM = 'SCM file can not be empty',
   NO_OPCODE = 'Can not read opcode definitions from <%s>, disassembling is impossible',
@@ -17,4 +17,3 @@ enum AppError {
   NODE_NOT_FOUND = 'Internal error: node not found',
   NO_IF_PREDICATE = 'No IF instruction found for the condition at %s',
 }
-export default AppError;

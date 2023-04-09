@@ -1,11 +1,11 @@
 import * as utils from '../index';
-import Log from '../log';
+import {Log} from '../log';
 
 import { DefinitionMap, IBasicBlock } from 'common/interfaces';
 import { eBasicBlockType } from 'common/enums';
 import { IInstructionParamArray } from 'common/instructions';
 
-export default class SimplePrinter {
+export class SimplePrinter {
   protected definitionMap: DefinitionMap;
 
   constructor(definitionMap: DefinitionMap) {

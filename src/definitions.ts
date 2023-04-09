@@ -3,8 +3,8 @@ import { eGame } from 'common/enums';
 import { DefinitionMap } from 'common/interfaces';
 import * as file from './utils/file';
 import * as utils from './utils';
-import AppError from './common/errors';
-import Log from './utils/log';
+import { AppError } from './common/errors';
+import { Log } from './utils/log';
 import { isBrowser } from 'browser-or-node';
 import nodeFetch from 'node-fetch';
 

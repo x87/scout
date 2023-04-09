@@ -9,7 +9,7 @@ import { IBasicBlock } from 'common/interfaces';
 describe('Loop utils', () => {
   it('structure shall collapse nodes of the given graph into a single LoopGraph node', () => {
     const graph = graphUtils.reversePostOrder(complexGraph());
-    const reduced = loopUtils.structure(graph);
+    const reduced = loopUtils.findLoops(graph);
     const loop1 = reduced.nodes[5] as LoopGraph<GraphNode<IBasicBlock>>;
     expect(loop1 instanceof LoopGraph).toBeTrue();
     const loop2 = loop1.nodes[2] as LoopGraph<GraphNode<IBasicBlock>>;
@@ -18,7 +18,7 @@ describe('Loop utils', () => {
 
   it('getLoopType shall determine loop type based on input parameters', () => {
     const graph = graphUtils.reversePostOrder(complexGraph());
-    const reduced = loopUtils.structure(graph);
+    const reduced = loopUtils.findLoops(graph);
     const loop1 = reduced.nodes[5] as LoopGraph<GraphNode<IBasicBlock>>;
     const loop2 = loop1.nodes[2] as LoopGraph<GraphNode<IBasicBlock>>;
     const loopType1 = loopUtils.getLoopType(
@@ -39,7 +39,7 @@ describe('Loop utils', () => {
 
   it('findFollowNode shall find a node after the given loop if there is one', () => {
     const graph = graphUtils.reversePostOrder(complexGraph());
-    const reduced = loopUtils.structure(graph);
+    const reduced = loopUtils.findLoops(graph);
     const loop1 = reduced.nodes[5] as LoopGraph<GraphNode<IBasicBlock>>;
     const loop2 = loop1.nodes[2] as LoopGraph<GraphNode<IBasicBlock>>;
     expect(loop1.followNode).toEqual(graph.nodes[10]);
@@ -49,7 +49,7 @@ describe('Loop utils', () => {
   it('should properly identify a conditional branch inside a loop', () => {
     const graph = graphUtils.reversePostOrder(ifNestedInLoop());
 
-    const reduced = loopUtils.structure(graph);
+    const reduced = loopUtils.findLoops(graph);
     expect(reduced.nodes.length).toBe(3);
 
     const loop = reduced.nodes[1] as LoopGraph<GraphNode<IBasicBlock>>;
