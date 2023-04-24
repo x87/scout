@@ -118,7 +118,12 @@ function main(inputFile) {
         const parser = new parser_1.Parser(definitionMap);
         const scripts = yield parser.parse(scriptFile);
         const printer = new ExpressionPrinter_1.ExpressionPrinter(definitionMap);
-        scripts.forEach((script) => {
+        scripts
+            .filter((script) => {
+            return (!arguments_1.GLOBAL_OPTIONS.only ||
+                script.name.toUpperCase() === arguments_1.GLOBAL_OPTIONS.only);
+        })
+            .forEach((script) => {
             const cfg = new cfg_1.CFG();
             const functions = cfg.getCallGraphs(script, scripts).sort((a, b) => {
                 return (0, cfg_1.getOffset)(a) - (0, cfg_1.getOffset)(b);
@@ -159,6 +164,7 @@ let GLOBAL_OPTIONS = {
     game: enums_1.eGame.GTA3,
     printAssembly: false,
     debugMode: false,
+    only: ''
 };
 exports.GLOBAL_OPTIONS = GLOBAL_OPTIONS;
 if (browser_or_node_1.isNode) {
@@ -174,6 +180,7 @@ if (browser_or_node_1.isNode) {
             }
             return gameMap[arg];
         })
+            .option('-o, --only <only>', 'only decompile a script with the given name')
             .parse(process.argv);
         const cli = program.opts();
         updateArguments({
@@ -181,6 +188,7 @@ if (browser_or_node_1.isNode) {
             inputFile: cli.inputFile,
             printAssembly: cli.print,
             debugMode: cli.debug,
+            only: cli.only,
         });
         let stream;
         if (process.stdin instanceof fs.ReadStream && !process.stdin.isTTY) {
@@ -216,6 +224,9 @@ function updateArguments(args) {
     }
     if (args.debugMode) {
         GLOBAL_OPTIONS.debugMode = args.debugMode;
+    }
+    if (args.only) {
+        GLOBAL_OPTIONS.only = args.only.toUpperCase();
     }
 }
 exports.updateArguments = updateArguments;
@@ -4497,7 +4508,7 @@ exports.bufferFromHex = bufferFromHex;
 /***/ ((module) => {
 
 "use strict";
-module.exports = JSON.parse('{"name":"scout","version":"0.5.1","description":"Scout Decompiler","main":"scout.js","repository":{"type":"git","url":"https://github.com/x87/scout.git"},"scripts":{"lint":"eslint ./src","build":"webpack --config webpack.node.config.js","build-web":"webpack --config webpack.web.config.js","dev":"npm run build -- --watch","test":"jest"},"keywords":[],"author":"Seemann","license":"MIT","devDependencies":{"@types/jest":"29.4.0","@types/node":"18.14.6","@typescript-eslint/eslint-plugin":"^5.54.0","@typescript-eslint/parser":"^5.54.0","eslint":"^8.35.0","jest":"29.4.3","jest-extended":"3.2.4","ts-jest":"29.0.5","ts-loader":"9.4.2","ts-node":"10.9.1","typescript":"4.9.5","webpack":"^5.76.2","webpack-cli":"5.0.1"},"dependencies":{"browser-or-node":"^2.1.1","commander":"10.0.0","eol":"0.9.1","format":"^0.2.2","node-fetch":"2.6.9"}}');
+module.exports = JSON.parse('{"name":"scout","version":"0.5.2","description":"Scout Decompiler","main":"scout.js","repository":{"type":"git","url":"https://github.com/x87/scout.git"},"scripts":{"lint":"eslint ./src","build":"webpack --config webpack.node.config.js","build-web":"webpack --config webpack.web.config.js","dev":"npm run build -- --watch","test":"jest"},"keywords":[],"author":"Seemann","license":"MIT","devDependencies":{"@types/jest":"29.4.0","@types/node":"18.14.6","@typescript-eslint/eslint-plugin":"^5.54.0","@typescript-eslint/parser":"^5.54.0","eslint":"^8.35.0","jest":"29.4.3","jest-extended":"3.2.4","ts-jest":"29.0.5","ts-loader":"9.4.2","ts-node":"10.9.1","typescript":"4.9.5","webpack":"^5.76.2","webpack-cli":"5.0.1"},"dependencies":{"browser-or-node":"^2.1.1","commander":"10.0.0","eol":"0.9.1","format":"^0.2.2","node-fetch":"2.6.9"}}');
 
 /***/ }),
 /* 26 */
@@ -4525,8 +4536,13 @@ class Loader {
     loadScript(stream) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const buffer = yield stream;
-                return this.isHeaderPresent(buffer)
+                let buffer = yield stream;
+                if (this.hasCustomFooter(buffer)) {
+                    // SB's Extra info is not supported yet
+                    const offset = buffer.getUint32(buffer.byteLength - 12, true);
+                    buffer = new DataView(buffer.buffer.slice(0, offset));
+                }
+                return this.hasHeader(buffer)
                     ? new ScriptMultifile_1.ScriptMultifile(buffer)
                     : new ScriptFile_1.ScriptFile(buffer, enums_1.eScriptType.CLEO);
             }
@@ -4536,10 +4552,26 @@ class Loader {
             }
         });
     }
-    isHeaderPresent(buf) {
+    hasHeader(buf) {
         // todo: count jumps
         const firstOp = buf.getInt16(0, true);
         return firstOp === 2;
+    }
+    hasCustomFooter(buf) {
+        // https://github.com/sannybuilder/dev/wiki/Extra-Info-Format
+        const magic = '__SBFTR\0';
+        try {
+            const initialOffset = buf.byteLength - magic.length;
+            for (let i = 0; i < magic.length; i++) {
+                const char = buf.getUint8(initialOffset + i);
+                if (char !== magic.charCodeAt(i))
+                    return false;
+            }
+            return true;
+        }
+        catch (_a) {
+            return false;
+        }
     }
 }
 exports.Loader = Loader;
@@ -6021,10 +6053,9 @@ function findIfs(graph) {
         log_1.Log.debug('No 2-way nodes found. Stopping.');
         return graph;
     }
-    let res = graphUtils.from(graph);
     const findFollowNode = (header) => {
-        const pdom = graphUtils.findIPDom(res);
-        const index = res.getNodeIndex(header);
+        const pdom = graphUtils.findIPDom(graph);
+        const index = graph.getNodeIndex(header);
         if (pdom[index])
             return pdom[index];
         /*
@@ -6046,44 +6077,44 @@ function findIfs(graph) {
                 but this is a malformed script and not covered by the decompiler yet
     
             */
-        const succ = res.getImmSuccessors(header);
+        const succ = graph.getImmSuccessors(header);
         return succ[0];
     };
     const replaceIf = (header, followNode) => {
         var _a, _b, _c;
-        const ifHeaderSuccessors = res.getImmSuccessors(header);
+        const ifHeaderSuccessors = graph.getImmSuccessors(header);
         const ifGraph = new graph_1.IfGraph();
         ifGraph.followNode = followNode;
-        const followIndex = res.getNodeIndex(followNode);
-        const ifType = getIfType(res, header, followNode);
+        const followIndex = graph.getNodeIndex(followNode);
+        const ifType = getIfType(graph, header, followNode);
         ifGraph.type = ifType;
-        ifGraph.ifNumber = getIfCondNumber(res, header);
+        ifGraph.ifNumber = getIfCondNumber(header);
         ifGraph.print(`New IF graph`);
         if (ifType === enums_1.eIfType.IF_THEN) {
             const thenHeader = ifHeaderSuccessors.at(-1);
-            const thenIndex = res.getNodeIndex(thenHeader);
+            const thenIndex = graph.getNodeIndex(thenHeader);
             ifGraph.thenNode = new graph_1.Graph();
             for (let i = thenIndex; i < followIndex; i++) {
-                ifGraph.thenNode.addNode(res.nodes[i]);
+                ifGraph.thenNode.addNode(graph.nodes[i]);
             }
             if (ifGraph.thenNode.nodes.length === 0) {
-                log_1.Log.warn(`IF..THEN construct without THEN clause`);
+                log_1.Log.debug(`IF..THEN construct without THEN clause`);
             }
         }
         else {
             const [elseHeader, thenHeader] = ifHeaderSuccessors;
             ifGraph.thenNode = new graph_1.Graph();
             ifGraph.elseNode = new graph_1.Graph();
-            const thenIndex = res.getNodeIndex(thenHeader);
-            const elseIndex = res.getNodeIndex(elseHeader);
+            const thenIndex = graph.getNodeIndex(thenHeader);
+            const elseIndex = graph.getNodeIndex(elseHeader);
             for (let i = thenIndex; i < elseIndex; i++) {
-                ifGraph.thenNode.addNode(res.nodes[i]);
+                ifGraph.thenNode.addNode(graph.nodes[i]);
             }
             for (let i = elseIndex; i < followIndex; i++) {
-                ifGraph.elseNode.addNode(res.nodes[i]);
+                ifGraph.elseNode.addNode(graph.nodes[i]);
             }
             if (ifGraph.thenNode.nodes.length === 0) {
-                log_1.Log.warn(`IF..THEN construct without THEN clause`);
+                log_1.Log.debug(`IF..THEN construct without THEN clause`);
             }
             if (ifGraph.elseNode.nodes.length === 0) {
                 log_1.Log.warn(`IF..THEN construct without ELSE clause`);
@@ -6091,7 +6122,7 @@ function findIfs(graph) {
         }
         ifGraph.addNode(header);
         const reduced = new graph_1.Graph();
-        for (const node of res.nodes) {
+        for (const node of graph.nodes) {
             if (!ifGraph.thenNode.hasNode(node) &&
                 !((_a = ifGraph.elseNode) === null || _a === void 0 ? void 0 : _a.hasNode(node)) &&
                 node !== header) {
@@ -6124,18 +6155,18 @@ function findIfs(graph) {
         return reduced;
     };
     const head = twoWayNodes.at(-1);
+    log_1.Log.debug("Finding follow node for node at " + (0, graph_utils_1.getOffset)(head));
     const tail = findFollowNode(head);
     if (!tail) {
         throw log_1.Log.error(errors_1.AppError.NODE_NOT_FOUND);
     }
-    // res.print("Structure graph before replacing IF node");
-    res = replaceIf(head, tail);
+    let res = replaceIf(head, tail);
     res.print(`New graph after replacing IF node (${twoWayNodes.length - 1} left)`);
     // recursively structure until no more 2-way nodes are found
     return findIfs(res);
 }
 exports.findIfs = findIfs;
-function getIfCondNumber(res, header) {
+function getIfCondNumber(header) {
     // const pred = res.getImmPredecessors(header);
     // if (
     //   pred.length === 1 &&
@@ -6150,7 +6181,7 @@ function getIfCondNumber(res, header) {
     if (instructions.length > 1 && instructions[0].opcode === cfg_1.OP_IF) {
         return (0, instructions_1.getNumericParam)(instructions[0]);
     }
-    log_1.Log.warn(errors_1.AppError.NO_IF_PREDICATE, (0, graph_utils_1.getOffset)(header));
+    log_1.Log.debug(errors_1.AppError.NO_IF_PREDICATE, (0, graph_utils_1.getOffset)(header));
     return 0;
 }
 
@@ -6312,6 +6343,7 @@ function findLoops(graph) {
                 // when there is an unstructured jump from the loop we must add it,
                 // otherwise the nodes that the jump is pointing to could become unreachable
                 // todo: rethink RPO algo to iterate over all nodes and create multiple disjoint graphs
+                // // line below breaks TAXI script
                 reduced.addEdge(loop, edge.to);
             }
             // if another edge originates from the loop, it is a BREAK
