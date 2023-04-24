@@ -1,0 +1,19 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`loop5 does not detect loop correctly as there is a jump in the middle of the loop 1`] = `
+"
+:NONAME_0
+    NOP
+    
+    while true
+        WAIT 2
+        if 
+            IS_INT_LVAR_GREATER_THAN_NUMBER 0 1
+        then
+        end
+        WAIT 1
+    end
+    
+    TERMINATE_THIS_SCRIPT
+"
+`;
