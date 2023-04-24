@@ -12,7 +12,7 @@ import {
   GraphNode,
   IfGraph,
   LoopGraph,
-  from
+  from,
 } from './frontend/cfg';
 import { ExpressionPrinter } from './utils/printer/ExpressionPrinter';
 import { getDefinitions } from './definitions';
@@ -119,11 +119,18 @@ export async function main(inputFile: Promise<DataView>): Promise<void> {
   const scripts = await parser.parse(scriptFile);
   const printer = new ExpressionPrinter(definitionMap);
 
-  scripts.forEach((script) => {
-    const cfg = new CFG();
-    const functions = cfg.getCallGraphs(script, scripts).sort((a, b) => {
-      return getOffset(a) - getOffset(b);
+  scripts
+    .filter((script) => {
+      return (
+        !GLOBAL_OPTIONS.only ||
+        script.name.toUpperCase() === GLOBAL_OPTIONS.only
+      );
+    })
+    .forEach((script) => {
+      const cfg = new CFG();
+      const functions = cfg.getCallGraphs(script, scripts).sort((a, b) => {
+        return getOffset(a) - getOffset(b);
+      });
+      print(functions, printer, script);
     });
-    print(functions, printer, script);
-  });
 }

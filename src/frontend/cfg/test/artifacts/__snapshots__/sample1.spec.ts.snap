@@ -1,0 +1,64 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`sample input 1 has redundant 'continue' statements 1`] = `
+"
+:NONAME_0
+    NOP
+    
+    while IS_INT_LVAR_GREATER_THAN_NUMBER 0 100
+        if 
+            IS_INT_LVAR_GREATER_THAN_NUMBER 0 2
+        then
+            WAIT 1
+            continue
+        else
+            WAIT 2
+        end
+    end
+    
+    
+    repeat
+        WAIT 3
+        if 
+            IS_INT_LVAR_GREATER_THAN_NUMBER 0 0
+        then
+            WAIT 1
+        end
+    until IS_INT_LVAR_GREATER_THAN_NUMBER 0 1
+    
+    
+    while IS_INT_LVAR_GREATER_THAN_NUMBER 0 1
+        WAIT 5
+        continue
+    end
+    
+    TERMINATE_THIS_SCRIPT
+"
+`;
+
+exports[`sample input 2 has redundant 'continue' statements 1`] = `
+"
+:NONAME_0
+    NOP
+    
+    repeat
+        WAIT 0
+        if 
+            NOT IS_INT_LVAR_GREATER_OR_EQUAL_TO_NUMBER 0 0
+        then
+            WAIT 444
+            GOTO -66
+        end
+        if 
+            NOT IS_INT_LVAR_GREATER_OR_EQUAL_TO_NUMBER 0 0
+        then
+            WAIT 555
+            continue
+        else
+            WAIT 1
+        end
+    until IS_INT_LVAR_GREATER_THAN_NUMBER 0 1
+    
+    TERMINATE_THIS_CUSTOM_SCRIPT
+"
+`;

@@ -183,6 +183,7 @@ export function findLoops<Node>(graph: Graph<Node>): Graph<Node> {
         // when there is an unstructured jump from the loop we must add it,
         // otherwise the nodes that the jump is pointing to could become unreachable
         // todo: rethink RPO algo to iterate over all nodes and create multiple disjoint graphs
+        // // line below breaks TAXI script
         reduced.addEdge(loop, edge.to);
       }
 

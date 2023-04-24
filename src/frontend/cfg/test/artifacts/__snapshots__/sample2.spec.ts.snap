@@ -1,0 +1,9 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`wrong 1 loses an unreachable node 1`] = `
+"
+:NONAME_0
+    NOP
+    TERMINATE_THIS_SCRIPT
+"
+`;

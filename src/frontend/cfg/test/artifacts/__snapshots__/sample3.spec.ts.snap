@@ -1,0 +1,903 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`yard2 duplicates M_FAIL block 1`] = `
+"
+:YARD2
+    GOSUB -36
+    if 
+        HAS_DEATHARREST_BEEN_EXECUTED
+    then
+        GOSUB -3944
+    end
+    GOSUB -4848
+    TERMINATE_THIS_SCRIPT
+
+:YARD2_36
+    REGISTER_MISSION_GIVEN
+    SCRIPT_NAME YARD2
+    SET_VAR_INT 828 1
+    SET_VAR_INT 960 1
+    WAIT 0
+    SET_PED_DENSITY_MULTIPLIER 0
+    SET_POLICE_IGNORE_PLAYER 528 1
+    LOAD_CUTSCENE YD_PH2
+    SET_CUTSCENE_OFFSET 121 -272.25 15.25
+    CLEAR_AREA_OF_CHARS 100.5 -250 0 130.5 -290 25
+    CREATE_CUTSCENE_OBJECT 0 600
+    SET_CUTSCENE_ANIM 600 PLAYER
+    DO_FADE 1500 1
+    START_CUTSCENE
+    GET_CUTSCENE_TIME 596
+    
+    while IS_NUMBER_GREATER_THAN_INT_VAR 2000 596
+        WAIT 0
+        GET_CUTSCENE_TIME 596
+    end
+    
+    PRINT_NOW YD2_A 10000 1
+    
+    while IS_NUMBER_GREATER_THAN_INT_VAR 4581 596
+        WAIT 0
+        GET_CUTSCENE_TIME 596
+    end
+    
+    PRINT_NOW YD2_A1 10000 1
+    
+    while IS_NUMBER_GREATER_THAN_INT_VAR 7135 596
+        WAIT 0
+        GET_CUTSCENE_TIME 596
+    end
+    
+    PRINT_NOW YD2_B 10000 1
+    
+    while IS_NUMBER_GREATER_THAN_INT_VAR 10431 596
+        WAIT 0
+        GET_CUTSCENE_TIME 596
+    end
+    
+    PRINT_NOW YD2_B1 10000 1
+    
+    while IS_NUMBER_GREATER_THAN_INT_VAR 13900 596
+        WAIT 0
+        GET_CUTSCENE_TIME 596
+    end
+    
+    DO_FADE 1500 0
+    
+    while GET_FADING_STATUS
+        WAIT 0
+    end
+    
+    
+    while NOT HAS_CUTSCENE_FINISHED
+        WAIT 0
+    end
+    
+    SWITCH_STREAMING 1
+    CLEAR_PRINTS
+    CLEAR_CUTSCENE
+    WAIT 0
+    REQUEST_MODEL 94
+    REQUEST_MODEL 18
+    REQUEST_MODEL 19
+    
+    while NOT HAS_MODEL_LOADED 94
+        NOT HAS_MODEL_LOADED 18
+        NOT HAS_MODEL_LOADED 19
+        WAIT 0
+    end
+    
+    SET_VAR_INT 14152 0
+    SET_VAR_INT 14140 0
+    SET_VAR_INT 14128 0
+    SET_VAR_INT 14132 0
+    SET_VAR_INT 14136 0
+    SET_VAR_INT 14120 0
+    SET_VAR_INT 14108 0
+    SET_VAR_INT 14144 0
+    SET_VAR_INT 14148 0
+    RESET_NUM_OF_MODELS_KILLED_BY_PLAYER
+    SET_VAR_FLOAT 14164 940
+    SET_VAR_FLOAT 14168 -220
+    SET_VAR_FLOAT 14172 231
+    SET_VAR_FLOAT 14176 -531
+    STORE_WANTED_LEVEL 528 14116
+    CLEAR_WANTED_LEVEL 528
+    SET_PLAYER_CONTROL 528 0
+    GET_PLAYER_CHAR 528 14112
+    SET_FIXED_CAMERA_POSITION 117.25 -266.25 17 0 0 0
+    POINT_CAMERA_AT_PLAYER 528 15 2
+    SWITCH_WIDESCREEN 1
+    SET_CAR_DENSITY_MULTIPLIER 0
+    CLEAR_AREA 4.1875 -310.0625 16 40 1
+    CLEAR_AREA 97 -285.5 16 50 1
+    DO_FADE 1500 1
+    WAIT 1500
+    CREATE_CAR 94 4.1875 -310.0625 16 14096
+    SET_CAR_HEADING 14096 0
+    SET_CAR_ONLY_DAMAGED_BY_PLAYER 14096 1
+    CREATE_CHAR_INSIDE_CAR 14096 4 18 14100
+    CREATE_CHAR_AS_PASSENGER 14096 4 19 0 14104
+    CAR_GOTO_COORDINATES 14096 113 -272 16
+    SET_CAR_CRUISE_SPEED 14096 25
+    SET_CAR_DRIVING_STYLE 14096 3
+    if 
+        NOT IS_CAR_DEAD 14096
+    then
+        POINT_CAMERA_AT_CAR 14096 15 1
+    end
+    
+    while NOT LOCATE_STOPPED_CAR_2D 14096 113 -272 5 5 0
+        WAIT 0
+        if 
+            IS_CAR_DEAD 14096
+        then
+            GOTO -4614
+        end
+        if 
+            IS_INT_VAR_EQUAL_TO_NUMBER 14120 0
+        then
+            CLEAR_AREA 115 -272 16 10 1
+            SET_VAR_INT 14120 1
+        end
+    end
+    
+    TURN_CHAR_TO_FACE_COORD 14112 115 -272 16
+    if 
+        NOT IS_CAR_DEAD 14096
+    then
+        CAR_SET_IDLE 14096
+        if 1
+            NOT IS_CHAR_DEAD 14104
+            NOT IS_CHAR_DEAD 14100
+        then
+            SET_CHAR_OBJ_LEAVE_CAR 14100 14096
+            SET_CHAR_OBJ_LEAVE_CAR 14104 14096
+        end
+    end
+    if 2
+        NOT IS_CHAR_DEAD 14104
+        NOT IS_CHAR_DEAD 14100
+        NOT IS_CAR_DEAD 14096
+    then
+    end
+    
+    while IS_CHAR_IN_CAR 14104 14096
+        IS_CHAR_IN_CAR 14100 14096
+        WAIT 0
+        if 22
+            IS_CHAR_DEAD 14104
+            IS_CHAR_DEAD 14100
+            IS_CAR_DEAD 14096
+        then
+            GOTO -4614
+        end
+    end
+    
+    if 
+        NOT IS_CHAR_DEAD 14104
+    then
+        POINT_CAMERA_AT_CHAR 14104 15 1
+    end
+    if 1
+        NOT IS_CHAR_DEAD 14100
+        NOT IS_CHAR_DEAD 14112
+    then
+        CHAR_LOOK_AT_CHAR_ALWAYS 14100 14112
+    end
+    
+    while true
+        WAIT 0
+        GET_PLAYER_COORDINATES 528 14180 14184 14188
+        if 1
+            NOT IS_CHAR_DEAD 14104
+            NOT IS_CHAR_DEAD 14100
+        then
+        end
+        SET_CHAR_HEALTH 14100 100
+        SET_CHAR_HEALTH 14104 100
+        SUB_VAL_FROM_FLOAT_VAR 14184 1
+        SET_CHAR_OBJ_GOTO_COORD_ON_FOOT 14104 14180 14184
+        SET_CHAR_OBJ_WAIT_ON_FOOT 14100
+        CHAR_LOOK_AT_CHAR_ALWAYS 14104 14112
+        CHAR_LOOK_AT_CHAR_ALWAYS 14112 14104
+        if 
+            NOT LOCATE_CHAR_ON_FOOT_2D 14104 14180 14184 2 2 0
+        then
+        end
+    end
+    
+    if 
+        NOT IS_CHAR_DEAD 14104
+    then
+    end
+    TURN_CHAR_TO_FACE_PLAYER 14104 528
+    TURN_CHAR_TO_FACE_CHAR 14112 14104
+    SET_CHAR_OBJ_WAIT_ON_FOOT 14104
+    LOAD_MISSION_AUDIO YD2_A
+    
+    while NOT HAS_MISSION_AUDIO_LOADED
+        WAIT 0
+        if 
+            IS_BUTTON_PRESSED 0 16
+        then
+            GOTO -1823
+        end
+    end
+    
+    PLAY_MISSION_AUDIO
+    PRINT_NOW YD2_C 10000 1
+    
+    while NOT HAS_MISSION_AUDIO_FINISHED
+        WAIT 0
+        if 
+            IS_BUTTON_PRESSED 0 16
+        then
+            GOTO -1823
+        end
+    end
+    
+    CLEAR_PRINTS
+    if 
+        NOT IS_CHAR_DEAD 14100
+    then
+        SET_CHAR_HEALTH 14100 100
+    end
+    if 
+        NOT IS_CHAR_DEAD 14104
+    then
+        SET_CHAR_HEALTH 14104 100
+    end
+    LOAD_MISSION_AUDIO YD2_B
+    
+    while NOT HAS_MISSION_AUDIO_LOADED
+        WAIT 0
+        if 
+            IS_BUTTON_PRESSED 0 16
+        then
+            GOTO -1823
+        end
+    end
+    
+    PLAY_MISSION_AUDIO
+    PRINT_NOW YD2_D 10000 1
+    
+    while NOT HAS_MISSION_AUDIO_FINISHED
+        WAIT 0
+        if 
+            IS_BUTTON_PRESSED 0 16
+        then
+            GOTO -1823
+        end
+    end
+    
+    CLEAR_PRINTS
+    if 
+        NOT IS_CHAR_DEAD 14100
+    then
+        SET_CHAR_HEALTH 14100 100
+    end
+    if 
+        NOT IS_CHAR_DEAD 14104
+    then
+        SET_CHAR_HEALTH 14104 100
+    end
+    LOAD_MISSION_AUDIO YD2_C
+    
+    while NOT HAS_MISSION_AUDIO_LOADED
+        WAIT 0
+        if 
+            IS_BUTTON_PRESSED 0 16
+        then
+            GOTO -1823
+        end
+    end
+    
+    PLAY_MISSION_AUDIO
+    PRINT_NOW YD2_CC 10000 1
+    
+    while NOT HAS_MISSION_AUDIO_FINISHED
+        WAIT 0
+        if 
+            IS_BUTTON_PRESSED 0 16
+        then
+            GOTO -1823
+        end
+    end
+    
+    CLEAR_PRINTS
+    STOP_CHAR_LOOKING 14112
+    GIVE_WEAPON_TO_PLAYER 528 3 150
+    WAIT 1000
+    SET_CURRENT_PLAYER_WEAPON 528 3
+    
+    while NOT IS_CURRENT_PLAYER_WEAPON 528 3
+        WAIT 0
+    end
+    
+    POINT_CAMERA_AT_PLAYER 528 15 1
+    if 
+        NOT IS_CHAR_DEAD 14100
+    then
+        SET_CHAR_HEALTH 14100 100
+        STOP_CHAR_LOOKING 14100
+        if 
+            NOT IS_CAR_DEAD 14096
+        then
+            SET_CHAR_OBJ_ENTER_CAR_AS_PASSENGER 14100 14096
+        end
+    end
+    if 
+        NOT IS_CHAR_DEAD 14104
+    then
+        SET_CHAR_HEALTH 14104 100
+        CHAR_LOOK_AT_CHAR_ALWAYS 14104 14112
+    end
+    SET_RADIO_CHANNEL 2 0
+    if 
+        NOT IS_CAR_DEAD 14096
+    then
+    end
+    SET_CHAR_OBJ_ENTER_CAR_AS_DRIVER 14112 14096
+    
+    while NOT IS_CHAR_IN_CAR 14112 14096
+        WAIT 0
+        if 
+            IS_CAR_DEAD 14096
+        then
+            GOTO -4614
+        end
+        if 
+            NOT IS_CHAR_DEAD 14100
+        then
+            SET_CHAR_HEALTH 14100 100
+        end
+        if 
+            NOT IS_CHAR_DEAD 14104
+        then
+            SET_CHAR_HEALTH 14104 100
+        end
+    end
+    
+    if 2
+        NOT IS_CAR_DEAD 14096
+        NOT IS_CHAR_DEAD 14104
+        NOT IS_CHAR_DEAD 14100
+    then
+    end
+    STOP_CHAR_LOOKING 14100
+    STOP_CHAR_LOOKING 14104
+    SET_CHAR_OBJ_ENTER_CAR_AS_PASSENGER 14104 14096
+    
+    while NOT IS_CHAR_IN_CAR 14104 14096
+        NOT IS_CHAR_IN_CAR 14100 14096
+        WAIT 0
+        if 22
+            IS_CHAR_DEAD 14104
+            IS_CHAR_DEAD 14100
+            IS_CAR_DEAD 14096
+        then
+            GOTO -4614
+        end
+        if 
+            NOT IS_CHAR_DEAD 14100
+        then
+            SET_CHAR_HEALTH 14100 100
+        end
+        if 
+            NOT IS_CHAR_DEAD 14104
+        then
+            SET_CHAR_HEALTH 14104 100
+        end
+    end
+    
+    if 
+        NOT IS_CAR_DEAD 14096
+    then
+        SET_CAR_ONLY_DAMAGED_BY_PLAYER 14096 0
+    end
+    if 
+        NOT IS_CHAR_DEAD 14100
+    then
+        SET_CHAR_CANT_BE_DRAGGED_OUT 14100 1
+        SET_CHAR_STAYS_IN_CURRENT_LEVEL 14100 0
+    end
+    if 
+        NOT IS_CHAR_DEAD 14104
+    then
+        SET_CHAR_CANT_BE_DRAGGED_OUT 14104 1
+        SET_CHAR_STAYS_IN_CURRENT_LEVEL 14104 0
+    end
+    RESTORE_CAMERA_JUMPCUT
+    SWITCH_WIDESCREEN 0
+    SET_PLAYER_CONTROL 528 1
+    LOAD_MISSION_AUDIO YD2_C1
+    
+    while NOT HAS_MISSION_AUDIO_LOADED
+        WAIT 0
+    end
+    
+    PLAY_MISSION_AUDIO
+    PRINT_SOON YD2_E 4000 1
+    
+    while NOT HAS_MISSION_AUDIO_FINISHED
+        WAIT 0
+    end
+    
+    ADD_BLIP_FOR_COORD 14164 14168 -100 14124
+    SET_PED_DENSITY_MULTIPLIER 1
+    SET_POLICE_IGNORE_PLAYER 528 0
+    SET_CAR_DENSITY_MULTIPLIER 1
+    SET_ZONE_PED_INFO TOWERS 1 15 0 0 700 0 0 0 0 20
+    SET_ZONE_PED_INFO TOWERS 0 10 0 0 800 0 0 0 0 10
+    ALTER_WANTED_LEVEL 528 14116
+    if 
+        NOT IS_CAR_DEAD 14096
+    then
+    end
+    
+    while NOT IS_PLAYER_IN_ZONE 528 TOWERS
+        WAIT 0
+        if 
+            NOT IS_CAR_DEAD 14096
+        then
+        end
+        if 1
+            IS_CAR_UPSIDEDOWN 14096
+            IS_CAR_STOPPED 14096
+        then
+            SET_VAR_INT 14128 1
+            GOTO -3944
+        end
+        if 
+            NOT IS_CAR_HEALTH_GREATER 14096 250
+        then
+            if 1
+                NOT LOCATE_CAR_3D 14096 379 -493.6875 26.1875 15 15 15 0
+                NOT LOCATE_CAR_3D 14096 925.375 -358.6875 10.75 15 15 15 0
+            then
+                SET_VAR_INT 14128 1
+                GOTO -3944
+            end
+        end
+        if 
+            NOT IS_PLAYER_IN_CAR 528 14096
+        then
+            SET_VAR_INT 14128 2
+            GOSUB -4984
+            if 
+                NOT IS_CAR_DEAD 14096
+            then
+                if 
+                    NOT IS_PLAYER_IN_CAR 528 14096
+                then
+                    SET_VAR_INT 14128 2
+                    GOTO -3944
+                end
+                GOTO -2846
+                LOCK_CAR_DOORS 14096 2
+            end
+            GOTO -4614
+        end
+        continue
+    end
+    
+    LOAD_MISSION_AUDIO YD2_F
+    
+    while NOT HAS_MISSION_AUDIO_LOADED
+        WAIT 0
+    end
+    
+    PLAY_MISSION_AUDIO
+    PRINT_NOW YD2_G1 2500 1
+    
+    while NOT HAS_MISSION_AUDIO_FINISHED
+        WAIT 0
+    end
+    
+    LOAD_MISSION_AUDIO YD2_G
+    
+    while NOT HAS_MISSION_AUDIO_LOADED
+        WAIT 0
+    end
+    
+    PLAY_MISSION_AUDIO
+    PRINT_SOON YD2_G2 2500 1
+    
+    while NOT HAS_MISSION_AUDIO_FINISHED
+        WAIT 0
+    end
+    
+    REMOVE_BLIP 14124
+    DISPLAY_ONSCREEN_COUNTER_WITH_STRING 14108 0 KILLS
+    
+    while IS_NUMBER_GREATER_THAN_INT_VAR 10 14108
+        WAIT 0
+        if 
+            NOT IS_CAR_DEAD 14096
+        then
+        end
+        if 1
+            IS_CAR_UPSIDEDOWN 14096
+            IS_CAR_STOPPED 14096
+        then
+            SET_VAR_INT 14128 1
+            GOTO -3944
+        end
+        if 
+            NOT IS_CAR_HEALTH_GREATER 14096 250
+        then
+            if 1
+                NOT LOCATE_CAR_3D 14096 379 -493.6875 26.1875 15 15 15 0
+                NOT LOCATE_CAR_3D 14096 925.375 -358.6875 10.75 15 15 15 0
+            then
+                SET_VAR_INT 14128 1
+                GOTO -3944
+            end
+        end
+        if 
+            NOT IS_PLAYER_IN_CAR 528 14096
+        then
+            GOSUB -4984
+            if 
+                NOT IS_CAR_DEAD 14096
+            then
+                if 
+                    NOT IS_PLAYER_IN_CAR 528 14096
+                then
+                    SET_VAR_INT 14128 2
+                    GOTO -3944
+                end
+                GOTO -3314
+            end
+            GOTO -4614
+        end
+        continue
+        GET_NUM_OF_MODELS_KILLED_BY_PLAYER 14 14144
+        GET_NUM_OF_MODELS_KILLED_BY_PLAYER 15 14148
+        SET_VAR_INT_TO_VAR_INT 14108 14144
+        ADD_INT_VAR_TO_INT_VAR 14108 14148
+    end
+    
+    LOAD_MISSION_AUDIO YD2_H
+    
+    while NOT HAS_MISSION_AUDIO_LOADED
+        WAIT 0
+    end
+    
+    PLAY_MISSION_AUDIO
+    PRINT_NOW YD2_H 2500 1
+    
+    while NOT HAS_MISSION_AUDIO_FINISHED
+        WAIT 0
+    end
+    
+    CLEAR_ONSCREEN_COUNTER 14108
+    ADD_BLIP_FOR_COORD 14172 14176 26 14124
+    if 
+        NOT IS_CAR_DEAD 14096
+    then
+        
+        while NOT LOCATE_STOPPED_CAR_3D 14096 14172 14176 26 5 5 5 1
+            WAIT 0
+            if 
+                NOT IS_CAR_DEAD 14096
+            then
+            end
+            if 1
+                IS_CAR_UPSIDEDOWN 14096
+                IS_CAR_STOPPED 14096
+            then
+                SET_VAR_INT 14128 1
+                GOTO -3944
+            end
+            if 
+                NOT IS_CAR_HEALTH_GREATER 14096 250
+            then
+                if 1
+                    NOT LOCATE_CAR_3D 14096 379 -493.6875 26.1875 15 15 15 0
+                    NOT LOCATE_CAR_3D 14096 925.375 -358.6875 10.75 15 15 15 0
+                then
+                    SET_VAR_INT 14128 1
+                    GOTO -3944
+                end
+            end
+            if 
+                NOT IS_PLAYER_IN_CAR 528 14096
+            then
+                GOSUB -4984
+                if 
+                    NOT IS_CAR_DEAD 14096
+                then
+                    if 
+                        NOT IS_PLAYER_IN_CAR 528 14096
+                    then
+                        SET_VAR_INT 14128 2
+                        GOTO -3944
+                    end
+                    GOTO -3749
+                end
+                GOTO -4614
+            end
+            continue
+        end
+        
+        SET_PLAYER_CONTROL 528 0
+        if 2
+            NOT IS_CHAR_DEAD 14100
+            NOT IS_CHAR_DEAD 14104
+            NOT IS_CAR_DEAD 14096
+        then
+            SET_CAR_HEALTH 14096 850
+            SET_CHAR_OBJ_LEAVE_CAR 14100 14096
+            SET_CHAR_OBJ_LEAVE_CAR 14104 14096
+            LOAD_MISSION_AUDIO YD2_OK
+            
+            while NOT HAS_MISSION_AUDIO_LOADED
+                WAIT 0
+            end
+            
+            PLAY_MISSION_AUDIO
+            PRINT_NOW YD2_L 4000 1
+            
+            while NOT HAS_MISSION_AUDIO_FINISHED
+                WAIT 0
+            end
+            
+            SET_PLAYER_CONTROL 528 1
+            SET_VAR_INT 1360 1
+            if 2
+                NOT IS_CHAR_DEAD 14100
+                NOT IS_CHAR_DEAD 14104
+                NOT IS_CAR_DEAD 14096
+            then
+                
+                while IS_CHAR_IN_CAR 14100 14096
+                    IS_CHAR_IN_CAR 14104 14096
+                    WAIT 0
+                    if 22
+                        IS_CHAR_DEAD 14100
+                        IS_CHAR_DEAD 14104
+                        IS_CAR_DEAD 14096
+                    then
+                        GOTO -4749
+                    end
+                end
+                
+            else
+            end
+            if 
+                NOT IS_CHAR_DEAD 14100
+            then
+                SET_CHAR_OBJ_FLEE_ON_FOOT_TILL_SAFE 14100
+            end
+            if 
+                NOT IS_CHAR_DEAD 14104
+            then
+                SET_CHAR_OBJ_FLEE_ON_FOOT_TILL_SAFE 14104
+            end
+            PRINT_WITH_NUMBER_BIG M_PASS 10000 5000 1
+            PLAY_MISSION_PASSED_TUNE 1
+            CLEAR_WANTED_LEVEL 528
+            ADD_SCORE 528 10000
+            REGISTER_MISSION_PASSED YD2
+            PLAYER_MADE_PROGRESS 1
+            SET_THREAT_FOR_PED_TYPE 9 1
+            RETURN
+        end
+    else
+    end
+    PRINT_BIG M_FAIL 2000 1
+    RETURN
+
+:YARD2_3944
+    if 1
+        NOT IS_CHAR_DEAD 14100
+        NOT IS_CAR_DEAD 14096
+    then
+        SET_CHAR_OBJ_LEAVE_CAR 14100 14096
+    end
+    if 1
+        NOT IS_CHAR_DEAD 14104
+        NOT IS_CAR_DEAD 14096
+    then
+        SET_CHAR_OBJ_LEAVE_CAR 14104 14096
+    end
+    if 
+        IS_INT_VAR_EQUAL_TO_NUMBER 14128 1
+    then
+        LOAD_MISSION_AUDIO YD2_D
+        
+        while NOT HAS_MISSION_AUDIO_LOADED
+            WAIT 0
+        end
+        
+        PLAY_MISSION_AUDIO
+        PRINT_NOW YD2_M 4000 1
+    end
+    if 
+        IS_INT_VAR_EQUAL_TO_NUMBER 14128 2
+    then
+        LOAD_MISSION_AUDIO YD2_E
+        
+        while NOT HAS_MISSION_AUDIO_LOADED
+            WAIT 0
+        end
+        
+        PLAY_MISSION_AUDIO
+        PRINT_NOW YD2_F 4000 1
+    end
+    if 1
+        NOT IS_CHAR_DEAD 14100
+        NOT IS_CAR_DEAD 14096
+    then
+        
+        while IS_CHAR_IN_CAR 14100 14096
+            WAIT 0
+            if 
+                IS_CHAR_DEAD 14100
+            then
+                break
+            end
+            if 
+                IS_CAR_DEAD 14096
+            then
+                break
+            end
+        end
+        
+    end
+    if 1
+        NOT IS_CHAR_DEAD 14104
+        NOT IS_CAR_DEAD 14096
+    then
+        
+        while IS_CHAR_IN_CAR 14104 14096
+            WAIT 0
+            if 
+                IS_CHAR_DEAD 14104
+            then
+                GOTO -4614
+            end
+            if 
+                IS_CAR_DEAD 14096
+            then
+                GOTO -4614
+            end
+        end
+        
+    else
+        if 
+            NOT IS_CHAR_DEAD 14100
+        then
+            GIVE_WEAPON_TO_CHAR 14100 4 10
+            
+            while NOT IS_CURRENT_CHAR_WEAPON 14100 4
+                WAIT 0
+                if 
+                    IS_CHAR_DEAD 14100
+                then
+                    GOTO -4474
+                end
+            end
+            
+            if 
+                NOT IS_CHAR_DEAD 14100
+            then
+                TURN_CHAR_TO_FACE_PLAYER 14100 528
+                if 
+                    IS_PLAYER_IN_ZONE 528 TOWERS
+                then
+                    SET_CHAR_THREAT_SEARCH 14100 512
+                end
+                SET_CHAR_THREAT_SEARCH 14100 1
+            end
+        end
+        if 
+            NOT IS_CHAR_DEAD 14104
+        then
+            GIVE_WEAPON_TO_CHAR 14104 3 30
+            
+            while NOT IS_CURRENT_CHAR_WEAPON 14104 3
+                WAIT 0
+                if 
+                    IS_CHAR_DEAD 14104
+                then
+                    GOTO -4614
+                end
+            end
+            
+            if 
+                NOT IS_CHAR_DEAD 14104
+            then
+                TURN_CHAR_TO_FACE_PLAYER 14104 528
+                if 
+                    IS_PLAYER_IN_ZONE 528 TOWERS
+                then
+                    SET_CHAR_THREAT_SEARCH 14104 512
+                end
+                SET_CHAR_THREAT_SEARCH 14104 1
+            end
+        end
+    end
+    PRINT_BIG M_FAIL 2000 1
+    RETURN
+
+:YARD2_4848
+    REMOVE_BLIP 14124
+    SET_VAR_INT 828 0
+    SET_VAR_INT 960 0
+    CLEAR_ONSCREEN_COUNTER 14108
+    REMOVE_BLIP 14124
+    SWITCH_WIDESCREEN 0
+    RESTORE_CAMERA_JUMPCUT
+    if 
+        NOT IS_CAR_DEAD 14096
+    then
+        LOCK_CAR_DOORS 14096 1
+    end
+    MARK_MODEL_AS_NO_LONGER_NEEDED 18
+    MARK_MODEL_AS_NO_LONGER_NEEDED 19
+    MARK_MODEL_AS_NO_LONGER_NEEDED 94
+    SET_ZONE_PED_INFO TOWERS 1 15 0 0 300 0 0 0 0 20
+    SET_ZONE_PED_INFO TOWERS 0 10 0 0 500 0 0 0 0 10
+    MISSION_HAS_FINISHED
+    RETURN
+
+:YARD2_4984
+    if 
+        NOT IS_CAR_DEAD 14096
+    then
+        LOCK_CAR_DOORS 14096 1
+    end
+    
+    while IS_NUMBER_GREATER_THAN_INT_VAR 7500 14152
+        WAIT 0
+        if 
+            NOT IS_CAR_DEAD 14096
+        then
+            if 
+                NOT IS_CAR_HEALTH_GREATER 14096 250
+            then
+                if 1
+                    NOT LOCATE_CAR_3D 14096 379 -493.6875 26.1875 15 15 15 0
+                    NOT LOCATE_CAR_3D 14096 925.375 -358.6875 10.75 15 15 15 0
+                then
+                    SET_VAR_INT 14128 1
+                    GOTO -3944
+                end
+            end
+            if 
+                IS_INT_VAR_EQUAL_TO_NUMBER 14140 0
+            then
+                LOAD_MISSION_AUDIO YD2_ASS
+                
+                while NOT HAS_MISSION_AUDIO_LOADED
+                    WAIT 0
+                end
+                
+                PLAY_MISSION_AUDIO
+                PRINT_NOW YD2_N 3000 1
+                SET_VAR_INT 14140 1
+                GET_GAME_TIMER 14156
+            end
+            GET_GAME_TIMER 14160
+            SET_VAR_INT_TO_VAR_INT 14152 14160
+            SUB_INT_VAR_FROM_INT_VAR 14152 14156
+            if 
+                NOT IS_CAR_DEAD 14096
+            then
+                if 
+                    IS_PLAYER_IN_CAR 528 14096
+                then
+                    SET_VAR_INT 14140 0
+                    RETURN
+                end
+            end
+        end
+    end
+    
+    LOCK_CAR_DOORS 14096 2
+    RETURN
+"
+`;

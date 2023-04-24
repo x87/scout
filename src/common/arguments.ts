@@ -23,6 +23,7 @@ let GLOBAL_OPTIONS = {
   game: eGame.GTA3,
   printAssembly: false,
   debugMode: false,
+  only: ''
 };
 
 if (isNode) {
@@ -38,6 +39,7 @@ if (isNode) {
         }
         return gameMap[arg];
       })
+      .option('-o, --only <only>', 'only decompile a script with the given name')
       .parse(process.argv);
 
     const cli = program.opts();
@@ -47,6 +49,7 @@ if (isNode) {
       inputFile: cli.inputFile,
       printAssembly: cli.print,
       debugMode: cli.debug,
+      only: cli.only,
     });
 
     let stream: fs.ReadStream;
@@ -82,6 +85,9 @@ function updateArguments(args) {
   }
   if (args.debugMode) {
     GLOBAL_OPTIONS.debugMode = args.debugMode;
+  }
+  if (args.only) {
+    GLOBAL_OPTIONS.only = args.only.toUpperCase();
   }
 }
 

@@ -32,10 +32,9 @@ export function findIfs<Node>(graph: Graph<Node>): Graph<GraphNode<Node>> {
     return graph;
   }
 
-  let res = graphUtils.from(graph);
   const findFollowNode = (header: Node): GraphNode<Node> => {
-    const pdom = graphUtils.findIPDom(res);
-    const index = res.getNodeIndex(header);
+    const pdom = graphUtils.findIPDom(graph);
+    const index = graph.getNodeIndex(header);
 
     if (pdom[index]) return pdom[index];
 
@@ -59,49 +58,49 @@ export function findIfs<Node>(graph: Graph<Node>): Graph<GraphNode<Node>> {
 
 		*/
 
-    const succ = res.getImmSuccessors(header);
+    const succ = graph.getImmSuccessors(header);
     return succ[0];
   };
   const replaceIf = (
     header: Node,
     followNode: GraphNode<Node>
   ): Graph<Node> => {
-    const ifHeaderSuccessors = res.getImmSuccessors(header);
+    const ifHeaderSuccessors = graph.getImmSuccessors(header);
     const ifGraph = new IfGraph<Node>();
     ifGraph.followNode = followNode;
-    const followIndex = res.getNodeIndex(followNode);
-    const ifType = getIfType(res, header, followNode);
+    const followIndex = graph.getNodeIndex(followNode);
+    const ifType = getIfType(graph, header, followNode);
     ifGraph.type = ifType;
-    ifGraph.ifNumber = getIfCondNumber(res, header);
+    ifGraph.ifNumber = getIfCondNumber(header);
 
     ifGraph.print(`New IF graph`);
 
     if (ifType === eIfType.IF_THEN) {
       const thenHeader = ifHeaderSuccessors.at(-1);
-      const thenIndex = res.getNodeIndex(thenHeader);
+      const thenIndex = graph.getNodeIndex(thenHeader);
 
       ifGraph.thenNode = new Graph<Node>();
       for (let i = thenIndex; i < followIndex; i++) {
-        ifGraph.thenNode.addNode(res.nodes[i]);
+        ifGraph.thenNode.addNode(graph.nodes[i]);
       }
       if (ifGraph.thenNode.nodes.length === 0) {
-        Log.warn(`IF..THEN construct without THEN clause` as AppError);
+        Log.debug(`IF..THEN construct without THEN clause` as AppError);
       }
     } else {
       const [elseHeader, thenHeader] = ifHeaderSuccessors;
       ifGraph.thenNode = new Graph<Node>();
       ifGraph.elseNode = new Graph<Node>();
-      const thenIndex = res.getNodeIndex(thenHeader);
-      const elseIndex = res.getNodeIndex(elseHeader);
+      const thenIndex = graph.getNodeIndex(thenHeader);
+      const elseIndex = graph.getNodeIndex(elseHeader);
 
       for (let i = thenIndex; i < elseIndex; i++) {
-        ifGraph.thenNode.addNode(res.nodes[i]);
+        ifGraph.thenNode.addNode(graph.nodes[i]);
       }
       for (let i = elseIndex; i < followIndex; i++) {
-        ifGraph.elseNode.addNode(res.nodes[i]);
+        ifGraph.elseNode.addNode(graph.nodes[i]);
       }
       if (ifGraph.thenNode.nodes.length === 0) {
-        Log.warn(`IF..THEN construct without THEN clause` as AppError);
+        Log.debug(`IF..THEN construct without THEN clause` as AppError);
       }
       if (ifGraph.elseNode.nodes.length === 0) {
         Log.warn(`IF..THEN construct without ELSE clause` as AppError);
@@ -110,7 +109,7 @@ export function findIfs<Node>(graph: Graph<Node>): Graph<GraphNode<Node>> {
     ifGraph.addNode(header);
     const reduced = new Graph<Node>();
 
-    for (const node of res.nodes) {
+    for (const node of graph.nodes) {
       if (
         !ifGraph.thenNode.hasNode(node) &&
         !ifGraph.elseNode?.hasNode(node) &&
@@ -153,12 +152,12 @@ export function findIfs<Node>(graph: Graph<Node>): Graph<GraphNode<Node>> {
   };
 
   const head = twoWayNodes.at(-1);
+  Log.debug("Finding follow node for node at " + getOffset(head));
   const tail = findFollowNode(head);
   if (!tail) {
     throw Log.error(AppError.NODE_NOT_FOUND);
   }
-  // res.print("Structure graph before replacing IF node");
-  res = replaceIf(head, tail);
+  let res = replaceIf(head, tail);
   res.print(
     `New graph after replacing IF node (${twoWayNodes.length - 1} left)`
   );
@@ -167,7 +166,7 @@ export function findIfs<Node>(graph: Graph<Node>): Graph<GraphNode<Node>> {
   return findIfs(res);
 }
 
-function getIfCondNumber<Node>(res: Graph<Node>, header: Node) {
+function getIfCondNumber<Node>(header: Node) {
   // const pred = res.getImmPredecessors(header);
   // if (
   //   pred.length === 1 &&
@@ -182,6 +181,6 @@ function getIfCondNumber<Node>(res: Graph<Node>, header: Node) {
   if (instructions.length > 1 && instructions[0].opcode === OP_IF) {
     return getNumericParam(instructions[0]);
   }
-  Log.warn(AppError.NO_IF_PREDICATE, getOffset(header));
+  Log.debug(AppError.NO_IF_PREDICATE, getOffset(header));
   return 0;
 }
