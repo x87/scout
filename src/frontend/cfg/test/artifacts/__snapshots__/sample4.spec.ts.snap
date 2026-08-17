@@ -588,7 +588,6 @@ exports[`cat1 does not find the (end credits) while loop because of GOTO -7180 i
                 SET_PLAYER_AS_LEADER 552 528
                 SET_VAR_INT 17196 1
             end
-            GOTO -4522
         else
             if 
                 IS_INT_VAR_EQUAL_TO_NUMBER 17196 1
@@ -664,7 +663,6 @@ exports[`cat1 does not find the (end credits) while loop because of GOTO -7180 i
                 ADD_BLIP_FOR_CHAR 552 17052
                 SET_VAR_INT 17216 1
             end
-            GOTO -4975
         else
             if 
                 IS_INT_VAR_EQUAL_TO_NUMBER 17216 1
@@ -683,7 +681,6 @@ exports[`cat1 does not find the (end credits) while loop because of GOTO -7180 i
                 SET_PLAYER_AS_LEADER 552 528
                 SET_VAR_INT 17196 1
             end
-            GOTO -5075
         else
             if 
                 IS_INT_VAR_EQUAL_TO_NUMBER 17196 1
@@ -947,15 +944,7 @@ exports[`cat1 does not find the (end credits) while loop because of GOTO -7180 i
     CLEAR_PRINTS
     CLEAR_CUTSCENE
     GOSUB -7115
-    SET_VAR_INT 1472 1
-    SET_VAR_INT 840 1
-    CLEAR_WANTED_LEVEL 528
-    REGISTER_MISSION_PASSED CAT2
-    PLAYER_MADE_PROGRESS 1
-    REMOVE_BLIP 884
-    SWITCH_CAR_GENERATOR 2196 101
-    SUBURBAN_PASSED
-    RETURN
+    GOTO -6818
 
 :CAT1_6780
     PRINT_BIG M_FAIL 5000 1
@@ -1339,7 +1328,6 @@ exports[`cat1 does not find the (end credits) while loop because of GOTO -7180 i
             
             SET_VAR_INT 17224 0
         end
-        GOTO -7180
         if 
             NOT ARE_CREDITS_FINISHED
         then

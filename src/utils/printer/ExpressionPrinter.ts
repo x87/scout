@@ -1,7 +1,7 @@
 import { SimplePrinter } from './SimplePrinter';
 import * as utils from '../index';
 import { DefinitionMap, IBasicBlock } from 'common/interfaces';
-import { IInstructionParamArray } from 'common/instructions';
+import { getNumericParam, IInstructionParamArray } from 'common/instructions';
 import {Log} from '../log';
 import { OP_IF, OP_JF, OP_JMP } from 'frontend/cfg/cfg';
 import { GLOBAL_OPTIONS } from 'common/arguments';
@@ -23,7 +23,11 @@ export class ExpressionPrinter extends SimplePrinter {
     Log.msg(this.indentation + line);
   }
 
-  print(bb: IBasicBlock, printComments: boolean = false): void {
+  print(
+    bb: IBasicBlock,
+    printComments: boolean = false,
+    suppressTrailingJumpTarget?: number
+  ): void {
     let output = '';
 
     const append = (format: string, ...args: any[]) =>
@@ -46,6 +50,14 @@ export class ExpressionPrinter extends SimplePrinter {
         !GLOBAL_OPTIONS.debugMode &&
         id === OP_JMP &&
         bb.type !== eBasicBlockType.UNSTRUCTURED
+      ) {
+        return;
+      }
+      if (
+        id === OP_JMP &&
+        bb.type === eBasicBlockType.UNSTRUCTURED &&
+        suppressTrailingJumpTarget !== undefined &&
+        Math.abs(getNumericParam(instruction)) === suppressTrailingJumpTarget
       ) {
         return;
       }

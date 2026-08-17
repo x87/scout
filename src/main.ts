@@ -1,8 +1,9 @@
 import { GLOBAL_OPTIONS } from './common/arguments';
 import { Loader } from './frontend/loader';
 import { Parser } from './frontend/parser';
-import { eLoopType } from './common/enums';
+import { eBasicBlockType, eIfType, eLoopType } from './common/enums';
 import { IBasicBlock, IScript } from './common/interfaces';
+import { getNumericParam } from './common/instructions';
 import {
   CFG,
   findLoops,
@@ -12,6 +13,7 @@ import {
   GraphNode,
   IfGraph,
   LoopGraph,
+  OP_JMP,
   from,
 } from './frontend/cfg';
 import { ExpressionPrinter } from './utils/printer/ExpressionPrinter';
@@ -34,8 +36,33 @@ export function print(
       }
     }
 
-    const printGraph = (graph: Graph<GraphNode<IBasicBlock>>) => {
-      for (const bb of graph.nodes) {
+    const printGraph = (
+      graph: Graph<GraphNode<IBasicBlock>>,
+      skipTrailingJumpTarget?: number
+    ) => {
+      const getUnstructuredJumpTarget = (
+        node: GraphNode<GraphNode<IBasicBlock>> | undefined
+      ): number | undefined => {
+        if (!node || node instanceof Graph) {
+          return undefined;
+        }
+        const bb = node as unknown as IBasicBlock;
+        if (bb.type !== eBasicBlockType.UNSTRUCTURED) {
+          return undefined;
+        }
+        const jump = bb.instructions.at(-1);
+        if (!jump || jump.opcode !== OP_JMP) {
+          return undefined;
+        }
+        return Math.abs(getNumericParam(jump));
+      };
+
+      for (let i = 0; i < graph.nodes.length; i++) {
+        const bb = graph.nodes[i];
+        const isLastNode = i === graph.nodes.length - 1;
+        const nextNode = graph.nodes[i + 1];
+        const nextJumpTarget = getUnstructuredJumpTarget(nextNode);
+
         if (bb instanceof LoopGraph) {
           printer.printLine('');
           switch (bb.type) {
@@ -73,23 +100,53 @@ export function print(
           }
           printer.printLine('');
         } else if (bb instanceof IfGraph) {
+          const followOffset = getOffset(bb.followNode);
+          const branchTrailingJumpTarget =
+            followOffset >= 0
+              ? followOffset
+              : isLastNode
+              ? skipTrailingJumpTarget
+              : nextJumpTarget;
+
           printer.printLine(`if ${bb.ifNumber || ''}`);
           printer.indent++;
           printer.print(bb.nodes[0]);
           printer.indent--;
           printer.printLine(`then`);
           printer.indent++;
-          printGraph(bb.thenNode);
+          printGraph(bb.thenNode, branchTrailingJumpTarget);
           printer.indent--;
           if (bb.elseNode) {
             printer.printLine(`else`);
             printer.indent++;
-            printGraph(bb.elseNode);
+            printGraph(bb.elseNode, branchTrailingJumpTarget);
             printer.indent--;
           }
           printer.printLine(`end`);
         } else {
-          bb && printer.print(bb as IBasicBlock, GLOBAL_OPTIONS.debugMode);
+          const prevNode = i > 0 ? graph.nodes[i - 1] : undefined;
+          const jumpTarget = getUnstructuredJumpTarget(bb);
+          const isStructuredIfFollowJump =
+            prevNode instanceof IfGraph &&
+            prevNode.type === eIfType.IF_THEN &&
+            prevNode.followNode === bb &&
+            jumpTarget !== undefined &&
+            (bb as IBasicBlock).instructions.length === 1;
+
+          if (isStructuredIfFollowJump) {
+            continue;
+          }
+
+          const suppressTrailingJumpTarget =
+            isLastNode && jumpTarget === skipTrailingJumpTarget
+              ? skipTrailingJumpTarget
+              : undefined;
+          bb &&
+            printer.print(
+              bb as IBasicBlock,
+              GLOBAL_OPTIONS.debugMode,
+              suppressTrailingJumpTarget
+            );
         }
       }
     };

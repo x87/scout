@@ -953,7 +953,6 @@ exports[`gta3 scm should produce a decompiled source 1`] = `
                 then
                     SET_VAR_INT 4408 1
                 end
-                GOTO 107934
             end
             if 
                 IS_INT_VAR_EQUAL_TO_NUMBER 212 1
@@ -2370,7 +2369,6 @@ exports[`gta3 scm should produce a decompiled source 1`] = `
                     NOT IS_INT_VAR_EQUAL_TO_NUMBER 48 3
                 then
                     PRINT_HELP ATUTOR
-                    GOTO 38329
                 else
                     PRINT_HELP ATUTOR3
                 end
@@ -2397,7 +2395,6 @@ exports[`gta3 scm should produce a decompiled source 1`] = `
                     LOAD_AND_LAUNCH_MISSION_INTERNAL 11
                     SET_VAR_INT 1480 1
                 end
-                GOTO 38557
             end
             if 
                 IS_BUTTON_PRESSED 0 14
@@ -2453,7 +2450,6 @@ exports[`gta3 scm should produce a decompiled source 1`] = `
                     NOT IS_INT_VAR_EQUAL_TO_NUMBER 48 3
                 then
                     PRINT_HELP FTUTOR
-                    GOTO 38729
                 else
                     PRINT_HELP FTUTOR2
                 end
@@ -2480,7 +2476,6 @@ exports[`gta3 scm should produce a decompiled source 1`] = `
                     LOAD_AND_LAUNCH_MISSION_INTERNAL 12
                     SET_VAR_INT 1488 1
                 end
-                GOTO 38957
             end
             if 
                 IS_BUTTON_PRESSED 0 14
@@ -2539,7 +2534,6 @@ exports[`gta3 scm should produce a decompiled source 1`] = `
                     NOT IS_INT_VAR_EQUAL_TO_NUMBER 48 3
                 then
                     PRINT_HELP CTUTOR
-                    GOTO 39150
                 else
                     PRINT_HELP CTUTOR2
                 end
@@ -2566,7 +2560,6 @@ exports[`gta3 scm should produce a decompiled source 1`] = `
                     LOAD_AND_LAUNCH_MISSION_INTERNAL 13
                     SET_VAR_INT 1496 1
                 end
-                GOTO 39378
             end
             if 
                 IS_BUTTON_PRESSED 0 14
@@ -2622,7 +2615,6 @@ exports[`gta3 scm should produce a decompiled source 1`] = `
                     NOT IS_INT_VAR_EQUAL_TO_NUMBER 48 3
                 then
                     PRINT_HELP TTUTOR
-                    GOTO 39548
                 else
                     PRINT_HELP TTUTOR2
                 end
@@ -2649,7 +2641,6 @@ exports[`gta3 scm should produce a decompiled source 1`] = `
                     LOAD_AND_LAUNCH_MISSION_INTERNAL 14
                     SET_VAR_INT 1588 1
                 end
-                GOTO 39776
             end
             if 
                 IS_BUTTON_PRESSED 0 14
@@ -2702,11 +2693,9 @@ exports[`gta3 scm should produce a decompiled source 1`] = `
                     IS_NUMBER_GREATER_THAN_INT_VAR 19 260
                 then
                     TURN_PHONE_ON 1204
-                    GOTO 39915
                 else
                     TURN_PHONE_OFF 1204
                 end
-                GOTO 39927
             else
                 TURN_PHONE_OFF 1204
             end
@@ -2783,11 +2772,9 @@ exports[`gta3 scm should produce a decompiled source 1`] = `
                     IS_NUMBER_GREATER_THAN_INT_VAR 19 260
                 then
                     TURN_PHONE_ON 1204
-                    GOTO 40312
                 else
                     TURN_PHONE_OFF 1204
                 end
-                GOTO 40324
             else
                 TURN_PHONE_OFF 1204
             end
@@ -2864,11 +2851,9 @@ exports[`gta3 scm should produce a decompiled source 1`] = `
                     IS_NUMBER_GREATER_THAN_INT_VAR 19 260
                 then
                     TURN_PHONE_ON 1204
-                    GOTO 40709
                 else
                     TURN_PHONE_OFF 1204
                 end
-                GOTO 40721
             else
                 TURN_PHONE_OFF 1204
             end
@@ -2945,11 +2930,9 @@ exports[`gta3 scm should produce a decompiled source 1`] = `
                     IS_NUMBER_GREATER_THAN_INT_VAR 19 260
                 then
                     TURN_PHONE_ON 1204
-                    GOTO 41106
                 else
                     TURN_PHONE_OFF 1204
                 end
-                GOTO 41118
             else
                 TURN_PHONE_OFF 1204
             end
@@ -4391,7 +4374,6 @@ exports[`gta3 scm should produce a decompiled source 1`] = `
                 IS_INT_VAR_EQUAL_TO_NUMBER 828 0
             then
                 TURN_PHONE_ON 1192
-                GOTO 48533
             else
                 TURN_PHONE_OFF 1192
             end
@@ -4457,7 +4439,6 @@ exports[`gta3 scm should produce a decompiled source 1`] = `
                 IS_INT_VAR_EQUAL_TO_NUMBER 828 0
             then
                 TURN_PHONE_ON 1192
-                GOTO 48852
             else
                 TURN_PHONE_OFF 1192
             end
@@ -4523,7 +4504,6 @@ exports[`gta3 scm should produce a decompiled source 1`] = `
                 IS_INT_VAR_EQUAL_TO_NUMBER 828 0
             then
                 TURN_PHONE_ON 1192
-                GOTO 49171
             else
                 TURN_PHONE_OFF 1192
             end
@@ -4589,7 +4569,6 @@ exports[`gta3 scm should produce a decompiled source 1`] = `
                 IS_INT_VAR_EQUAL_TO_NUMBER 828 0
             then
                 TURN_PHONE_ON 1192
-                GOTO 49490
             else
                 TURN_PHONE_OFF 1192
             end
@@ -5753,7 +5732,6 @@ exports[`gta3 scm should produce a decompiled source 1`] = `
                 IS_INT_VAR_EQUAL_TO_NUMBER 828 0
             then
                 TURN_PHONE_ON 1208
-                GOTO 55175
             else
                 TURN_PHONE_OFF 1208
             end
@@ -5819,7 +5797,6 @@ exports[`gta3 scm should produce a decompiled source 1`] = `
                 IS_INT_VAR_EQUAL_TO_NUMBER 828 0
             then
                 TURN_PHONE_ON 1208
-                GOTO 55494
             else
                 TURN_PHONE_OFF 1208
             end
@@ -5885,7 +5862,6 @@ exports[`gta3 scm should produce a decompiled source 1`] = `
                 IS_INT_VAR_EQUAL_TO_NUMBER 828 0
             then
                 TURN_PHONE_ON 1208
-                GOTO 55813
             else
                 TURN_PHONE_OFF 1208
             end
@@ -5951,7 +5927,6 @@ exports[`gta3 scm should produce a decompiled source 1`] = `
                 IS_INT_VAR_EQUAL_TO_NUMBER 828 0
             then
                 TURN_PHONE_ON 1208
-                GOTO 56132
             else
                 TURN_PHONE_OFF 1208
             end
@@ -6416,7 +6391,6 @@ exports[`gta3 scm should produce a decompiled source 1`] = `
                 IS_INT_VAR_EQUAL_TO_NUMBER 828 0
             then
                 TURN_PHONE_ON 1236
-                GOTO 58397
             else
                 TURN_PHONE_OFF 1236
             end
@@ -6482,7 +6456,6 @@ exports[`gta3 scm should produce a decompiled source 1`] = `
                 IS_INT_VAR_EQUAL_TO_NUMBER 828 0
             then
                 TURN_PHONE_ON 1236
-                GOTO 58716
             else
                 TURN_PHONE_OFF 1236
             end
@@ -6552,7 +6525,6 @@ exports[`gta3 scm should produce a decompiled source 1`] = `
                 IS_INT_VAR_EQUAL_TO_NUMBER 828 0
             then
                 TURN_PHONE_ON 1236
-                GOTO 59053
             else
                 TURN_PHONE_OFF 1236
             end
@@ -6618,7 +6590,6 @@ exports[`gta3 scm should produce a decompiled source 1`] = `
                 IS_INT_VAR_EQUAL_TO_NUMBER 828 0
             then
                 TURN_PHONE_ON 1236
-                GOTO 59372
             else
                 TURN_PHONE_OFF 1236
             end
@@ -6684,7 +6655,6 @@ exports[`gta3 scm should produce a decompiled source 1`] = `
                 IS_INT_VAR_EQUAL_TO_NUMBER 828 0
             then
                 TURN_PHONE_ON 1236
-                GOTO 59691
             else
                 TURN_PHONE_OFF 1236
             end
@@ -6760,7 +6730,6 @@ exports[`gta3 scm should produce a decompiled source 1`] = `
             if 
                 IS_INT_VAR_EQUAL_TO_NUMBER 1684 1
             then
-                GOTO 60086
             else
                 if 
                     IS_SCORE_GREATER 528 499999
@@ -6835,7 +6804,6 @@ exports[`gta3 scm should produce a decompiled source 1`] = `
                                 WAIT 0
                             end
                             
-                            GOTO 60597
                         else
                             
                             while NOT ROTATE_OBJECT 56 0 10 0
@@ -7194,7 +7162,6 @@ exports[`gta3 scm should produce a decompiled source 1`] = `
                             WAIT 0
                         end
                         
-                        GOTO 62420
                     else
                         
                         while NOT SLIDE_OBJECT 184 103.8125 -482.75 16.25 0.0625 0 0 0
@@ -7397,7 +7364,6 @@ exports[`gta3 scm should produce a decompiled source 1`] = `
                             IS_NUMBER_GREATER_THAN_FLOAT_VAR 10 1720
                         then
                             SET_VAR_FLOAT 1720 0
-                            GOTO 63500
                         else
                             SUB_VAL_FROM_FLOAT_VAR 1720 10
                         end
@@ -7445,7 +7411,6 @@ exports[`gta3 scm should produce a decompiled source 1`] = `
                             WAIT 0
                         end
                         
-                        GOTO 63762
                     else
                         
                         while NOT ROTATE_OBJECT 224 180 10 0
@@ -7976,7 +7941,6 @@ exports[`gta3 scm should produce a decompiled source 1`] = `
                             end
                         end
                         SET_VAR_INT 3276 1
-                        GOTO 81983
                     else
                         if 
                             IS_PLAYER_SHOOTING 528
@@ -7997,7 +7961,6 @@ exports[`gta3 scm should produce a decompiled source 1`] = `
                             end
                         end
                     end
-                    GOTO 82244
                 else
                     if 
                         IS_INT_VAR_EQUAL_TO_NUMBER 3276 1
@@ -8120,7 +8083,6 @@ exports[`gta3 scm should produce a decompiled source 1`] = `
                         CHAR_WANDER_DIR 3332 0
                         SET_VAR_INT 3288 1
                     end
-                    GOTO 82797
                 else
                     if 
                         IS_INT_VAR_EQUAL_TO_NUMBER 3288 1
@@ -8216,7 +8178,6 @@ exports[`gta3 scm should produce a decompiled source 1`] = `
                         MARK_MODEL_AS_NO_LONGER_NEEDED 56
                         SET_VAR_INT 3248 1
                         SET_VAR_INT 3268 1
-                        GOTO 83389
                     else
                         if 
                             IS_INT_VAR_EQUAL_TO_NUMBER 3248 1
@@ -8236,7 +8197,6 @@ exports[`gta3 scm should produce a decompiled source 1`] = `
                             end
                         end
                     end
-                    GOTO 83526
                 else
                     if 
                         IS_INT_VAR_EQUAL_TO_NUMBER 3268 1
@@ -8259,7 +8219,6 @@ exports[`gta3 scm should produce a decompiled source 1`] = `
                                 SET_VAR_INT 3244 0
                                 SET_VAR_INT 3268 0
                             end
-                            GOTO 83526
                         else
                             SET_VAR_INT 3268 0
                         end
@@ -8475,7 +8434,6 @@ exports[`gta3 scm should produce a decompiled source 1`] = `
                             end
                         end
                         SET_VAR_INT 3280 1
-                        GOTO 84767
                     else
                         if 
                             IS_PLAYER_SHOOTING 528
@@ -8496,7 +8454,6 @@ exports[`gta3 scm should produce a decompiled source 1`] = `
                             end
                         end
                     end
-                    GOTO 85028
                 else
                     if 
                         IS_INT_VAR_EQUAL_TO_NUMBER 3280 1

@@ -46,12 +46,15 @@ const branchOpcodesMap: any = {
 export class CFG {
   getCallGraphs(
     script: IScript,
-    allScripts: IScript[]
+    allScripts: IScript[],
   ): Array<Graph<IBasicBlock>> {
-    const functions: number[] = [
-      script.instructionMap.keys().next().value,
-      ...this.findFunctions(script),
-    ];
+    if (script.instructionMap.size === 0) {
+      return [];
+    }
+
+    const firstOffset = script.instructionMap.keys().next().value as number;
+
+    const functions: number[] = [firstOffset, ...this.findFunctions(script)];
     if (script.type === eScriptType.MAIN) {
       // some functions in MAIN are referenced only by missions/externals
       allScripts.forEach((s) => {
@@ -71,27 +74,49 @@ export class CFG {
   private buildGraph(
     basicBlocks: IBasicBlock[],
     startOffset: number,
-    entries: number[]
+    entries: number[],
   ): Graph<IBasicBlock> {
     const graph = new Graph<IBasicBlock>();
+    const sortedEntries = [...entries].sort((a, b) => a - b);
+
+    const getOwnerEntry = (offset: number): number => {
+      let owner = sortedEntries[0];
+      for (const entry of sortedEntries) {
+        if (entry > offset) {
+          break;
+        }
+        owner = entry;
+      }
+      return owner;
+    };
 
     const visited: boolean[] = [];
     const startIndex = this.findBasicBlockIndex(basicBlocks, startOffset);
 
     if (startIndex === -1) {
       Log.warn(AppError.NO_BRANCH, startOffset);
-      return;
+      return graph;
     }
 
     const traverse = (index: number): void => {
+      if (index < 0 || index >= basicBlocks.length) {
+        return;
+      }
       if (visited[index]) return;
       visited[index] = true;
 
       const bb = basicBlocks[index];
+      if (!bb || bb.instructions.length === 0) {
+        return;
+      }
       bb.start = startOffset;
       graph.addNode(bb);
 
       const lastInstruction = bb.instructions[bb.instructions.length - 1];
+      if (!lastInstruction) {
+        bb.type = eBasicBlockType.RETURN;
+        return;
+      }
 
       bb.type = this.getBasicBlockType(lastInstruction);
 
@@ -105,17 +130,16 @@ export class CFG {
           const targetOffsetAbs = Math.abs(targetOffset);
           const targetIndex = this.findBasicBlockIndex(
             basicBlocks,
-            targetOffsetAbs
+            targetOffsetAbs,
           );
 
           if (targetIndex === -1) {
             Log.warn(AppError.NO_BRANCH, targetOffset);
             return;
           }
-          if (
-            entries.includes(targetOffsetAbs) &&
-            bb.start !== targetOffsetAbs
-          ) {
+
+          const targetOwner = getOwnerEntry(targetOffsetAbs);
+          if (targetOwner !== startOffset && bb.start !== targetOwner) {
             // one-way jump into another function is always an unstructured jump
             // two-way jump into another function could however be legit if the IF statement is the last block of the function that naturally falls into the next function
             // todo: unstructured jf to another function
@@ -128,7 +152,7 @@ export class CFG {
               const empty = this.createBasicBlock(
                 [],
                 eBasicBlockType.RETURN,
-                startOffset
+                startOffset,
               );
               graph.addNode(empty);
               graph.addEdge(bb, empty);
@@ -139,10 +163,29 @@ export class CFG {
           }
           if (bb.type === eBasicBlockType.ONE_WAY) break; // else fallthrough
         }
-        case eBasicBlockType.FALL:
-          graph.addEdge(bb, basicBlocks[index + 1]);
+        case eBasicBlockType.FALL: {
+          const nextBlock = basicBlocks[index + 1];
+          if (!nextBlock) {
+            bb.type = eBasicBlockType.RETURN;
+            break;
+          }
+
+          const nextOffset = nextBlock.instructions[0]?.offset;
+          if (
+            nextOffset !== undefined &&
+            getOwnerEntry(nextOffset) !== startOffset &&
+            bb.start !== getOwnerEntry(nextOffset)
+          ) {
+            // Never fall through into another function entry.
+            // This avoids inlining the tail of adjacent subroutines.
+            bb.type = eBasicBlockType.RETURN;
+            break;
+          }
+
+          graph.addEdge(bb, nextBlock);
           traverse(index + 1);
           break;
+        }
         default:
           Log.warn(`${bb.type} is not implemented` as AppError);
       }
@@ -155,8 +198,8 @@ export class CFG {
   }
 
   private findBasicBlocks(script: IScript, entries: number[]): IBasicBlock[] {
-    let currentLeader = null;
-    let instructions = [];
+    let currentLeader: IInstruction | null = null;
+    let instructions: IInstruction[] = [];
     const result: IBasicBlock[] = [];
     const leaderOffsets = [
       ...new Set(entries.concat(this.findLeaderOffsets(script))),
@@ -175,14 +218,16 @@ export class CFG {
       }
     }
     // add last bb in the file
-    result.push(this.createBasicBlock(instructions));
+    if (instructions.length) {
+      result.push(this.createBasicBlock(instructions));
+    }
 
     return result;
   }
 
   private findGlobalFunctions(
     innerScript: IScript,
-    mainScript: IScript
+    mainScript: IScript,
   ): number[] {
     const res = [];
     for (const [offset, instruction] of innerScript.instructionMap) {
@@ -272,20 +317,20 @@ export class CFG {
   private createBasicBlock(
     instructions: IInstruction[],
     type: eBasicBlockType = eBasicBlockType.UNDEFINED,
-    start?: number
+    start: number = 0,
   ): IBasicBlock {
     return { type, instructions, start };
   }
 
   private findBasicBlockIndex(
     basicBlocks: IBasicBlock[],
-    offset: number
-  ): number | undefined {
+    offset: number,
+  ): number {
     return basicBlocks.findIndex((bb) => bb.instructions[0].offset === offset);
   }
 
   private getBranchType(
-    instruction: IInstruction
+    instruction: IInstruction,
   ): eBasicBlockType | undefined {
     return branchOpcodesMap[GLOBAL_OPTIONS.game][instruction.opcode];
   }
@@ -303,17 +348,20 @@ export class CFG {
 
   // split self-loop blocks on two blocks to provide better analysis of the CFG
   private patchSelfLoops(graph: Graph<IBasicBlock>): Graph<IBasicBlock> {
-    const selfLoopNodes = graph.nodes.filter((node) => {
+    const selfLoopNodes = graph.nodes.filter((node): node is IBasicBlock => {
+      if (node instanceof Graph) {
+        return false;
+      }
       const successors = graph.getImmSuccessors(node);
       return successors.includes(node);
     });
 
     if (!selfLoopNodes.length) return graph;
     const newGraph = graphUtils.from(graph);
-    selfLoopNodes.forEach((node: IBasicBlock) => {
+    selfLoopNodes.forEach((node) => {
       const newNode = this.createBasicBlock(
         node.instructions.slice(1),
-        node.type
+        node.type,
       );
       node.type = eBasicBlockType.FALL;
       node.instructions = [node.instructions[0]];
