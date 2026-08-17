@@ -21,6 +21,7 @@ const arguments_1 = __webpack_require__(2);
 const loader_1 = __webpack_require__(26);
 const parser_1 = __webpack_require__(31);
 const enums_1 = __webpack_require__(19);
+const instructions_1 = __webpack_require__(32);
 const cfg_1 = __webpack_require__(38);
 const ExpressionPrinter_1 = __webpack_require__(41);
 const definitions_1 = __webpack_require__(36);
@@ -35,8 +36,26 @@ function print(functions, printer, script) {
                 printer.print(bb);
             }
         }
-        const printGraph = (graph) => {
-            for (const bb of graph.nodes) {
+        const printGraph = (graph, skipTrailingJumpTarget) => {
+            const getUnstructuredJumpTarget = (node) => {
+                if (!node || node instanceof cfg_1.Graph) {
+                    return undefined;
+                }
+                const bb = node;
+                if (bb.type !== enums_1.eBasicBlockType.UNSTRUCTURED) {
+                    return undefined;
+                }
+                const jump = bb.instructions.at(-1);
+                if (!jump || jump.opcode !== cfg_1.OP_JMP) {
+                    return undefined;
+                }
+                return Math.abs((0, instructions_1.getNumericParam)(jump));
+            };
+            for (let i = 0; i < graph.nodes.length; i++) {
+                const bb = graph.nodes[i];
+                const isLastNode = i === graph.nodes.length - 1;
+                const nextNode = graph.nodes[i + 1];
+                const nextJumpTarget = getUnstructuredJumpTarget(nextNode);
                 if (bb instanceof cfg_1.LoopGraph) {
                     printer.printLine('');
                     switch (bb.type) {
@@ -71,24 +90,44 @@ function print(functions, printer, script) {
                     printer.printLine('');
                 }
                 else if (bb instanceof cfg_1.IfGraph) {
+                    const followOffset = (0, cfg_1.getOffset)(bb.followNode);
+                    const branchTrailingJumpTarget = followOffset >= 0
+                        ? followOffset
+                        : isLastNode
+                            ? skipTrailingJumpTarget
+                            : nextJumpTarget;
                     printer.printLine(`if ${bb.ifNumber || ''}`);
                     printer.indent++;
                     printer.print(bb.nodes[0]);
                     printer.indent--;
                     printer.printLine(`then`);
                     printer.indent++;
-                    printGraph(bb.thenNode);
+                    printGraph(bb.thenNode, branchTrailingJumpTarget);
                     printer.indent--;
                     if (bb.elseNode) {
                         printer.printLine(`else`);
                         printer.indent++;
-                        printGraph(bb.elseNode);
+                        printGraph(bb.elseNode, branchTrailingJumpTarget);
                         printer.indent--;
                     }
                     printer.printLine(`end`);
                 }
                 else {
-                    bb && printer.print(bb, arguments_1.GLOBAL_OPTIONS.debugMode);
+                    const prevNode = i > 0 ? graph.nodes[i - 1] : undefined;
+                    const jumpTarget = getUnstructuredJumpTarget(bb);
+                    const isStructuredIfFollowJump = prevNode instanceof cfg_1.IfGraph &&
+                        prevNode.type === enums_1.eIfType.IF_THEN &&
+                        prevNode.followNode === bb &&
+                        jumpTarget !== undefined &&
+                        bb.instructions.length === 1;
+                    if (isStructuredIfFollowJump) {
+                        continue;
+                    }
+                    const suppressTrailingJumpTarget = isLastNode && jumpTarget === skipTrailingJumpTarget
+                        ? skipTrailingJumpTarget
+                        : undefined;
+                    bb &&
+                        printer.print(bb, arguments_1.GLOBAL_OPTIONS.debugMode, suppressTrailingJumpTarget);
                 }
             }
         };
@@ -5222,10 +5261,11 @@ const branchOpcodesMap = {
 };
 class CFG {
     getCallGraphs(script, allScripts) {
-        const functions = [
-            script.instructionMap.keys().next().value,
-            ...this.findFunctions(script),
-        ];
+        if (script.instructionMap.size === 0) {
+            return [];
+        }
+        const firstOffset = script.instructionMap.keys().next().value;
+        const functions = [firstOffset, ...this.findFunctions(script)];
         if (script.type === enums_1.eScriptType.MAIN) {
             // some functions in MAIN are referenced only by missions/externals
             allScripts.forEach((s) => {
@@ -5242,20 +5282,42 @@ class CFG {
     }
     buildGraph(basicBlocks, startOffset, entries) {
         const graph = new graph_1.Graph();
+        const sortedEntries = [...entries].sort((a, b) => a - b);
+        const getOwnerEntry = (offset) => {
+            let owner = sortedEntries[0];
+            for (const entry of sortedEntries) {
+                if (entry > offset) {
+                    break;
+                }
+                owner = entry;
+            }
+            return owner;
+        };
         const visited = [];
         const startIndex = this.findBasicBlockIndex(basicBlocks, startOffset);
         if (startIndex === -1) {
             log_1.Log.warn(errors_1.AppError.NO_BRANCH, startOffset);
-            return;
+            return graph;
         }
         const traverse = (index) => {
+            var _a;
+            if (index < 0 || index >= basicBlocks.length) {
+                return;
+            }
             if (visited[index])
                 return;
             visited[index] = true;
             const bb = basicBlocks[index];
+            if (!bb || bb.instructions.length === 0) {
+                return;
+            }
             bb.start = startOffset;
             graph.addNode(bb);
             const lastInstruction = bb.instructions[bb.instructions.length - 1];
+            if (!lastInstruction) {
+                bb.type = enums_1.eBasicBlockType.RETURN;
+                return;
+            }
             bb.type = this.getBasicBlockType(lastInstruction);
             switch (bb.type) {
                 case enums_1.eBasicBlockType.RETURN:
@@ -5270,8 +5332,8 @@ class CFG {
                         log_1.Log.warn(errors_1.AppError.NO_BRANCH, targetOffset);
                         return;
                     }
-                    if (entries.includes(targetOffsetAbs) &&
-                        bb.start !== targetOffsetAbs) {
+                    const targetOwner = getOwnerEntry(targetOffsetAbs);
+                    if (targetOwner !== startOffset && bb.start !== targetOwner) {
                         // one-way jump into another function is always an unstructured jump
                         // two-way jump into another function could however be legit if the IF statement is the last block of the function that naturally falls into the next function
                         // todo: unstructured jf to another function
@@ -5294,10 +5356,25 @@ class CFG {
                     if (bb.type === enums_1.eBasicBlockType.ONE_WAY)
                         break; // else fallthrough
                 }
-                case enums_1.eBasicBlockType.FALL:
-                    graph.addEdge(bb, basicBlocks[index + 1]);
+                case enums_1.eBasicBlockType.FALL: {
+                    const nextBlock = basicBlocks[index + 1];
+                    if (!nextBlock) {
+                        bb.type = enums_1.eBasicBlockType.RETURN;
+                        break;
+                    }
+                    const nextOffset = (_a = nextBlock.instructions[0]) === null || _a === void 0 ? void 0 : _a.offset;
+                    if (nextOffset !== undefined &&
+                        getOwnerEntry(nextOffset) !== startOffset &&
+                        bb.start !== getOwnerEntry(nextOffset)) {
+                        // Never fall through into another function entry.
+                        // This avoids inlining the tail of adjacent subroutines.
+                        bb.type = enums_1.eBasicBlockType.RETURN;
+                        break;
+                    }
+                    graph.addEdge(bb, nextBlock);
                     traverse(index + 1);
                     break;
+                }
                 default:
                     log_1.Log.warn(`${bb.type} is not implemented`);
             }
@@ -5326,7 +5403,9 @@ class CFG {
             }
         }
         // add last bb in the file
-        result.push(this.createBasicBlock(instructions));
+        if (instructions.length) {
+            result.push(this.createBasicBlock(instructions));
+        }
         return result;
     }
     findGlobalFunctions(innerScript, mainScript) {
@@ -5406,7 +5485,7 @@ class CFG {
         }
         return offsets;
     }
-    createBasicBlock(instructions, type = enums_1.eBasicBlockType.UNDEFINED, start) {
+    createBasicBlock(instructions, type = enums_1.eBasicBlockType.UNDEFINED, start = 0) {
         return { type, instructions, start };
     }
     findBasicBlockIndex(basicBlocks, offset) {
@@ -5428,6 +5507,9 @@ class CFG {
     // split self-loop blocks on two blocks to provide better analysis of the CFG
     patchSelfLoops(graph) {
         const selfLoopNodes = graph.nodes.filter((node) => {
+            if (node instanceof graph_1.Graph) {
+                return false;
+            }
             const successors = graph.getImmSuccessors(node);
             return successors.includes(node);
         });
@@ -6377,6 +6459,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ExpressionPrinter = void 0;
 const SimplePrinter_1 = __webpack_require__(42);
 const utils = __webpack_require__(30);
+const instructions_1 = __webpack_require__(32);
 const log_1 = __webpack_require__(20);
 const cfg_1 = __webpack_require__(33);
 const arguments_1 = __webpack_require__(2);
@@ -6392,7 +6475,7 @@ class ExpressionPrinter extends SimplePrinter_1.SimplePrinter {
     printLine(line) {
         log_1.Log.msg(this.indentation + line);
     }
-    print(bb, printComments = false) {
+    print(bb, printComments = false, suppressTrailingJumpTarget) {
         var _a;
         let output = '';
         const append = (format, ...args) => (output += log_1.Log.format(format, ...args));
@@ -6411,6 +6494,12 @@ class ExpressionPrinter extends SimplePrinter_1.SimplePrinter {
             if (!arguments_1.GLOBAL_OPTIONS.debugMode &&
                 id === cfg_1.OP_JMP &&
                 bb.type !== enums_1.eBasicBlockType.UNSTRUCTURED) {
+                return;
+            }
+            if (id === cfg_1.OP_JMP &&
+                bb.type === enums_1.eBasicBlockType.UNSTRUCTURED &&
+                suppressTrailingJumpTarget !== undefined &&
+                Math.abs((0, instructions_1.getNumericParam)(instruction)) === suppressTrailingJumpTarget) {
                 return;
             }
             const definition = this.definitionMap.get(instruction.opcode & 0x7fff);
